@@ -193,8 +193,8 @@ ClassData Network::Classify(const cv::Mat& img, int N) {
 
     ClassData mydata(N); // objecto
 
-    N = std::min<int>(labels.size(), N);
-    std::vector<int> maxN = Argmax(output, N);
+    N = std::min<int>(labels.size(), N);       // tem 5 top labels
+    std::vector<int> maxN = Argmax(output, N); // tem o top
 
     for (int i = 0; i < N; ++i) {
         int idx = maxN[i];
@@ -235,82 +235,6 @@ std::vector<float> Network::Predict(const cv::Mat& img) {
     const float* end = begin + output_layer->channels();
 
     return std::vector<float>(begin, end);
-}
-
-/************************************************************************/
-// Function BackwardPass
-/************************************************************************/
-void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
-
-    std::vector<int> caffeLabel (1000);
-    std::fill(caffeLabel.begin(), caffeLabel.end(), 0); // vector of zeros
-
-    // For each predicted class (top 5)
-    for (int i = 0; i < 1; ++i) {           //N
-
-        int label_index = mydata.index[i];  // tem o indice da classe
-        //caffeLabel.insert(caffeLabel.begin()+label_index-1, 1);
-
-        // Tem dados do forward
-        //Blob<float>* forward_output_layer = net->output_blobs()[0];
-        boost::shared_ptr<caffe::Blob<float> > forward_output_layer = net->blob_by_name("fc8");
-        float* top_data = forward_output_layer->mutable_cpu_data();
-
-        top_data[label_index] = 1; // Specific class = 1;
-
-        net->Backward();
-
-        boost::shared_ptr<caffe::Blob<float> > data_layer = net->blob_by_name("data");
-        //Blob<float>* data_layer = net->input_blobs()[0]; // Especificar layer???
-
-        //float* bottom_diff = data_layer->mutable_cpu_diff();
-        float* bottom_data = data_layer->mutable_cpu_data();
-
-        //const float* begin_back = data_layer->cpu_data();  // cpu_diff??
-        //const float* end_back = begin_back + data_layer->channels();
-        //std::vector<float> input = std::vector<float>(begin, end);
-
-        // SALIENCY MAP - normalizar bottom_data, layer 'data'
-        for (int i=0; i< sizeof(bottom_data); ++i){
-            cout << "Data " << std::setprecision(4) << bottom_data[i] << endl;
-        }
-
-        float* normalize_bottom_data = Network::Limit_values(bottom_data);
-
-
-
-
-
-
-
-
-
-
-        // SEGMENTATION MASK
-        // CROP BBOX
-        // RESIZE CROPPED IMAGE
-
-        // Forward
-        net->Forward();
-
-        boost::shared_ptr<caffe::Blob<float> > output_layer = net->blob_by_name("fc8");
-        //Blob<float>* output_layer = net->output_blobs()[0];
-        const float* begin_forward = output_layer->cpu_data();
-        const float* end_forward = begin_forward + output_layer->channels();
-        std::vector<float> output = std::vector<float>(begin_forward, end_forward);
-
-        // Predict new top 5 for the new class
-        N = std::min<int>(labels.size(), N);
-        std::vector<int> maxN = Argmax(output, N);
-
-        cout << "Look Twice: \n" << mydata << endl;
-
-
-
-
-
-    }
-
 }
 
 
@@ -382,6 +306,107 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
 }
 
 /************************************************************************/
+// Function BackwardPass
+/************************************************************************/
+void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
+
+    //std::vector<int> caffeLabel (1000);
+    //std::fill(caffeLabel.begin(), caffeLabel.end(), 0); // vector of zeros
+
+    // For each predicted class (top 5)
+    for (int i = 0; i < 1; ++i) {           //N
+
+        int label_index = mydata.index[i];  // tem o indice da classe
+        //caffeLabel.insert(caffeLabel.begin()+label_index-1, 1);
+
+        // Tem dados do forward
+        //Blob<float>* forward_output_layer = net->output_blobs()[0];
+
+        //boost::shared_ptr<caffe::Blob<float> > forward_output_layer = net->blob_by_name("fc8");
+        //float* top_data = forward_output_layer->mutable_cpu_data();
+
+        /*Blob<float>* forward_output_layer = net->output_blobs()[0];
+        const float* begin = forward_output_layer->cpu_data();
+        const float* end = begin + forward_output_layer->channels();
+        std::vector<float> output_forward = std::vector<float>(begin, end);*/
+
+        // Dados do 1 forward
+        Blob<float>* forward_output_layer = net->output_blobs()[0];
+        float* outData = forward_output_layer->mutable_cpu_data();
+        float* outDiff = forward_output_layer->mutable_cpu_diff();
+
+        for (int i = 0;  i< forward_output_layer->num() * forward_output_layer->channels() * forward_output_layer->height() * forward_output_layer->width(); i++)
+            outDiff[i] = 0.0f;
+
+        outDiff[label_index] = 1.0f; // Specific class
+
+
+        //top_data[label_index] = 1; // Specific class = 1;
+
+        net->Backward();
+
+        Blob<float>* data_layer = net->input_blobs()[0]; // copy the input layer 'data' to vector
+        float* bottom_diff = data_layer->mutable_cpu_diff();
+        float* bottom_data = data_layer->mutable_cpu_data();
+
+        cout << sizeof(bottom_diff) << sizeof(bottom_diff[0]) << bottom_diff[0] << endl;
+
+
+        //-boost::shared_ptr<caffe::Blob<float> > data_layer = net->blob_by_name("data");
+        //Blob<float>* data_layer = net->input_blobs()[0]; // Especificar layer???
+
+        //float* bottom_diff = data_layer->mutable_cpu_diff();
+        //-float* bottom_data = data_layer->mutable_cpu_data();
+
+        //const float* begin_back = data_layer->cpu_data();  // cpu_diff??
+        //const float* end_back = begin_back + data_layer->channels();
+        //std::vector<float> input = std::vector<float>(begin, end);
+
+        // SALIENCY MAP - normalizar bottom_data, layer 'data'
+        for (int i=0; i< sizeof(bottom_diff); ++i){
+            cout << "Data " << std::setprecision(4) << bottom_diff[i] << endl;
+        }
+
+        float* normalize_bottom_diff = Network::Limit_values(bottom_diff);
+
+        cout << sizeof(normalize_bottom_diff) << normalize_bottom_diff[0] << endl;
+
+
+
+
+
+
+
+
+        // SEGMENTATION MASK
+        // CROP BBOX
+        // RESIZE CROPPED IMAGE
+
+        // Forward
+        /*net->Forward();
+
+        boost::shared_ptr<caffe::Blob<float> > output_layer = net->blob_by_name("fc8");
+        //Blob<float>* output_layer = net->output_blobs()[0];
+        const float* begin_forward = output_layer->cpu_data();
+        const float* end_forward = begin_forward + output_layer->channels();
+        std::vector<float> output = std::vector<float>(begin_forward, end_forward);
+
+        // Predict new top 5 for the new class
+        N = std::min<int>(labels.size(), N);
+        std::vector<int> maxN = Argmax(output, N);
+
+        cout << "Look Twice: \n" << mydata << endl;*/
+
+
+
+
+
+    }
+
+}
+
+
+/************************************************************************/
 // Function Limit Values
 // Find min and max value of vector
 // Return bottom_data normalized
@@ -411,7 +436,7 @@ float* Network::Limit_values(float* bottom_data){
 }
 
 /*****************************************/
-//					MAIN
+//		MAIN
 /*****************************************/
 
 int main(int argc, char** argv){
@@ -438,7 +463,7 @@ int main(int argc, char** argv){
         //cout << "Using GPU, device_id\n" << device_id << "\n" << endl;
     }
 
-    // Load network, pre-processment, set mean and labels
+    // Load network, pre-processment, set mean and load labels
     Network Network(model_file, weight_file, mean_file, label_file);
 
     string file = string(argv[8]) + "ILSVRC2012_val_00000001.JPEG";            // load image

@@ -22,6 +22,7 @@
 using namespace caffe;
 using namespace std;
 using std::string;
+using namespace cv;
 //using cv::Mat;
 //using namespace boost::numpy;
 
@@ -313,8 +314,16 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
     //std::vector<int> caffeLabel (1000);
     //std::fill(caffeLabel.begin(), caffeLabel.end(), 0); // vector of zeros
 
+    cout << "Estou no backward\n" << endl;
+
     // For each predicted class (top 5)
     for (int i = 0; i < 1; ++i) {           //N
+
+
+        /*********************************************************/
+        //                  Get Saliency Map                     //
+        //              Backward and normalize                   //
+        /*********************************************************/
 
         int label_index = mydata.index[i];  // tem o indice da classe
         //caffeLabel.insert(caffeLabel.begin()+label_index-1, 1);
@@ -335,21 +344,19 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
         float* outData = forward_output_layer->mutable_cpu_data();
         float* outDiff = forward_output_layer->mutable_cpu_diff();
 
+        // Backward of a specific class
         for (int i = 0;  i< forward_output_layer->num() * forward_output_layer->channels() * forward_output_layer->height() * forward_output_layer->width(); i++)
             outDiff[i] = 0.0f;
 
         outDiff[label_index] = 1.0f; // Specific class
 
-
-        //top_data[label_index] = 1; // Specific class = 1;
-
         net->Backward();
+
 
         Blob<float>* data_layer = net->input_blobs()[0]; // copy the input layer 'data' to vector
         float* bottom_diff = data_layer->mutable_cpu_diff();
         float* bottom_data = data_layer->mutable_cpu_data();
 
-        cout << sizeof(bottom_diff) << sizeof(bottom_diff[0]) << bottom_diff[0] << endl;
 
 
         //-boost::shared_ptr<caffe::Blob<float> > data_layer = net->blob_by_name("data");
@@ -369,7 +376,6 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
 
         float* normalize_bottom_diff = Network::Limit_values(bottom_diff);
 
-        cout << sizeof(normalize_bottom_diff) << normalize_bottom_diff[0] << endl;
 
 
 
@@ -377,10 +383,21 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
 
 
 
+        /*********************************************************/
+        //                  Segmentation Mask                    //
+        //       Pick pixels > threshold and define box          //
+        /*********************************************************/
 
-        // SEGMENTATION MASK
-        // CROP BBOX
-        // RESIZE CROPPED IMAGE
+
+
+
+        /*********************************************************/
+        //                     Foveate Images                    //
+        //         Give center of bbox and foveate image         //
+        /*********************************************************/
+
+
+
 
         // Forward
         /*net->Forward();
@@ -398,6 +415,11 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
         cout << "Look Twice: \n" << mydata << endl;*/
 
 
+
+    /*********************************************************/
+    //               Rank Top 5 final solution               //
+    //      From 25 predicted labels, find highest 5         //
+    /*********************************************************/
 
 
 

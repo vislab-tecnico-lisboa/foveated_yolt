@@ -1,6 +1,7 @@
 #include <caffe/caffe.hpp>
 #include <caffe/util/io.hpp>
 #include <caffe/blob.hpp>
+#include <caffe/layer.hpp>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -68,7 +69,12 @@ int main(int argc, char** argv){
     //string file = string(argv[8]) + "resize_000010.jpg";
     cout << "\n------- Prediction for " << file << " ------\n" << endl;
 
-    cv::Mat img = cv::imread(file, -1);		 // Read image
+
+
+    cv::Mat img = cv::imread(file, 1);		 // Read image
+    //imshow("image", img);
+    //waitKey(1000);
+
     static int N = 5;
     ClassData mydata(N);
 

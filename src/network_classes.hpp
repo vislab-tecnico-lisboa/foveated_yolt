@@ -14,10 +14,10 @@
 #include <memory>
 #include <math.h>
 #include <limits>
-#include </usr/include/numpy/ndarrayobject.h>
-#include </usr/include/numpy/ndarraytypes.h>
+//#include </usr/include/numpy/ndarrayobject.h>
+//#include </usr/include/numpy/ndarraytypes.h>
 
-
+#define CV_64FC3 CV_MAKETYPE(CV_64F,3)
 
 //#include <boost/shared_ptr.hpp>
 //#include <stdio>
@@ -27,7 +27,7 @@ using namespace std;
 using std::string;
 using namespace cv;
 //using cv::Mat;
-using namespace boost::numpy;
+//using namespace boost::numpy;
 
 /* Pair (label, confidence) representing a prediction. */
 typedef std::pair<string, float> Prediction;
@@ -330,18 +330,6 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
         /*********************************************************/
 
         int label_index = mydata.index[i];  // tem o indice da classe
-        //caffeLabel.insert(caffeLabel.begin()+label_index-1, 1);
-
-        // Tem dados do forward
-        //Blob<float>* forward_output_layer = net->output_blobs()[0];
-
-        //boost::shared_ptr<caffe::Blob<float> > forward_output_layer = net->blob_by_name("fc8");
-        //float* top_data = forward_output_layer->mutable_cpu_data();
-
-        /*Blob<float>* forward_output_layer = net->output_blobs()[0];
-        const float* begin = forward_output_layer->cpu_data();
-        const float* end = begin + forward_output_layer->channels();
-        std::vector<float> output_forward = std::vector<float>(begin, end);*/
 
         // Dados do 1 forward
         Blob<float>* forward_output_layer = net->output_blobs()[0];
@@ -354,72 +342,51 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
 
         fc8Diff[label_index] = 1.0f; // Specific class
 
-
+        // Backward
         net->Backward();
 
-
-//        Blob<float>* data_layer = net->input_blobs()[0]; // copy the input layer 'data' to vector
-//        float* dataDiff = data_layer->mutable_cpu_diff();
-//        float* dataData = data_layer->mutable_cpu_data();
-
-
+        // Get Data
         boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");  // get data from Data layer
         int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
-        const float* begin_diff = out_data_layer->cpu_diff();
+        const float* begin_diff = out_data_layer->mutable_cpu_diff(); // gradient
         const float* end_diff = begin_diff + dim;
         std::vector<float> dataDiff(begin_diff,end_diff);
 
 //        for(int j=0; j<dataDiff.size(); ++j)
 //            cout << "Resultado " << dataDiff[j] << endl;   // dataDiff tem o gradiente!!
 
+        cout << "Heigh: " << out_data_layer->height() << " Width: " << out_data_layer->width() << endl;
+        cout << "Size: " << dataDiff.size() << endl;
 
-        float smallest = dataDiff[0];
-        float largest = dataDiff[0];
 
-        for(int i=0; i<dataDiff.size(); ++i){
+        // Normalize
+        cv::normalize(dataDiff, dataDiff, 0, 1, NORM_MINMAX);
 
-            if (dataDiff[i]<smallest){
-                smallest=dataDiff[i];
-            }
-            if (dataDiff[i]>largest){
-                largest=dataDiff[i];
-            }
 
+//        // Normalize
+//        float smallest = dataDiff[0];
+//        float largest = dataDiff[0];
+//        for(int i=0; i<dataDiff.size(); ++i){
+//            if (dataDiff[i]<smallest){
+//                smallest=dataDiff[i];
+//            }
+//            if (dataDiff[i]>largest){
+//                largest=dataDiff[i];
+//            }
+//        }
+//        cout << "mais pequeno: " << smallest << " maior: " << largest << endl;
+//        for (int i = 0; i<dataDiff.size(); ++i){
+//            dataDiff[i] -= smallest;
+//            dataDiff[i] /= largest;
+//        }
+
+
+        ofstream myfile ("datadiff_norm.txt");
+        if (myfile.is_open()){
+            for(int j=0; j<dataDiff.size(); ++j)
+                myfile << dataDiff[j] << "\n";
         }
-        cout << "mais pequeno: " << smallest << " maior: " << largest << endl;
-
-        for (int i = 0; i<dataDiff.size(); ++i){
-            dataDiff[i] -= smallest;
-            dataDiff[i] /= largest;
-        }
-        dataDiff = np.squeeze(dataDiff);
-
-
-
-        //float max = Network::find_max(gradient_values);
-        //cout << "Maximo é " << max << endl;
-
-
-        //-boost::shared_ptr<caffe::Blob<float> > data_layer = net->blob_by_name("data");
-        //Blob<float>* data_layer = net->input_blobs()[0]; // Especificar layer???
-
-        //float* bottom_diff = data_layer->mutable_cpu_diff();
-        //-float* bottom_data = data_layer->mutable_cpu_data();
-
-        //const float* begin_back = data_layer->cpu_data();  // cpu_diff??
-        //const float* end_back = begin_back + data_layer->channels();
-        //std::vector<float> input = std::vector<float>(begin, end);
-
-        // SALIENCY MAP - normalizar bottom_data, layer 'data'
-
-
-        //float* normalize_bottom_diff = Network::Limit_values(dataDiff);
-
-
-
-
-
 
 
 
@@ -440,19 +407,11 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
 
 
         // Forward
-        /*net->Forward();
 
-        boost::shared_ptr<caffe::Blob<float> > output_layer = net->blob_by_name("fc8");
-        //Blob<float>* output_layer = net->output_blobs()[0];
-        const float* begin_forward = output_layer->cpu_data();
-        const float* end_forward = begin_forward + output_layer->channels();
-        std::vector<float> output = std::vector<float>(begin_forward, end_forward);
+        // Predict top 5 of each predicted class
+        //mydata = Network.Classify(img);
 
-        // Predict new top 5 for the new class
-        N = std::min<int>(labels.size(), N);
-        std::vector<int> maxN = Argmax(output, N);
-
-        cout << "Look Twice: \n" << mydata << endl;*/
+        //cout << "Look Twice: \n" << mydata << endl;*/
 
 
 
@@ -460,26 +419,13 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
     //               Rank Top 5 final solution               //
     //      From 25 predicted labels, find highest 5         //
     /*********************************************************/
-
+    // We have 25 predicted labels
 
 
     }
 
 }
 
-//float Network::find_max(Mat gradient_values){
-
-//    float max = gradient_values[0];
-
-//    for (int i=0; i<gradient_values.size(); ++i){
-
-//        if (gradient_values[i]>max)
-//            max = gradient_values[i];
-//    }
-
-
-//    return max;
-//}
 
 
 /************************************************************************/

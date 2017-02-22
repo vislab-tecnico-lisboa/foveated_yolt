@@ -349,7 +349,7 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
         boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");  // get data from Data layer
         int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
-        const float* begin_diff = out_data_layer->mutable_cpu_diff(); // gradient
+        const float* begin_diff = out_data_layer->mutable_cpu_diff();
         const float* end_diff = begin_diff + dim;
         std::vector<float> dataDiff(begin_diff,end_diff);
 
@@ -358,10 +358,6 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
 
         cout << "Heigh: " << out_data_layer->height() << " Width: " << out_data_layer->width() << endl;
         cout << "Size: " << dataDiff.size() << endl;
-
-
-        // Normalize
-        cv::normalize(dataDiff, dataDiff, 0, 1, NORM_MINMAX);
 
 
 //        // Normalize
@@ -381,6 +377,9 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
 //            dataDiff[i] /= largest;
 //        }
 
+
+        // Normalize
+        cv::normalize(dataDiff, dataDiff, 0, 1, NORM_MINMAX);
 
         ofstream myfile ("datadiff_norm.txt");
         if (myfile.is_open()){

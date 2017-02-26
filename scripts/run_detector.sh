@@ -34,7 +34,7 @@ SIZE_MAP=227
 LEVELS=5
 
 # Define size of the fovea
-SIGMA=25
+SIGMA=50
 
 # change this path to the absolute location of the network related files
 FILES_FOLDER_ABSOLUTE_PATH=$PWD"/files/"

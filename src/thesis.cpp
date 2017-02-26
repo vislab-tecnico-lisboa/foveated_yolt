@@ -47,6 +47,7 @@ int main(int argc, char** argv){
     static int levels = atoi(argv[12]);    // Number of kernel levels
     int sigma = atoi(argv[13]);            // Size of the fovea
 
+    cv::Mat rank_labels;
 
     // Set mode
     if (strcmp(argv[6], "CPU") == 0){
@@ -71,82 +72,73 @@ int main(int argc, char** argv){
 
     ClassData mydata(N);
 
+
     // Predict top 5
-    mydata = Network.Classify(img,N);
+    mydata = Network.Classify(img, N);
+
+    std::vector<Rect> bboxes;
+
+    // For each predicted class label:
+    for (int i = 0; i < N; ++i) {
+
+        /*******************************************/
+        //  Weakly Supervised Object Localization  //
+        // Saliency Map + Segmentation Mask + BBox //
+        /*******************************************/
+
+        Rect Min_Rect = Network.CalcBBox(N, i,img, mydata, thresh);
+
+        bboxes.push_back(Min_Rect); // save all bounding boxes
+
+        /*******************************************************/
+        //      Image Re-Classification with Attention         //
+        // Foveated Image + Forward + Predict new class labels //
+        /*******************************************************/
+
+        // Foveate images
+        resize(img,img, Size(size_map,size_map));
+        int m = floor(4*img.size().height);
+        int n = floor(4*img.size().width);
+
+        img.convertTo(img, CV_64F);
+
+        // Compute kernels
+        std::vector<Mat> kernels = createFilterPyr(m, n, levels, sigma);
+
+        // Construct Pyramid
+        LaplacianBlending pyramid(img,levels, kernels);
 
 
-    /*******************************************/
-    //  Weakly Supervised Object Localisation  //
-    // Saliency Map + Segmentation Mask + BBox //
-    /*******************************************/
-
-    std::vector<Rect> bboxes = Network.CalcBBox(N,img, mydata, thresh);
-
-    string input = "";
-    cout << "Do you want to visualize the bounding boxes? [y/n] \n>";
-    getline(cin, input);
-
-    if (input == "y"){
-        Mat copy_img;
-        img.copyTo(copy_img);
-
-        // Visualize bounding boxes on input image
-        Network.VisualizeBBox(bboxes, N, copy_img, size_map);
-
-    }
-
-
-    /*******************************************************/
-    //      Image Re-Classification with Attention         //
-    // Foveated Image + Forward + Predict new class labels //
-    /*******************************************************/
-
-
-    // Foveate images
-    resize(img,img, Size(size_map,size_map));
-    int m = floor(4*img.size().height);
-    int n = floor(4*img.size().width);
-
-    img.convertTo(img, CV_64F);
-
-    // Compute kernels
-    std::vector<Mat> kernels = createFilterPyr(m, n, levels, sigma);
-
-    // Construct Pyramid
-    LaplacianBlending pyramid(img,levels, kernels);
-
-
-    // Find Bounding Box Centroid
-    for (int k=0; k<N; ++k){
+        // Find Bounding Box Centroid
+        //for (int k=0; k<N; ++k){
 
 
         cv::Mat center(2,1,CV_32S);
-        center.at<int>(0,0) = bboxes[k].y + bboxes[k].height/2;
-        center.at<int>(1,0) = bboxes[k].x + bboxes[k].width/2;
+        center.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
+        center.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
 
-        cout<<"Rectangle " <<k<< " Centroid position is at: " << center.at<int>(1,0) << " " << center.at<int>(0,0) << endl;
+        //cout<<"Rectangle " <<k<< " Centroid position is at: " << center.at<int>(1,0) << " " << center.at<int>(0,0) << endl;
 
 
         // Foveate
         cv::Mat foveated_image = pyramid.foveate(center);
 
-//        foveated_image.convertTo(foveated_image,CV_8UC3);
-//        cv::resize(foveated_image,foveated_image,Size(size_map,size_map));
-//        imshow("Foveada", foveated_image);
-//        waitKey(0);
+        foveated_image.convertTo(foveated_image,CV_8UC3);
+        cv::resize(foveated_image,foveated_image,Size(size_map,size_map));
+        imshow("Foveada", foveated_image);
+        waitKey(0);
+
+        // Forward
+
+        // Predict New top 5 of each predicted class
+        mydata = Network.Classify(foveated_image, N);
+
 
 
     }
 
+    cout << "Top 25: " << rank_labels << endl;
 
-
-
-    // Forward
-
-    // Predict top 5 of each predicted class
-    //mydata = Network.Classify(img);
-
-    //cout << "Look Twice: \n" << mydata << endl;*/
 
 
 
@@ -154,10 +146,27 @@ int main(int argc, char** argv){
 //               Rank Top 5 final solution               //
 //      From 25 predicted labels, find highest 5         //
 /*********************************************************/
-// We have 25 predicted labels
+
+
+
 
 
 
 
 
 }
+
+
+
+//    string input = "";
+//    cout << "Do you want to visualize the bounding boxes? [y/n] \n>";
+//    getline(cin, input);
+
+//    if (input == "y"){
+//        Mat copy_img;
+//        //img.copyTo(copy_img);
+
+//        // Visualize bounding boxes on input image
+//        Network.VisualizeBBox(bboxes, N, img, size_map);
+
+//    }

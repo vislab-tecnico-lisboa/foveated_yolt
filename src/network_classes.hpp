@@ -62,6 +62,7 @@ public:
 };
 
 
+
 /*****************************************/
 
 class Network{
@@ -71,7 +72,7 @@ public:
 
     // Return Top 5 prediction of image in mydata
     ClassData Classify(const cv::Mat& img, int N);
-    std::vector<Rect> CalcBBox(int N, const cv::Mat &img, ClassData mydata, float thresh); // NEW
+    Rect CalcBBox(int N, int i, const cv::Mat &img, ClassData mydata, float thresh); // NEW
     void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map);
 
     float* Limit_values(float* bottom_data); // NEW
@@ -336,77 +337,77 @@ Mat CalcRGBmax(Mat i_RGB) {
 /************************************************************************/
 // Function CalcBBox
 /************************************************************************/
-std::vector<Rect> Network::CalcBBox(int N, const cv::Mat& img, ClassData mydata, float thresh ){
+Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float thresh ){
 
-    std::vector<Rect> bboxes;
+    //std::vector<Rect> bboxes;
 
     // For each predicted class (top 5)
-    for (int i = 0; i < N; ++i) {
+    //for (int i = 0; i < N; ++i) {
 
-        /*********************************************************/
-        //                  Get Saliency Map                     //
-        //              Backward and normalize                   //
-        /*********************************************************/
+    /*********************************************************/
+    //                  Get Saliency Map                     //
+    //              Backward and normalize                   //
+    /*********************************************************/
 
-        int label_index = mydata.index[i];  // tem o indice da classe
+    int label_index = mydata.index[i];  // tem o indice da classe
 
-        // Dados do 1 forward
-        Blob<float>* forward_output_layer = net->output_blobs()[0];
-        float* fc8Data = forward_output_layer->mutable_cpu_data();
-        float* fc8Diff = forward_output_layer->mutable_cpu_diff();
+    // Dados do 1 forward
+    Blob<float>* forward_output_layer = net->output_blobs()[0];
+    float* fc8Data = forward_output_layer->mutable_cpu_data();
+    float* fc8Diff = forward_output_layer->mutable_cpu_diff();
 
-        // Backward of a specific class
-        for (int i = 0;  i< forward_output_layer->num() * forward_output_layer->channels() * forward_output_layer->height() * forward_output_layer->width(); ++i)
-            fc8Diff[i] = 0.0f;
+    // Backward of a specific class
+    for (int i = 0;  i< forward_output_layer->num() * forward_output_layer->channels() * forward_output_layer->height() * forward_output_layer->width(); ++i)
+        fc8Diff[i] = 0.0f;
 
-        fc8Diff[label_index] = 1.0f; // Specific class
+    fc8Diff[label_index] = 1.0f; // Specific class
 
-        // Backward
-        net->Backward();
+    // Backward
+    net->Backward();
 
-        // Get Data
-        boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");  // get data from Data layer
-        int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
+    // Get Data
+    boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");  // get data from Data layer
+    int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
-        const float* begin_diff = out_data_layer->mutable_cpu_diff();
+    const float* begin_diff = out_data_layer->mutable_cpu_diff();
 
-        Mat M2 = Mat(out_data_layer->height(),out_data_layer->width(),CV_32FC3);
+    Mat M2 = Mat(out_data_layer->height(),out_data_layer->width(),CV_32FC3);
 
-        for (int i=0; i<out_data_layer->height(); ++i){
-            for(int j=0; j< out_data_layer->width(); ++j){
-                for (int c=0; c<3; ++c){
+    for (int i=0; i<out_data_layer->height(); ++i){
+        for(int j=0; j< out_data_layer->width(); ++j){
+            for (int c=0; c<3; ++c){
 
-                    int index =  j + i*out_data_layer->width() + c*out_data_layer->width()*out_data_layer->height();
-                    M2.at<Vec3f>(i,j)[c] = begin_diff[index];
-                }
+                int index =  j + i*out_data_layer->width() + c*out_data_layer->width()*out_data_layer->height();
+                M2.at<Vec3f>(i,j)[c] = begin_diff[index];
             }
         }
-
-        cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
-
-        // Find max across RGB channels
-        Mat saliency_map = CalcRGBmax(M2);
-
-
-        /*********************************************************/
-        //                  Segmentation Mask                    //
-        //       Set pixels > threshold to 1 and define box      //
-        /*********************************************************/
-
-        Mat foreground_mask;
-        threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
-
-        foreground_mask.convertTo(foreground_mask,CV_8UC1);
-
-        Mat Points;
-        findNonZero(foreground_mask,Points);
-        Rect Min_Rect = boundingRect(Points);
-
-        bboxes.push_back(Min_Rect);
-
     }
 
-    return bboxes;
+    cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
+
+    // Find max across RGB channels
+    Mat saliency_map = CalcRGBmax(M2);
+
+
+    /*********************************************************/
+    //                  Segmentation Mask                    //
+    //       Set pixels > threshold to 1 and define box      //
+    /*********************************************************/
+
+    Mat foreground_mask;
+    threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
+
+    foreground_mask.convertTo(foreground_mask,CV_8UC1);
+
+    Mat Points;
+    findNonZero(foreground_mask,Points);
+    Rect Min_Rect = boundingRect(Points);
+
+    //bboxes.push_back(Min_Rect);
+
+    //}
+
+    return Min_Rect;
 
 }
 

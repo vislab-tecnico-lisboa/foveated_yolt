@@ -71,7 +71,7 @@ public:
 
     // Return Top 5 prediction of image in mydata
     ClassData Classify(const cv::Mat& img, int N = 5);
-    void BackwardPass(int N, const cv::Mat &img, ClassData mydata); // NEW
+    std::vector<Rect> BackwardPass(int N, const cv::Mat &img, ClassData mydata); // NEW
     float* Limit_values(float* bottom_data); // NEW
     float find_max(Mat gradient_values);
 
@@ -310,18 +310,42 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
             << "Input channels are not wrapping the input layer of the network.";
 }
 
+
+
+/************************************************************************/
+// Function CalcRGBmax
+// Get the highest value of R,G,B for each pixel
+/************************************************************************/
+
+Mat CalcRGBmax(Mat i_RGB) {
+
+    std::vector<cv::Mat> planes(3);
+
+    cv::split(i_RGB, planes);
+
+   // cout << max(planes[2], cv::max(planes[1], planes[0])) << endl;
+
+    Mat maxRGB = max(planes[2], cv::max(planes[1], planes[0]));
+
+    return maxRGB;
+}
+
+
+
+
+
 /************************************************************************/
 // Function BackwardPass
 /************************************************************************/
-void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
+std::vector<Rect> Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
 
     //std::vector<int> caffeLabel (1000);
     //std::fill(caffeLabel.begin(), caffeLabel.end(), 0); // vector of zeros
 
     cout << "Estou no backward\n" << endl;
-
+    std::vector<Rect> bboxes;
     // For each predicted class (top 5)
-    for (int i = 0; i < 1; ++i) {           //N
+    for (int i = 0; i < N; ++i) {           //N
 
 
         /*********************************************************/
@@ -350,43 +374,36 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
         int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
         const float* begin_diff = out_data_layer->mutable_cpu_diff();
-        const float* end_diff = begin_diff + dim;
-        std::vector<float> dataDiff(begin_diff,end_diff);
+        //const float* end_diff = begin_diff + dim;
+        //std::vector<float> dataDiff(begin_diff,end_diff);
 
-//        for(int j=0; j<dataDiff.size(); ++j)
-//            cout << "Resultado " << dataDiff[j] << endl;   // dataDiff tem o gradiente!!
+        //Mat M2=Mat(out_data_layer->height(),out_data_layer->width(),CV_32FC3,(float*)begin_diff);
 
-        cout << "Heigh: " << out_data_layer->height() << " Width: " << out_data_layer->width() << endl;
-        cout << "Size: " << dataDiff.size() << endl;
+        Mat M2 = Mat(out_data_layer->height(),out_data_layer->width(),CV_32FC3);
 
+        for (int i=0; i<out_data_layer->height(); ++i){
+            for(int j=0; j< out_data_layer->width(); ++j){
+                for (int c=0; c<3; ++c){
+                    //int index = c + j*3 + i*3*out_data_layer->width();
 
-//        // Normalize
-//        float smallest = dataDiff[0];
-//        float largest = dataDiff[0];
-//        for(int i=0; i<dataDiff.size(); ++i){
-//            if (dataDiff[i]<smallest){
-//                smallest=dataDiff[i];
-//            }
-//            if (dataDiff[i]>largest){
-//                largest=dataDiff[i];
-//            }
-//        }
-//        cout << "mais pequeno: " << smallest << " maior: " << largest << endl;
-//        for (int i = 0; i<dataDiff.size(); ++i){
-//            dataDiff[i] -= smallest;
-//            dataDiff[i] /= largest;
-//        }
+                    int index =  j + i*out_data_layer->width() + c*out_data_layer->width()*out_data_layer->height();
+                    M2.at<Vec3f>(i,j)[c] = begin_diff[index];
+                }
+            }
+        }
 
+        cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
 
-        // Normalize
-        cv::normalize(dataDiff, dataDiff, 0, 1, NORM_MINMAX);
+        cout << M2.size() << endl;
 
         ofstream myfile ("datadiff_norm.txt");
         if (myfile.is_open()){
-            for(int j=0; j<dataDiff.size(); ++j)
-                myfile << dataDiff[j] << "\n";
+            //for(int j=0; j<dataDiff.size(); ++j)
+            myfile << M2 << "\n";
         }
 
+
+        Mat result = CalcRGBmax(M2);
 
 
         /*********************************************************/
@@ -394,8 +411,26 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
         //       Pick pixels > threshold and define box          //
         /*********************************************************/
 
+        //cv2.threshold(result,127,255,cv2.THRESH_TRUNC)
+        Mat foreground_mask;
+        threshold(result, foreground_mask, 0.75, 1, THRESH_BINARY);
 
 
+
+        foreground_mask.convertTo(foreground_mask,CV_8UC1);
+
+        Mat Points;
+        findNonZero(foreground_mask,Points);
+        Rect Min_Rect=boundingRect(Points);
+
+
+
+
+        bboxes.push_back(Min_Rect);
+
+    }
+
+    return bboxes;
 
         /*********************************************************/
         //                     Foveate Images                    //
@@ -421,7 +456,7 @@ void Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
     // We have 25 predicted labels
 
 
-    }
+
 
 }
 

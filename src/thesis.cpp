@@ -16,10 +16,6 @@
 #include <math.h>
 #include <limits>
 
-
-
-
-
 #include "network_classes.hpp"
 
 //#include <boost/shared_ptr.hpp>
@@ -70,22 +66,29 @@ int main(int argc, char** argv){
     cout << "\n------- Prediction for " << file << " ------\n" << endl;
 
 
-
     cv::Mat img = cv::imread(file, 1);		 // Read image
-    //imshow("image", img);
-    //waitKey(1000);
 
-    static int N = 5;
+    static int N = atoi(argv[9]);
     ClassData mydata(N);
 
     // Predict top 5
-    mydata = Network.Classify(img);
+    mydata = Network.Classify(img,N);
 
 
     /***************************************/
     // Weakly Supervised Object Localisation
     /***************************************/
 
-    Network.BackwardPass(N,img, mydata);
+    std::vector<Rect> bboxes = Network.BackwardPass(N,img, mydata);
+
+    resize(img, img, Size(227,227) );
+
+    for (int k =0; k< 5; ++k)
+        rectangle(img, bboxes[k], Scalar(0, 0, 255), 1, 8, 0 );
+
+
+    imshow("box", img );
+    waitKey(0);
+
 
 }

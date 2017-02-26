@@ -1,15 +1,25 @@
 # Foveated-YOLT
 You Only Look Twice - Foveated version
 
-Para executar thesis.cpp:
-
-./yolt /home/filipa/Documents/Foveated_YOLT/files/ deploy_caffenet.prototxt bvlc_caffenet.caffemodel imagenet_mean.binaryproto val.txt
+The pre-trained models used to test our method are CaffeNet, AlexNet, GoogLeNet and VGGNet (16 weight layers).
 
 
+Donwload files and from root, create a build directory (mkdir build).
+
+Execute from root
+bash scripts/setup.sh to directly download the pre-trained models.
+
+To compile from root: 
+cd build
+cmake ..
+make
 
 
-Objectivo para a tese: 
-  - Converter código de Python para C++
-  - Comparar os erros de classificação e localização entre o dataset dado e o dataset com blur uniforme
-  - Converter imagens to dataset de coordenadas cartesianas para coordenadas polares
-  - Testar vários raios de fovea para testar a influência da resolução nas tarefas
+To run thesis.cpp from root:
+bash scripts/run_detector.sh
+
+
+To configurate your network and its parameters, change accordingly the run_detector.sh file.
+
+
+

@@ -24,6 +24,17 @@ PAUSE_VAL=1
 # Choose number of top prediction that you want
 TOP=5
 
+# Choose segmentation threshold
+THRESHOLD=0.75
+
+# Size of the images received by the network
+SIZE_MAP=227
+
+# Define number of kernel levels
+LEVELS=5
+
+# Define size of the fovea
+SIGMA=25
 
 # change this path to the absolute location of the network related files
 FILES_FOLDER_ABSOLUTE_PATH=$PWD"/files/"
@@ -36,6 +47,6 @@ DATASET="files/"
 
 
 # /home/filipa/Documents/Foveated_YOLT/files/ deploy_caffenet.prototxt bvlc_caffenet.caffemodel imagenet_mean.binaryproto val.txt
-build/yolt $FILES_FOLDER_ABSOLUTE_PATH $MODEL_FILE $WEIGHTS_FILE $MEAN_FILE $LABELS_FILE $SET_MODE $GPU_ID $DATASET $TOP
+build/yolt $FILES_FOLDER_ABSOLUTE_PATH $MODEL_FILE $WEIGHTS_FILE $MEAN_FILE $LABELS_FILE $SET_MODE $GPU_ID $DATASET $TOP $THRESHOLD $SIZE_MAP $LEVELS $SIGMA
 
 #$GPU_ID

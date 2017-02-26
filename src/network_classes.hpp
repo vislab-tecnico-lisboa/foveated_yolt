@@ -70,8 +70,10 @@ public:
             const string& mean_file,  const string& label_file); //construtor
 
     // Return Top 5 prediction of image in mydata
-    ClassData Classify(const cv::Mat& img, int N = 5);
-    std::vector<Rect> BackwardPass(int N, const cv::Mat &img, ClassData mydata); // NEW
+    ClassData Classify(const cv::Mat& img, int N);
+    std::vector<Rect> CalcBBox(int N, const cv::Mat &img, ClassData mydata, float thresh); // NEW
+    void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map);
+
     float* Limit_values(float* bottom_data); // NEW
     float find_max(Mat gradient_values);
 
@@ -83,6 +85,7 @@ private:
 
     int num_channels;
     shared_ptr<Net<float> > net;
+
 
     cv::Mat mean_;
     std::vector<string> labels;
@@ -323,8 +326,6 @@ Mat CalcRGBmax(Mat i_RGB) {
 
     cv::split(i_RGB, planes);
 
-   // cout << max(planes[2], cv::max(planes[1], planes[0])) << endl;
-
     Mat maxRGB = max(planes[2], cv::max(planes[1], planes[0]));
 
     return maxRGB;
@@ -332,21 +333,15 @@ Mat CalcRGBmax(Mat i_RGB) {
 
 
 
-
-
 /************************************************************************/
-// Function BackwardPass
+// Function CalcBBox
 /************************************************************************/
-std::vector<Rect> Network::BackwardPass(int N,const cv::Mat& img, ClassData mydata){
+std::vector<Rect> Network::CalcBBox(int N, const cv::Mat& img, ClassData mydata, float thresh ){
 
-    //std::vector<int> caffeLabel (1000);
-    //std::fill(caffeLabel.begin(), caffeLabel.end(), 0); // vector of zeros
-
-    cout << "Estou no backward\n" << endl;
     std::vector<Rect> bboxes;
-    // For each predicted class (top 5)
-    for (int i = 0; i < N; ++i) {           //N
 
+    // For each predicted class (top 5)
+    for (int i = 0; i < N; ++i) {
 
         /*********************************************************/
         //                  Get Saliency Map                     //
@@ -374,17 +369,12 @@ std::vector<Rect> Network::BackwardPass(int N,const cv::Mat& img, ClassData myda
         int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
         const float* begin_diff = out_data_layer->mutable_cpu_diff();
-        //const float* end_diff = begin_diff + dim;
-        //std::vector<float> dataDiff(begin_diff,end_diff);
-
-        //Mat M2=Mat(out_data_layer->height(),out_data_layer->width(),CV_32FC3,(float*)begin_diff);
 
         Mat M2 = Mat(out_data_layer->height(),out_data_layer->width(),CV_32FC3);
 
         for (int i=0; i<out_data_layer->height(); ++i){
             for(int j=0; j< out_data_layer->width(); ++j){
                 for (int c=0; c<3; ++c){
-                    //int index = c + j*3 + i*3*out_data_layer->width();
 
                     int index =  j + i*out_data_layer->width() + c*out_data_layer->width()*out_data_layer->height();
                     M2.at<Vec3f>(i,j)[c] = begin_diff[index];
@@ -394,37 +384,23 @@ std::vector<Rect> Network::BackwardPass(int N,const cv::Mat& img, ClassData myda
 
         cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
 
-        cout << M2.size() << endl;
-
-        ofstream myfile ("datadiff_norm.txt");
-        if (myfile.is_open()){
-            //for(int j=0; j<dataDiff.size(); ++j)
-            myfile << M2 << "\n";
-        }
-
-
-        Mat result = CalcRGBmax(M2);
+        // Find max across RGB channels
+        Mat saliency_map = CalcRGBmax(M2);
 
 
         /*********************************************************/
         //                  Segmentation Mask                    //
-        //       Pick pixels > threshold and define box          //
+        //       Set pixels > threshold to 1 and define box      //
         /*********************************************************/
 
-        //cv2.threshold(result,127,255,cv2.THRESH_TRUNC)
         Mat foreground_mask;
-        threshold(result, foreground_mask, 0.75, 1, THRESH_BINARY);
-
-
+        threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
 
         foreground_mask.convertTo(foreground_mask,CV_8UC1);
 
         Mat Points;
         findNonZero(foreground_mask,Points);
-        Rect Min_Rect=boundingRect(Points);
-
-
-
+        Rect Min_Rect = boundingRect(Points);
 
         bboxes.push_back(Min_Rect);
 
@@ -432,33 +408,34 @@ std::vector<Rect> Network::BackwardPass(int N,const cv::Mat& img, ClassData myda
 
     return bboxes;
 
-        /*********************************************************/
-        //                     Foveate Images                    //
-        //         Give center of bbox and foveate image         //
-        /*********************************************************/
-
-
-
-
-        // Forward
-
-        // Predict top 5 of each predicted class
-        //mydata = Network.Classify(img);
-
-        //cout << "Look Twice: \n" << mydata << endl;*/
-
-
-
-    /*********************************************************/
-    //               Rank Top 5 final solution               //
-    //      From 25 predicted labels, find highest 5         //
-    /*********************************************************/
-    // We have 25 predicted labels
-
-
-
-
 }
+
+
+/************************************************************************/
+// Function VisualiseBbox
+/************************************************************************/
+
+void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int size_map){
+
+    // Transformation from (227*227) to (height*width) of input image
+    for (int k =0; k< N; ++k){
+
+        bboxes[k].x =  bboxes[k].x*img.size().width / size_map;
+        bboxes[k].y =  bboxes[k].y*img.size().height / size_map;
+        bboxes[k].width = bboxes[k].width*img.size().width / size_map;
+        bboxes[k].height = bboxes[k].height*img.size().height / size_map;
+    }
+
+    for (int k =0; k< N; ++k)
+
+        rectangle(img, bboxes[k], Scalar(0, 0, 255), 1, 8, 0 );
+
+    imshow("box", img );
+    waitKey(0);
+}
+
+
+
 
 
 

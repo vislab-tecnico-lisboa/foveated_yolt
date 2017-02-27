@@ -10,6 +10,9 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <sys/types.h>
+#include <dirent.h>
+#include <errno.h>
 #include <vector>
 #include <memory>
 #include <math.h>
@@ -62,7 +65,6 @@ public:
 };
 
 
-
 /*****************************************/
 
 class Network{
@@ -74,6 +76,7 @@ public:
     ClassData Classify(const cv::Mat& img, int N);
     Rect CalcBBox(int N, int i, const cv::Mat &img, ClassData mydata, float thresh); // NEW
     void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map);
+    std::vector<string> GetDir(string dir, vector<string> &files);
 
     float* Limit_values(float* bottom_data); // NEW
     float find_max(Mat gradient_values);
@@ -410,6 +413,30 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
     return Min_Rect;
 
 }
+
+/************************************************************************/
+// Function GetDir                                                      //
+// Get list of image files on given directory                           //
+/************************************************************************/
+
+std::vector<string> Network::GetDir(string dir, vector<string> &files) {
+    DIR *dp;
+    struct dirent *dirp;
+    if((dp  = opendir(dir.c_str())) == NULL) {
+        cout << "Error(" << errno << ") opening " << dir << endl;
+    }
+
+    while ((dirp = readdir(dp)) != NULL) {
+        files.push_back(string(dirp->d_name));
+    }
+
+    closedir(dp);
+
+    return files;
+}
+
+
+
 
 
 /************************************************************************/

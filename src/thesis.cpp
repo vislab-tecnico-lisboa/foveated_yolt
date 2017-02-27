@@ -15,6 +15,7 @@
 #include <memory>
 #include <math.h>
 #include <limits>
+#include <boost/algorithm/string.hpp>
 
 #include "network_classes.hpp"
 #include "laplacian_foveation.hpp"
@@ -26,6 +27,8 @@ using std::string;
 
 /* Pair (label, confidence) representing a prediction. */
 typedef std::pair<string, float> Prediction;
+
+
 
 /*****************************************/
 //		MAIN
@@ -41,13 +44,14 @@ int main(int argc, char** argv){
     const string weight_file = absolute_path_folder + string(argv[3]);
     const string mean_file = absolute_path_folder + string(argv[4]);
     const string label_file = absolute_path_folder + string(argv[5]);
+
     static int N = atoi(argv[9]);          // define number of top predicted labels
     static float thresh = atof(argv[10]);  // segmentation threshold for mask
     static int size_map = atoi(argv[11]);  // Size of the network input images (227,227)
     static int levels = atoi(argv[12]);    // Number of kernel levels
     int sigma = atoi(argv[13]);            // Size of the fovea
+    const string ground_truth_labels = absolute_path_folder + string(argv[14]);  // file with ground truth labels used to classification error
 
-    cv::Mat rank_labels;
 
     // Set mode
     if (strcmp(argv[6], "CPU") == 0){
@@ -63,98 +67,176 @@ int main(int argc, char** argv){
     // Load network, pre-processment, set mean and load labels
     Network Network(model_file, weight_file, mean_file, label_file);
 
-    string file = string(argv[8]) + "ILSVRC2012_val_00000003.JPEG";            // load image
-    //string file = string(argv[8]) + "resize_000010.jpg";
-    cout << "\n------- Prediction for " << file << " ------\n" << endl;
+
+    /**********************************************************************/
+    //                  LOAD LIST OF IMAGES OF DIRECTORY                  //
+    /**********************************************************************/
+    string dir = string(argv[8]);              // directory with validation set
+    cout << "dir " << dir << endl;
+    vector<string> files ;
+
+    files = Network.GetDir (dir, files);
+    glob(dir, files);
+
+    // FOR EACH IMAGE OF THE DATASET
+    for (unsigned int input = 0;input < files.size(); ++input){
+
+        string file = files[input];
+
+        cv::Mat img = cv::imread(file, 1);		 // Read image
+
+        ClassData mydata(N);
 
 
-    cv::Mat img = cv::imread(file, 1);		 // Read image
+        // Predict top 5
+        mydata = Network.Classify(img, N);
 
-    ClassData mydata(N);
+        std::vector<Rect> bboxes;
+        std::vector<string> new_labels;
+        std::vector<float> new_scores;
 
+        // For each predicted class label:
+        for (int i = 0; i < N; ++i) {
 
-    // Predict top 5
-    mydata = Network.Classify(img, N);
+            /*******************************************/
+            //  Weakly Supervised Object Localization  //
+            // Saliency Map + Segmentation Mask + BBox //
+            /*******************************************/
 
-    std::vector<Rect> bboxes;
+            Rect Min_Rect = Network.CalcBBox(N, i,img, mydata, thresh);
 
-    // For each predicted class label:
-    for (int i = 0; i < N; ++i) {
+            bboxes.push_back(Min_Rect); // save all bounding boxes
 
-        /*******************************************/
-        //  Weakly Supervised Object Localization  //
-        // Saliency Map + Segmentation Mask + BBox //
-        /*******************************************/
+            /*******************************************************/
+            //      Image Re-Classification with Attention         //
+            // Foveated Image + Forward + Predict new class labels //
+            /*******************************************************/
 
-        Rect Min_Rect = Network.CalcBBox(N, i,img, mydata, thresh);
+            // Foveate images
+            resize(img,img, Size(size_map,size_map));
+            int m = floor(4*img.size().height);
+            int n = floor(4*img.size().width);
 
-        bboxes.push_back(Min_Rect); // save all bounding boxes
+            img.convertTo(img, CV_64F);
 
-        /*******************************************************/
-        //      Image Re-Classification with Attention         //
-        // Foveated Image + Forward + Predict new class labels //
-        /*******************************************************/
+            // Compute kernels
+            std::vector<Mat> kernels = createFilterPyr(m, n, levels, sigma);
 
-        // Foveate images
-        resize(img,img, Size(size_map,size_map));
-        int m = floor(4*img.size().height);
-        int n = floor(4*img.size().width);
-
-        img.convertTo(img, CV_64F);
-
-        // Compute kernels
-        std::vector<Mat> kernels = createFilterPyr(m, n, levels, sigma);
-
-        // Construct Pyramid
-        LaplacianBlending pyramid(img,levels, kernels);
+            // Construct Pyramid
+            LaplacianBlending pyramid(img,levels, kernels);
 
 
-        // Find Bounding Box Centroid
-        //for (int k=0; k<N; ++k){
+            // Find Bounding Box Centroid
+            //for (int k=0; k<N; ++k){
 
 
-        cv::Mat center(2,1,CV_32S);
-        center.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
-        center.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
+            cv::Mat center(2,1,CV_32S);
+            center.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
+            center.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
 
-        //cout<<"Rectangle " <<k<< " Centroid position is at: " << center.at<int>(1,0) << " " << center.at<int>(0,0) << endl;
+            //cout<<"Rectangle " <<k<< " Centroid position is at: " << center.at<int>(1,0) << " " << center.at<int>(0,0) << endl;
 
 
-        // Foveate
-        cv::Mat foveated_image = pyramid.foveate(center);
+            // Foveate
+            cv::Mat foveated_image = pyramid.foveate(center);
 
-        foveated_image.convertTo(foveated_image,CV_8UC3);
-        cv::resize(foveated_image,foveated_image,Size(size_map,size_map));
-        imshow("Foveada", foveated_image);
-        waitKey(0);
+            foveated_image.convertTo(foveated_image,CV_8UC3);
+            cv::resize(foveated_image,foveated_image,Size(size_map,size_map));
+            imshow("Foveada", foveated_image);
+            waitKey(0);
 
-        // Forward
+            // Forward
 
-        // Predict New top 5 of each predicted class
-        mydata = Network.Classify(foveated_image, N);
+            // Predict New top 5 of each predicted class
+            mydata = Network.Classify(foveated_image, N);
 
+
+
+            for(int m=0; m<N; ++m){
+
+                new_labels.push_back(mydata.label[m]);
+                new_scores.push_back(mydata.score[m]);
+            }
+
+
+        }
+
+        /*********************************************************/
+        //               Rank Top 5 final solution               //
+        //      From 25 predicted labels, find highest 5         //
+        /*********************************************************/
+
+        //for (int k=0; k<new_labels.size(); ++k)
+        //    cout << "New Prediction: " << new_labels[k] << "\t\t" << new_scores[k] << endl;
+
+        std::vector<string> top_final_labels;
+        std::vector<float> top_final_scores;
+
+
+        std::vector<int> topN = Argmax(new_scores, N);
+
+        for (int top = 0; top <N; ++top){
+            int idx = topN[top];
+
+            top_final_labels.push_back(new_labels[idx]);
+            top_final_scores.push_back(new_scores[idx]);
+        }
+
+        cout << "Final Solution:\n " << endl;
+        for (int top = 0; top <N; ++top)
+            cout << "Score: " << top_final_scores[top]  << "\t Label: " << top_final_labels[top] << endl;
+
+
+
+    /*********************************************************/
+    //             COMPUTE CLASSIFICATION ERROR              //
+    /*********************************************************/
+
+//    ofstream myfile;
+//    myfile.open (ground_truth_labels);
+
+//    string line2;
+//    int line_number;
+//    int counter_top1 = 50000;
+//    int counter_top5 = 50000;
+
+
+
+//    cout << "linha: " << line << endl;
+
+//    if (line == top_final_labels[0]){
+//        cout << "Acertei a 1" << endl;
+//        counter_top1-=1;
+
+//    }
 
 
     }
-
-    cout << "Top 25: " << rank_labels << endl;
-
-
-
-
-/*********************************************************/
-//               Rank Top 5 final solution               //
-//      From 25 predicted labels, find highest 5         //
-/*********************************************************/
-
-
-
-
 
 
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

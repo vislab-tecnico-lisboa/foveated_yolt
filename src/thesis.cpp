@@ -50,7 +50,7 @@ int main(int argc, char** argv){
     static int size_map = atoi(argv[11]);  // Size of the network input images (227,227)
     static int levels = atoi(argv[12]);    // Number of kernel levels
     int sigma = atoi(argv[13]);            // Size of the fovea
-    const string ground_truth_labels = absolute_path_folder + string(argv[14]);  // file with ground truth labels used to classification error
+    const string ground_truth_labels = string(argv[14]);  // file with ground truth labels used to classification error
 
 
     // Set mode
@@ -78,6 +78,19 @@ int main(int argc, char** argv){
     files = Network.GetDir (dir, files);
     glob(dir, files);
 
+//    cout << "file " << ground_truth_labels << endl;
+
+    // File with ground truth labels
+    ifstream ground_truth_file;
+    ground_truth_file.open("/home/filipa/PycharmProjects/C++/Foveated-YOLT/files/ground_truth_labels_ilsvrc12.txt");
+    string ground_class;
+
+    int counter_top1_yolo = files.size();
+    int counter_top5_yolo = files.size();
+    int counter_top1_yolt = files.size();
+    int counter_top5_yolt = files.size();
+
+
     // FOR EACH IMAGE OF THE DATASET
     for (unsigned int input = 0;input < files.size(); ++input){
 
@@ -90,6 +103,21 @@ int main(int argc, char** argv){
 
         // Predict top 5
         mydata = Network.Classify(img, N);
+
+
+        getline(ground_truth_file,ground_class);
+//        cout << "ground label " << ground_class << endl;
+
+        if (strstr(mydata.label[0].c_str(), ground_class.c_str())){
+            counter_top1_yolo-=1; // acertou a primeira na class
+        }
+        for (int k=0; k<N; ++k){
+            if (strstr(mydata.label[k].c_str(), ground_class.c_str()))
+                counter_top5_yolo-=1; // class verdadeira esta no top
+        }
+
+
+//        cout << "top1 " << counter_top1_yolo << " top5 " << counter_top5_yolo << endl;
 
         std::vector<Rect> bboxes;
         std::vector<string> new_labels;
@@ -140,10 +168,10 @@ int main(int argc, char** argv){
             // Foveate
             cv::Mat foveated_image = pyramid.foveate(center);
 
-            foveated_image.convertTo(foveated_image,CV_8UC3);
-            cv::resize(foveated_image,foveated_image,Size(size_map,size_map));
-            imshow("Foveada", foveated_image);
-            waitKey(0);
+//            foveated_image.convertTo(foveated_image,CV_8UC3);
+//            cv::resize(foveated_image,foveated_image,Size(size_map,size_map));
+//            imshow("Foveada", foveated_image);
+//            waitKey(0);
 
             // Forward
 
@@ -182,39 +210,46 @@ int main(int argc, char** argv){
             top_final_scores.push_back(new_scores[idx]);
         }
 
-        cout << "Final Solution:\n " << endl;
-        for (int top = 0; top <N; ++top)
-            cout << "Score: " << top_final_scores[top]  << "\t Label: " << top_final_labels[top] << endl;
+//        cout << "Final Solution:\n " << endl;
+//        for (int top = 0; top <N; ++top)
+//            cout << "Score: " << top_final_scores[top]  << "\t Label: " << top_final_labels[top] << endl;
 
+
+
+        if (strstr(top_final_labels[0].c_str(), ground_class.c_str())){
+            counter_top1_yolt-=1; // acertou a primeira na class
+        }
+        for (int k=0; k<N; ++k){
+            if (strstr(top_final_labels[k].c_str(), ground_class.c_str()))
+                counter_top5_yolt-=1; // class verdadeira esta no top
+                break;
+        }
+
+
+//        cout << "top1 " << counter_top1_yolt << " top5 " << counter_top5_yolt << endl;
 
 
     /*********************************************************/
     //             COMPUTE CLASSIFICATION ERROR              //
     /*********************************************************/
 
-//    ofstream myfile;
-//    myfile.open (ground_truth_labels);
 
-//    string line2;
-//    int line_number;
-//    int counter_top1 = 50000;
-//    int counter_top5 = 50000;
-
-
-
-//    cout << "linha: " << line << endl;
-
-//    if (line == top_final_labels[0]){
-//        cout << "Acertei a 1" << endl;
-//        counter_top1-=1;
-
-//    }
 
 
     }
 
 
+    ground_truth_file.close();
 
+
+    // Write data to output file
+    ofstream output_file;
+    output_file.open ("final_results.txt",ios::app);  //appending the content to the current content of the file.
+    output_file << std::fixed << std::setprecision(4) ;
+    output_file << "Sigma: " << sigma << " Thres: " << thresh << " Top1: " << double(counter_top1_yolo)/double(files.size());
+    output_file << " Top5 " << double(counter_top5_yolo)/double(files.size());
+    output_file <<" Top1: " << double(counter_top1_yolt)/double(files.size()) << " Top5 " << double(counter_top5_yolt)/double(files.size()) << endl;
+    output_file.close();
 
 }
 

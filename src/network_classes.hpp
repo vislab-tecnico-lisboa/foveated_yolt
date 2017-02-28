@@ -215,7 +215,7 @@ ClassData Network::Classify(const cv::Mat& img, int N) {
         mydata.label[i] = labels[idx];
         mydata.score[i] = output[idx];
     }
-    cout << mydata << endl;  // imprime os dados do top 5
+//    cout << mydata << endl;  // imprime os dados do top 5
 
     return mydata;
 }

@@ -16,9 +16,11 @@
 #include <math.h>
 #include <limits>
 #include <boost/algorithm/string.hpp>
+#include </home/filipa/Downloads/mxml-release-2.10/mxml.h>
 
 #include "network_classes.hpp"
 #include "laplacian_foveation.hpp"
+
 
 using namespace caffe;
 using namespace std;
@@ -78,7 +80,6 @@ int main(int argc, char** argv){
     files = Network.GetDir (dir, files);
     glob(dir, files);
 
-//    cout << "file " << ground_truth_labels << endl;
 
     // File with ground truth labels
     ifstream ground_truth_file;
@@ -105,8 +106,9 @@ int main(int argc, char** argv){
         mydata = Network.Classify(img, N);
 
 
+        // Check if predicted labels = ground truth labels - YOLO
         getline(ground_truth_file,ground_class);
-//        cout << "ground label " << ground_class << endl;
+        cout << "ground label " << ground_class << endl;
 
         if (strstr(mydata.label[0].c_str(), ground_class.c_str())){
             counter_top1_yolo-=1; // acertou a primeira na class
@@ -117,7 +119,7 @@ int main(int argc, char** argv){
         }
 
 
-//        cout << "top1 " << counter_top1_yolo << " top5 " << counter_top5_yolo << endl;
+       // cout << "top1 " << counter_top1_yolo << " top5 " << counter_top5_yolo << endl;
 
         std::vector<Rect> bboxes;
         std::vector<string> new_labels;
@@ -134,6 +136,7 @@ int main(int argc, char** argv){
             Rect Min_Rect = Network.CalcBBox(N, i,img, mydata, thresh);
 
             bboxes.push_back(Min_Rect); // save all bounding boxes
+
 
             /*******************************************************/
             //      Image Re-Classification with Attention         //
@@ -162,14 +165,14 @@ int main(int argc, char** argv){
             center.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
             center.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
 
-            //cout<<"Rectangle " <<k<< " Centroid position is at: " << center.at<int>(1,0) << " " << center.at<int>(0,0) << endl;
+            //cout<<"Rectangle " <<i<< " Centroid position is at: " << center.at<int>(1,0) << " " << center.at<int>(0,0) << endl;
 
 
             // Foveate
             cv::Mat foveated_image = pyramid.foveate(center);
 
-//            foveated_image.convertTo(foveated_image,CV_8UC3);
-//            cv::resize(foveated_image,foveated_image,Size(size_map,size_map));
+            foveated_image.convertTo(foveated_image,CV_8UC3);
+            cv::resize(foveated_image,foveated_image,Size(size_map,size_map));
 //            imshow("Foveada", foveated_image);
 //            waitKey(0);
 
@@ -215,7 +218,7 @@ int main(int argc, char** argv){
 //            cout << "Score: " << top_final_scores[top]  << "\t Label: " << top_final_labels[top] << endl;
 
 
-
+        // Check if predicted labels = ground truth labels - YOLT
         if (strstr(top_final_labels[0].c_str(), ground_class.c_str())){
             counter_top1_yolt-=1; // acertou a primeira na class
         }
@@ -226,29 +229,38 @@ int main(int argc, char** argv){
         }
 
 
-//        cout << "top1 " << counter_top1_yolt << " top5 " << counter_top5_yolt << endl;
+       // cout << "top1 " << counter_top1_yolt << " top5 " << counter_top5_yolt << endl;
 
 
-    /*********************************************************/
-    //             COMPUTE CLASSIFICATION ERROR              //
-    /*********************************************************/
+
+        /***************************************************************/
+        //                  LOCALIZATION ERROR                         //
+        /***************************************************************/
+
+        // tenho 5 bboxes no bboxes; comparar se alguma dessas faz overlap de 50% com as ground truth
+
+
 
 
 
 
     }
 
-
     ground_truth_file.close();
 
+
+
+    /*********************************************************/
+    //           WRITE OUTPUT FILE WITH THE RESULTS          //
+    /*********************************************************/
 
     // Write data to output file
     ofstream output_file;
     output_file.open ("final_results.txt",ios::app);  //appending the content to the current content of the file.
     output_file << std::fixed << std::setprecision(4) ;
-    output_file << "Sigma: " << sigma << " Thres: " << thresh << " Top1: " << double(counter_top1_yolo)/double(files.size());
-    output_file << " Top5 " << double(counter_top5_yolo)/double(files.size());
-    output_file <<" Top1: " << double(counter_top1_yolt)/double(files.size()) << " Top5 " << double(counter_top5_yolt)/double(files.size()) << endl;
+    output_file << sigma << " " << thresh << " " << double(counter_top1_yolo)/double(files.size());
+    output_file << " " << double(counter_top5_yolo)/double(files.size());
+    output_file <<" " << double(counter_top1_yolt)/double(files.size()) << " " << double(counter_top5_yolt)/double(files.size()) << endl;
     output_file.close();
 
 }
@@ -275,15 +287,4 @@ int main(int argc, char** argv){
 
 
 
-//    string input = "";
-//    cout << "Do you want to visualize the bounding boxes? [y/n] \n>";
-//    getline(cin, input);
 
-//    if (input == "y"){
-//        Mat copy_img;
-//        //img.copyTo(copy_img);
-
-//        // Visualize bounding boxes on input image
-//        Network.VisualizeBBox(bboxes, N, img, size_map);
-
-//    }

@@ -16,7 +16,8 @@
 #include <math.h>
 #include <limits>
 #include <boost/algorithm/string.hpp>
-#include </home/filipa/Downloads/mxml-release-2.10/mxml.h>
+
+#include </home/filipa/pugixml-master/src/pugixml.hpp>
 
 #include "network_classes.hpp"
 #include "laplacian_foveation.hpp"
@@ -24,6 +25,7 @@
 
 using namespace caffe;
 using namespace std;
+using namespace pugi;
 using std::string;
 
 
@@ -53,7 +55,7 @@ int main(int argc, char** argv){
     static int levels = atoi(argv[12]);    // Number of kernel levels
     int sigma = atoi(argv[13]);            // Size of the fovea
     const string ground_truth_labels = string(argv[14]);  // file with ground truth labels used to classification error
-
+//    const string ground_bbox_dir = string(argv[15]);
 
     // Set mode
     if (strcmp(argv[6], "CPU") == 0){
@@ -71,19 +73,25 @@ int main(int argc, char** argv){
 
 
     /**********************************************************************/
-    //                  LOAD LIST OF IMAGES OF DIRECTORY                  //
+    //              LOAD LIST OF IMAGES AND BBOX OF DIRECTORY             //
     /**********************************************************************/
     string dir = string(argv[8]);              // directory with validation set
-    cout << "dir " << dir << endl;
+
     vector<string> files ;
 
     files = Network.GetDir (dir, files);
     glob(dir, files);
 
 
+//    vector<string> bbox_files ;
+
+//    bbox_files = Network.GetDir (ground_bbox_dir, bbox_files);
+//    glob(ground_bbox_dir, bbox_files);
+
+
     // File with ground truth labels
     ifstream ground_truth_file;
-    ground_truth_file.open("/home/filipa/PycharmProjects/C++/Foveated-YOLT/files/ground_truth_labels_ilsvrc12.txt");
+    ground_truth_file.open(ground_truth_labels.c_str());
     string ground_class;
 
     int counter_top1_yolo = files.size();
@@ -91,14 +99,24 @@ int main(int argc, char** argv){
     int counter_top1_yolt = files.size();
     int counter_top5_yolt = files.size();
 
+    ofstream raw_bbox_file;
 
     // FOR EACH IMAGE OF THE DATASET
     for (unsigned int input = 0;input < files.size(); ++input){
 
         string file = files[input];
 
-        cv::Mat img = cv::imread(file, 1);		 // Read image
+//        xml_document doc;
+//        string bbox_file = bbox_files[input];
 
+//        doc.load_file("/home/filipa/PycharmProjects/C++/Foveated-YOLT/bbox/ILSVRC2012_val_00000001.xml");
+
+
+        raw_bbox_file.open ("raw_bbox.txt",ios::app);  //appending the content to the current content of the file.
+
+        cv::Mat img = cv::imread(file, 1);		 // Read image
+        //cv::Mat copy_img;
+        //img.copyTo(copy_img);
         ClassData mydata(N);
 
 
@@ -108,7 +126,6 @@ int main(int argc, char** argv){
 
         // Check if predicted labels = ground truth labels - YOLO
         getline(ground_truth_file,ground_class);
-        cout << "ground label " << ground_class << endl;
 
         if (strstr(mydata.label[0].c_str(), ground_class.c_str())){
             counter_top1_yolo-=1; // acertou a primeira na class
@@ -117,9 +134,6 @@ int main(int argc, char** argv){
             if (strstr(mydata.label[k].c_str(), ground_class.c_str()))
                 counter_top5_yolo-=1; // class verdadeira esta no top
         }
-
-
-       // cout << "top1 " << counter_top1_yolo << " top5 " << counter_top5_yolo << endl;
 
         std::vector<Rect> bboxes;
         std::vector<string> new_labels;
@@ -157,15 +171,9 @@ int main(int argc, char** argv){
             LaplacianBlending pyramid(img,levels, kernels);
 
 
-            // Find Bounding Box Centroid
-            //for (int k=0; k<N; ++k){
-
-
             cv::Mat center(2,1,CV_32S);
             center.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
             center.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
-
-            //cout<<"Rectangle " <<i<< " Centroid position is at: " << center.at<int>(1,0) << " " << center.at<int>(0,0) << endl;
 
 
             // Foveate
@@ -191,6 +199,17 @@ int main(int argc, char** argv){
 
 
         }
+
+//        // Show input image and bounding boxes
+//        Network.VisualizeBBox(bboxes, N, copy_img, size_map);
+
+        raw_bbox_file << bboxes[0].x << " " << bboxes[0].y << " " << bboxes[0].width << " " << bboxes[0].height << " ";
+        raw_bbox_file << bboxes[1].x << " " << bboxes[1].y << " " << bboxes[1].width << " " << bboxes[1].height << " ";
+        raw_bbox_file << bboxes[2].x << " " << bboxes[2].y << " " << bboxes[2].width << " " << bboxes[2].height << " ";
+        raw_bbox_file << bboxes[3].x << " " << bboxes[3].y << " " << bboxes[3].width << " " << bboxes[3].height << " ";
+        raw_bbox_file << bboxes[4].x << " " << bboxes[4].y << " " << bboxes[4].width << " " << bboxes[4].height << " " << endl;
+
+
 
         /*********************************************************/
         //               Rank Top 5 final solution               //
@@ -229,24 +248,35 @@ int main(int argc, char** argv){
         }
 
 
-       // cout << "top1 " << counter_top1_yolt << " top5 " << counter_top5_yolt << endl;
+//        /***************************************************************/
+//        //                  LOCALIZATION ERROR                         //
+//        /***************************************************************/
+
+//        xpath_node_set get_width = doc.select_nodes("/annotation/size/width");
+//        xpath_node_set get_height = doc.select_nodes("/annotation/size/height");
+
+//        for (xpath_node_set::const_iterator it = get_width.begin(); it!= get_width.end(); ++it){
+//            xpath_node node_width = *it;
+//            cout << "name " << node_width.node().name() << endl;
+//            cout << "Width " << node_width.node().child_value() << endl;
+//            string img_width = node_width.node().child_value();
+//        }
+//        for (xpath_node_set::const_iterator it = get_height.begin(); it!= get_height.end(); ++it){
+//            xpath_node node_height = *it;
+//            cout << "name " << node_height.node().name() << endl;
+//            cout << "Height " << node_height.node().child_value() << endl;
+//            string img_height = node_height.node().child_value();
+//        }
 
 
 
-        /***************************************************************/
-        //                  LOCALIZATION ERROR                         //
-        /***************************************************************/
-
-        // tenho 5 bboxes no bboxes; comparar se alguma dessas faz overlap de 50% com as ground truth
 
 
-
-
-
-
+          raw_bbox_file.close();
     }
 
     ground_truth_file.close();
+
 
 
 
@@ -263,28 +293,10 @@ int main(int argc, char** argv){
     output_file <<" " << double(counter_top1_yolt)/double(files.size()) << " " << double(counter_top5_yolt)/double(files.size()) << endl;
     output_file.close();
 
+    raw_bbox_file.open("raw_bbox.txt",ios::app);
+    raw_bbox_file << "\n" ;
+    raw_bbox_file.close();
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

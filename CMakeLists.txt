@@ -43,7 +43,7 @@ message("CUDA_INCLUDE_DIRS is ${CUDA_INCLUDE_DIRS}")
 set(GLOG_LIB glog)
 
 #add_executable(main src/main.cpp)
-add_executable(yolt src/thesis.cpp)
+add_executable(yolt src/thesis.cpp src/pugixml.cpp)
 #add_executable(box src/volume_box.cpp)
 #add_executable(derived src/derived_classes.cpp)
 #add_executable(multiple src/multiple_derived_classes.cpp)

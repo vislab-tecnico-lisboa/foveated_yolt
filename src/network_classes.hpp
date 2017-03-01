@@ -391,6 +391,9 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
     // Find max across RGB channels
     Mat saliency_map = CalcRGBmax(M2);
 
+//    imshow("saliency", saliency_map);
+//    waitKey(0);
+
 
     /*********************************************************/
     //                  Segmentation Mask                    //
@@ -400,6 +403,8 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
 
+//    imshow("Mask", foreground_mask);
+//    waitKey(0);
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
 
     Mat Points;
@@ -458,6 +463,7 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
 
         rectangle(img, bboxes[k], Scalar(0, 0, 255), 1, 8, 0 );
 
+    imwrite("Figures/bbox.jpg",img);
     imshow("box", img );
     waitKey(0);
 }

@@ -54,7 +54,7 @@ int main(int argc, char** argv){
     static int size_map = atoi(argv[11]);  // Size of the network input images (227,227)
     static int levels = atoi(argv[12]);    // Number of kernel levels
     int sigma = atoi(argv[13]);            // Size of the fovea
-    const string ground_truth_labels = string(argv[14]);  // file with ground truth labels used to classification error
+    //const string ground_truth_labels = string(argv[14]);  // file with ground truth labels used to classification error
 //    const string ground_bbox_dir = string(argv[15]);
 
     // Set mode
@@ -93,16 +93,17 @@ int main(int argc, char** argv){
 
 
     // File with ground truth labels
-    ifstream ground_truth_file;
-    ground_truth_file.open(ground_truth_labels.c_str());
-    string ground_class;
+//    ifstream ground_truth_file;
+//    ground_truth_file.open(ground_truth_labels.c_str());
+//    string ground_class;
 
-    int counter_top1_yolo = files.size();
-    int counter_top5_yolo = files.size();
-    int counter_top1_yolt = files.size();
-    int counter_top5_yolt = files.size();
+//    int counter_top1_yolo = files.size();
+//    int counter_top5_yolo = files.size();
+//    int counter_top1_yolt = files.size();
+//    int counter_top5_yolt = files.size();
 
     ofstream raw_bbox_file;
+    ofstream feedback_detection;
 
     // FOR EACH IMAGE OF THE DATASET
     for (unsigned int input = 0;input < files.size(); ++input){
@@ -115,7 +116,8 @@ int main(int argc, char** argv){
 //        doc.load_file("/home/filipa/PycharmProjects/C++/Foveated-YOLT/bbox/ILSVRC2012_val_00000001.xml");
 
 
-        raw_bbox_file.open ("raw_bbox.txt",ios::app);  //appending the content to the current content of the file.
+        raw_bbox_file.open ("raw_bbox.txt",ios::app);            // file with 5 classes + scores; 5 bounding boxes
+        feedback_detection.open ("feedback_detection.txt", ios::app);  // file with 25 predicted classes for each image
 
         cv::Mat img = cv::imread(file, 1);		 // Read image
         //cv::Mat copy_img;
@@ -126,19 +128,22 @@ int main(int argc, char** argv){
         mydata = Network.Classify(img, N);
 
         // Check if predicted labels = ground truth labels - YOLO
-        getline(ground_truth_file,ground_class);
+//        getline(ground_truth_file,ground_class);
 
-        if (strstr(mydata.label[0].c_str(), ground_class.c_str())){
-            counter_top1_yolo-=1; // acertou a primeira na class
-        }
-        for (int k=0; k<N; ++k){
-            if (strstr(mydata.label[k].c_str(), ground_class.c_str()))
-                counter_top5_yolo-=1; // class verdadeira esta no top
-        }
+//        if (strstr(mydata.label[0].c_str(), ground_class.c_str())){
+//            counter_top1_yolo-=1; // acertou a primeira na class
+//        }
+//        for (int k=0; k<N; ++k){
+//            if (strstr(mydata.label[k].c_str(), ground_class.c_str()))
+//                counter_top5_yolo-=1; // class verdadeira esta no top
+//        }
 
         std::vector<Rect> bboxes;
         std::vector<string> new_labels;
         std::vector<float> new_scores;
+
+        raw_bbox_file <<  std::fixed << std::setprecision(4) << sigma << " " << thresh << " " ;
+        feedback_detection << std::fixed << std::setprecision(4) << sigma << " " << thresh << " " ;
 
         // For each predicted class label:
         for (int i = 0; i < N; ++i) {
@@ -151,6 +156,10 @@ int main(int argc, char** argv){
             Rect Min_Rect = Network.CalcBBox(N, i,img, mydata, thresh);
 
             bboxes.push_back(Min_Rect); // save all bounding boxes
+
+
+            raw_bbox_file <<  mydata.label[i] << " " << mydata.score[i] << " " << Min_Rect.x << " " << Min_Rect.y << " " << Min_Rect.width << " " << Min_Rect.height << " ";
+
 
 
             /*******************************************************/
@@ -188,28 +197,21 @@ int main(int argc, char** argv){
             // Forward
 
             // Predict New top 5 of each predicted class
-            mydata = Network.Classify(foveated_image, N);
+            ClassData feedback_data = Network.Classify(foveated_image, N);
 
 
-
+            // For each bounding box
             for(int m=0; m<N; ++m){
 
-                new_labels.push_back(mydata.label[m]);
-                new_scores.push_back(mydata.score[m]);
-            }
+                new_labels.push_back(feedback_data.label[m]);
+                new_scores.push_back(feedback_data.score[m]);
+                feedback_detection <<  feedback_data.label[m] << " " << feedback_data.score[m] << " ";
 
+            }
+            feedback_detection << endl;
 
         }
-
-//        // Show input image and bounding boxes
-//        Network.VisualizeBBox(bboxes, N, copy_img, size_map);
-
-        raw_bbox_file << bboxes[0].x << " " << bboxes[0].y << " " << bboxes[0].width << " " << bboxes[0].height << " ";
-        raw_bbox_file << bboxes[1].x << " " << bboxes[1].y << " " << bboxes[1].width << " " << bboxes[1].height << " ";
-        raw_bbox_file << bboxes[2].x << " " << bboxes[2].y << " " << bboxes[2].width << " " << bboxes[2].height << " ";
-        raw_bbox_file << bboxes[3].x << " " << bboxes[3].y << " " << bboxes[3].width << " " << bboxes[3].height << " ";
-        raw_bbox_file << bboxes[4].x << " " << bboxes[4].y << " " << bboxes[4].width << " " << bboxes[4].height << " " << endl;
-
+        raw_bbox_file << endl;
 
 
         /*********************************************************/
@@ -220,18 +222,18 @@ int main(int argc, char** argv){
         //for (int k=0; k<new_labels.size(); ++k)
         //    cout << "New Prediction: " << new_labels[k] << "\t\t" << new_scores[k] << endl;
 
-        std::vector<string> top_final_labels;
-        std::vector<float> top_final_scores;
+//        std::vector<string> top_final_labels;
+//        std::vector<float> top_final_scores;
 
 
-        std::vector<int> topN = Argmax(new_scores, N);
+//        std::vector<int> topN = Argmax(new_scores, N);
 
-        for (int top = 0; top <N; ++top){
-            int idx = topN[top];
+//        for (int top = 0; top <N; ++top){
+//            int idx = topN[top];
 
-            top_final_labels.push_back(new_labels[idx]);
-            top_final_scores.push_back(new_scores[idx]);
-        }
+//            top_final_labels.push_back(new_labels[idx]);
+//            top_final_scores.push_back(new_scores[idx]);
+//        }
 
 //        cout << "Final Solution:\n " << endl;
 //        for (int top = 0; top <N; ++top)
@@ -239,14 +241,14 @@ int main(int argc, char** argv){
 
 
         // Check if predicted labels = ground truth labels - YOLT
-        if (strstr(top_final_labels[0].c_str(), ground_class.c_str())){
-            counter_top1_yolt-=1; // acertou a primeira na class
-        }
-        for (int k=0; k<N; ++k){
-            if (strstr(top_final_labels[k].c_str(), ground_class.c_str()))
-                counter_top5_yolt-=1; // class verdadeira esta no top
-                break;
-        }
+//        if (strstr(top_final_labels[0].c_str(), ground_class.c_str())){
+//            counter_top1_yolt-=1; // acertou a primeira na class
+//        }
+//        for (int k=0; k<N; ++k){
+//            if (strstr(top_final_labels[k].c_str(), ground_class.c_str()))
+//                counter_top5_yolt-=1; // class verdadeira esta no top
+//                break;
+//        }
 
 
 //        /***************************************************************/
@@ -276,7 +278,7 @@ int main(int argc, char** argv){
           raw_bbox_file.close();
     }
 
-    ground_truth_file.close();
+    //ground_truth_file.close();
 
 
 
@@ -285,18 +287,18 @@ int main(int argc, char** argv){
     //           WRITE OUTPUT FILE WITH THE RESULTS          //
     /*********************************************************/
 
-    // Write data to output file
-    ofstream output_file;
-    output_file.open ("final_results.txt",ios::app);  //appending the content to the current content of the file.
-    output_file << std::fixed << std::setprecision(4) ;
-    output_file << sigma << " " << thresh << " " << double(counter_top1_yolo)/double(files.size());
-    output_file << " " << double(counter_top5_yolo)/double(files.size());
-    output_file <<" " << double(counter_top1_yolt)/double(files.size()) << " " << double(counter_top5_yolt)/double(files.size()) << endl;
-    output_file.close();
+//    // Write data to output file
+//    ofstream output_file;
+//    output_file.open ("final_results.txt",ios::app);  //appending the content to the current content of the file.
+//    output_file << std::fixed << std::setprecision(4) ;
+//    output_file << sigma << " " << thresh << " " << double(counter_top1_yolo)/double(files.size());
+//    output_file << " " << double(counter_top5_yolo)/double(files.size());
+//    output_file <<" " << double(counter_top1_yolt)/double(files.size()) << " " << double(counter_top5_yolt)/double(files.size()) << endl;
+//    output_file.close();
 
-    raw_bbox_file.open("raw_bbox.txt",ios::app);
-    raw_bbox_file << "\n" ;
-    raw_bbox_file.close();
+//    raw_bbox_file.open("raw_bbox.txt",ios::app);
+//    raw_bbox_file << "\n" ;
+//    raw_bbox_file.close();
 
 }
 

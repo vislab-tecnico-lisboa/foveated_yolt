@@ -17,7 +17,7 @@
 #include <limits>
 #include <boost/algorithm/string.hpp>
 
-#include </home/filipa/pugixml-master/src/pugixml.hpp>
+
 
 #include "network_classes.hpp"
 #include "laplacian_foveation.hpp"
@@ -25,7 +25,7 @@
 
 using namespace caffe;
 using namespace std;
-using namespace pugi;
+
 using std::string;
 
 
@@ -65,23 +65,26 @@ int main(int argc, char** argv){
     else{
         Caffe::set_mode(Caffe::GPU);
         int device_id = atoi(argv[7]);
+        cout << "GPU "<< device_id << endl;
         Caffe::SetDevice(device_id);
     }
+
 
     // Load network, pre-processment, set mean and load labels
     Network Network(model_file, weight_file, mean_file, label_file);
 
 
+
     /**********************************************************************/
     //              LOAD LIST OF IMAGES AND BBOX OF DIRECTORY             //
     /**********************************************************************/
-    string dir = string(argv[8]);              // directory with validation set
+    std::string dir = string(argv[8]);              // directory with validation set
 
-    vector<string> files ;
+    std::vector<cv::String> files ;
 
     files = Network.GetDir (dir, files);
-    glob(dir, files);
 
+    glob(dir, files);
 
 //    vector<string> bbox_files ;
 
@@ -119,10 +122,8 @@ int main(int argc, char** argv){
         //img.copyTo(copy_img);
         ClassData mydata(N);
 
-
         // Predict top 5
         mydata = Network.Classify(img, N);
-
 
         // Check if predicted labels = ground truth labels - YOLO
         getline(ground_truth_file,ground_class);

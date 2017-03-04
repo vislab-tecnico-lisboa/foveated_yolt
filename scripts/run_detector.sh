@@ -10,7 +10,7 @@
 DIR=$PWD; # Foveated_YOLT
 
 # Choose set mode for caffe  [CPU | GPU]
-SET_MODE=CPU
+SET_MODE=GPU
 
 # Choose which GPU the detector runs on
 GPU_ID=0
@@ -40,18 +40,18 @@ THRESHOLD=0.75
 # change this path to the absolute location of the network related files
 FILES_FOLDER_ABSOLUTE_PATH=$PWD"/files/"
 MODEL_FILE="deploy_caffenet.prototxt"
-WEIGHTS_FILE="bvlc_caffenet.caffemodel"
+WEIGHTS_FILE="bvlc_reference_caffenet.caffemodel"
 MEAN_FILE="imagenet_mean.binaryproto"
 LABELS_FILE="synset_words_change.txt"
-#DATASET="/home/filipa/Documents/Validation_Part/"
-DATASET=$PWD"/dataset/"
+DATASET="/media/Data/filipa/ILSVRC2012_img_val"
+#DATASET=$PWD"/dataset/"
 #BBOX=$PWD"/bbox/"
 GROUND_TRUTH_LABELS=$FILES_FOLDER_ABSOLUTE_PATH"ground_truth_labels_ilsvrc12.txt"
 
 
 for SIGMA in {20,40,60,80,100}
 do
-    for THRESHOLD in {0.75,0.95}
+    for THRESHOLD in {0.75,0.80,0.85,0.90,0.95}
     do
 
         # /home/filipa/Documents/Foveated_YOLT/files/ deploy_caffenet.prototxt bvlc_caffenet.caffemodel imagenet_mean.binaryproto val.txt

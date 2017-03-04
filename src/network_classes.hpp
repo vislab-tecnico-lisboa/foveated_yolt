@@ -76,7 +76,7 @@ public:
     ClassData Classify(const cv::Mat& img, int N);
     Rect CalcBBox(int N, int i, const cv::Mat &img, ClassData mydata, float thresh); // NEW
     void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map);
-    std::vector<string> GetDir(string dir, vector<string> &files);
+    std::vector<String> GetDir(string dir, vector<String> &files);
 
     float* Limit_values(float* bottom_data); // NEW
     float find_max(Mat gradient_values);
@@ -121,6 +121,7 @@ Network::Network(const string& model_file, const string& weight_file,
 
     // Load mean file
     SetMean(mean_file);
+    std::cout << "asdasdasd4" << std::endl;
 
     // Load labels
     std::ifstream labels2(label_file.c_str());   // vector with labels
@@ -141,26 +142,31 @@ Network::Network(const string& model_file, const string& weight_file,
 void Network::SetMean(const string& mean_file) {
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
-
     // Convert from BlobProto to Blob<float>
     Blob<float> mean_blob;
     mean_blob.FromProto(blob_proto);			  // make copy
     CHECK_EQ(mean_blob.channels(), num_channels)
             << "Number of channels of mean file doesn't match input layer";
+    std::cout << "asdasdasd123123123123123"<<std::endl;
 
     // The format of the mean file is planar 32-bit float BGR or grayscale
     std::vector<cv::Mat> channels;
+   // Mat* channels2;
     float* data = mean_blob.mutable_cpu_data();
     for (int i = 0; i < num_channels; ++i) {
         // Extract an individual channel
         cv::Mat channel(mean_blob.height(), mean_blob.width(), CV_32FC1, data);
+
         channels.push_back(channel);
+        //channels2->push_back(channel);
         data += mean_blob.height() * mean_blob.width();
     }
 
     // Merge the separate channels into a single image
     cv::Mat mean;
     cv::merge(channels, mean);
+
+    cout << "merge " << endl;
 
     // Compute the global mean pixel value and create a mean image filled with this value
     cv::Scalar channel_mean = cv::mean(mean);
@@ -424,7 +430,7 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
 // Get list of image files on given directory                           //
 /************************************************************************/
 
-std::vector<string> Network::GetDir(string dir, vector<string> &files) {
+std::vector<String> Network::GetDir(string dir, vector<String> &files) {
     DIR *dp;
     struct dirent *dirp;
     if((dp  = opendir(dir.c_str())) == NULL) {

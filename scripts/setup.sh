@@ -19,6 +19,9 @@ function get_network_weights
 	# AlexNet
 	wget http://dl.caffe.berkeleyvision.org/bvlc_alexnet.caffemodel
 
+	# Ground Truth Bounding Boxes ILSVRC 2012
+	wget https://www.dropbox.com/s/3nsb0prw9uxynkf/ILSVRC2012_bbox_val_v3.tgz?dl=0
+	
 	cd ..
 }
 

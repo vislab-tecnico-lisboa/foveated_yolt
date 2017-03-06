@@ -17,8 +17,6 @@
 #include <limits>
 #include <boost/algorithm/string.hpp>
 
-
-
 #include "network_classes.hpp"
 #include "laplacian_foveation.hpp"
 
@@ -102,11 +100,12 @@ int main(int argc, char** argv){
 //    int counter_top1_yolt = files.size();
 //    int counter_top5_yolt = files.size();
 
+
+
     ofstream raw_bbox_file;
     ofstream feedback_detection;
-<<<<<<< HEAD
 
-    raw_bbox_file.open ("raw_bbox_parse.txt",ios::app);            // file with 5 classes + scores; 5 bounding boxes
+    raw_bbox_file.open ("raw_bbox_parse.txt",ios::app);                  // file with 5 classes + scores; 5 bounding boxes
     feedback_detection.open ("feedback_detection_parse.txt", ios::app);  // file with 25 predicted classes for each image
 
     raw_bbox_file <<  std::fixed << std::setprecision(4) << "sigma;" << "thres;" << "class1;" << "score1;"<< "x1;" << "y1;" << "w1;" << "h1;" << "class2;" << "score2;"<< "x2;" << "y2;" << "w2;" << "h2;";
@@ -118,8 +117,9 @@ int main(int argc, char** argv){
     feedback_detection << "class16;" << "score16;"  << "class17;" << "score17;"  << "class18;" << "score18;"  << "class19;" << "score19;"  << "class20;" << "score20;";
     feedback_detection << "class21;" << "score21;"  << "class22;" << "score22;"  << "class23;" << "score23;"  << "class24;" << "score24;"  << "class25;" << "score25" << "\n";
 
-=======
->>>>>>> f876fdb919a8052aad46e776aa459340029f282d
+
+    std::vector<string> new_labels;
+    std::vector<float> new_scores;
 
     // FOR EACH IMAGE OF THE DATASET
     for (unsigned int input = 0;input < files.size(); ++input){
@@ -132,12 +132,9 @@ int main(int argc, char** argv){
 //        doc.load_file("/home/filipa/PycharmProjects/C++/Foveated-YOLT/bbox/ILSVRC2012_val_00000001.xml");
 
 
-<<<<<<< HEAD
-=======
-        raw_bbox_file.open ("raw_bbox.txt",ios::app);            // file with 5 classes + scores; 5 bounding boxes
-        feedback_detection.open ("feedback_detection.txt", ios::app);  // file with 25 predicted classes for each image
+//        raw_bbox_file.open ("raw_bbox_parse.txt",ios::app);                  // file with 5 classes + scores; 5 bounding boxes
+//        feedback_detection.open ("feedback_detection_parse.txt", ios::app);  // file with 25 predicted classes for each image
 
->>>>>>> f876fdb919a8052aad46e776aa459340029f282d
         cv::Mat img = cv::imread(file, 1);		 // Read image
         //cv::Mat copy_img;
         //img.copyTo(copy_img);
@@ -156,22 +153,13 @@ int main(int argc, char** argv){
 //            if (strstr(mydata.label[k].c_str(), ground_class.c_str()))
 //                counter_top5_yolo-=1; // class verdadeira esta no top
 //        }
-
         std::vector<Rect> bboxes;
-        std::vector<string> new_labels;
-        std::vector<float> new_scores;
-
-<<<<<<< HEAD
+//        std::vector<string> new_labels;
+//        std::vector<float> new_scores;
 
         raw_bbox_file << sigma << ";" << thresh << ";" ;
 
         feedback_detection << sigma << ";" << thresh << ";" ;
-
-
-=======
-        raw_bbox_file <<  std::fixed << std::setprecision(4) << sigma << " " << thresh << " " ;
-        feedback_detection << std::fixed << std::setprecision(4) << sigma << " " << thresh << " " ;
->>>>>>> f876fdb919a8052aad46e776aa459340029f282d
 
         // For each predicted class label:
         for (int i = 0; i < N; ++i) {
@@ -189,11 +177,6 @@ int main(int argc, char** argv){
                 raw_bbox_file << mydata.label[i] << ";" << mydata.score[i] << ";" << Min_Rect.x << ";" << Min_Rect.y << ";" << Min_Rect.width << ";" << Min_Rect.height;
             else
                 raw_bbox_file << mydata.label[i] << ";" << mydata.score[i] << ";" << Min_Rect.x << ";" << Min_Rect.y << ";" << Min_Rect.width << ";" << Min_Rect.height << ";";
-
-
-
-            raw_bbox_file <<  mydata.label[i] << " " << mydata.score[i] << " " << Min_Rect.x << " " << Min_Rect.y << " " << Min_Rect.width << " " << Min_Rect.height << " ";
-
 
 
             /*******************************************************/
@@ -239,33 +222,22 @@ int main(int argc, char** argv){
 
                 new_labels.push_back(feedback_data.label[m]);
                 new_scores.push_back(feedback_data.score[m]);
-<<<<<<< HEAD
+
                 //feedback_detection <<  feedback_data.label[m] << " " << feedback_data.score[m] << " ";
-
             }
-=======
-                feedback_detection <<  feedback_data.label[m] << " " << feedback_data.score[m] << " ";
->>>>>>> f876fdb919a8052aad46e776aa459340029f282d
-
-            }
-            feedback_detection << endl;
-
-<<<<<<< HEAD
-
         }
+
         raw_bbox_file << endl;
 
-        for (int aux=0; aux<N*N; ++aux)
+        for (int aux=0; aux<N*N; ++aux){
             if (aux==N*N-1)
                  feedback_detection <<  new_labels[aux] << ";" << new_scores[aux];
             else
              feedback_detection <<  new_labels[aux] << ";" << new_scores[aux] << ";";
-
-        feedback_detection << endl;
-=======
         }
-        raw_bbox_file << endl;
->>>>>>> f876fdb919a8052aad46e776aa459340029f282d
+
+     }
+     feedback_detection << endl;
 
 
         /*********************************************************/
@@ -326,18 +298,10 @@ int main(int argc, char** argv){
 //        }
 
 
-
-
-
-//          raw_bbox_file.close();
-//          feedback_detection.close();
-    }
+ //   }
 
     //ground_truth_file.close();
-<<<<<<< HEAD
-=======
 
->>>>>>> f876fdb919a8052aad46e776aa459340029f282d
 
 
 

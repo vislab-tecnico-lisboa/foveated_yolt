@@ -28,7 +28,7 @@ make
 To run thesis.cpp from root:
 
 bash scripts/run_detector.sh
-
+ 
 
 
 To configurate your network and its parameters, change accordingly the run_detector.sh file.

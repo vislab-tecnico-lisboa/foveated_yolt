@@ -121,7 +121,6 @@ Network::Network(const string& model_file, const string& weight_file,
 
     // Load mean file
     SetMean(mean_file);
-    std::cout << "asdasdasd4" << std::endl;
 
     // Load labels
     std::ifstream labels2(label_file.c_str());   // vector with labels
@@ -147,7 +146,7 @@ void Network::SetMean(const string& mean_file) {
     mean_blob.FromProto(blob_proto);			  // make copy
     CHECK_EQ(mean_blob.channels(), num_channels)
             << "Number of channels of mean file doesn't match input layer";
-    std::cout << "asdasdasd123123123123123"<<std::endl;
+
 
     // The format of the mean file is planar 32-bit float BGR or grayscale
     std::vector<cv::Mat> channels;
@@ -166,7 +165,6 @@ void Network::SetMean(const string& mean_file) {
     cv::Mat mean;
     cv::merge(channels, mean);
 
-    cout << "merge " << endl;
 
     // Compute the global mean pixel value and create a mean image filled with this value
     cv::Scalar channel_mean = cv::mean(mean);

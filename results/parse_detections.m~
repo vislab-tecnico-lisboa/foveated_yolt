@@ -1,4 +1,4 @@
-function [sigmas,class1,class2,class3,class4,class5,score1,score2,score3,score4,score5,detections1,detections2,detections3,detections4,detections5] = parse_detections(detections_file)
+function [sigmas,score1,score2,score3,score4,score5,detections1,detections2,detections3,detections4,detections5] = parse_detections(detections_file)
 detections_ = tdfread(detections_file,';');
 
 detections1=zeros(length(detections_.x1),4);
@@ -7,20 +7,17 @@ detections3=zeros(length(detections_.x3),4);
 detections4=zeros(length(detections_.x4),4);
 
 sigmas=detections_.sigma;
-
-class1=detections_.class1;
-class2=detections_.class2;
-class3=detections_.class3;
-class4=detections_.class4;
-class5=detections_.class5;
-
-
 score1=detections_.score1;
 score2=detections_.score2;
 score3=detections_.score3;
 score4=detections_.score4;
 score5=detections_.score5;
 
+score1=detections_.class1;
+score2=detections_.score2;
+score3=detections_.score3;
+score4=detections_.score4;
+score5=detections_.score5;
 
 for i=1:length(detections_.x1)
     detections1(i,1)=detections_.x1(i);

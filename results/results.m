@@ -2,6 +2,7 @@ gt_folder='../dataset/gt/';
 detections_file='../dataset/detections/raw_bbox_parse.txt';
 
 % parameters
+detections_resolution=227;
 sigmas_number=10;
 thresholds_number=10;
 images_number=100;
@@ -21,15 +22,23 @@ for s=1:sigmas_number
         for i=1:images_number
             %check overlaps for each ground truth bounding box
             overlaps(s,t,i,1).overlap=zeros(size(gt(i).bboxes,1),1);
+            gt_size=gt(i).size;
             for g=1:size(gt(i).bboxes,1)
                 gt_bbox=gt(i).bboxes(g,:);
                 
+                % scale detections (FILIPA VE SE ISTO FAZ SENTIDO)
+                detection=reshape(detections(i,j,:),1,4);
+                detection(1)=detection(1)*gt_size(1)/detections_resolution;
+                detection(2)=detection(2)*gt_size(2)/detections_resolution;
+                detection(3)=detection(3)*gt_size(1)/detections_resolution;
+                detection(4)=detection(4)*gt_size(2)/detections_resolution;
+
                 % for each detection (of the 5)
                 for j=1:top_k
-                    overlaps(s,t,i,j).overlap(g)=bboxOverlapRatio(gt_bbox,reshape(detections(i,j,:),1,4));
+                    overlaps(s,t,i,j).overlap(g)=bboxOverlapRatio(gt_bbox,detection);
                 end
             end
-        end
+        en
     end
 end
 

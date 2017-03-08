@@ -3,11 +3,12 @@ detections_file='../dataset/detections/raw_bbox_parse.txt';
 
 % parameters
 detections_resolution=227;
-sigmas_number=10;
-thresholds_number=10;
+sigmas_number=5;
+thresholds_number=5;
 images_number=100;
-overlap_correct=0.1;
+overlap_correct=0.5;
 top_k=5;
+
 % get ground truth
 gt=parse_ground_truth(gt_folder,images_number);
 
@@ -15,30 +16,33 @@ gt=parse_ground_truth(gt_folder,images_number);
 [sigmas,classes,scores,detections]=parse_detections(detections_file);
 
 % check overlaps
-overlaps=zeros(sigmas_number,thresholds_number, images_number,top_k);
 overlaps=[];
 for s=1:sigmas_number
     for t=1:thresholds_number
         for i=1:images_number
-            %check overlaps for each ground truth bounding box
-            overlaps(s,t,i,1).overlap=zeros(size(gt(i).bboxes,1),1);
             gt_size=gt(i).size;
-            for g=1:size(gt(i).bboxes,1)
-                gt_bbox=gt(i).bboxes(g,:);
+            aspect_ratio_x=gt_size(1)/detections_resolution;
+            aspect_ratio_y=gt_size(2)/detections_resolution;
+            % for each detection (of the 5)
+            for j=1:top_k
                 
-                % scale detections (FILIPA VE SE ISTO FAZ SENTIDO)
-                detection=reshape(detections(i,j,:),1,4);
-                detection(1)=detection(1)*gt_size(1)/detections_resolution;
-                detection(2)=detection(2)*gt_size(2)/detections_resolution;
-                detection(3)=detection(3)*gt_size(1)/detections_resolution;
-                detection(4)=detection(4)*gt_size(2)/detections_resolution;
-
-                % for each detection (of the 5)
-                for j=1:top_k
+                % check overlaps for each ground truth bounding box
+                overlaps(s,t,i,j).overlap=zeros(size(gt(i).bboxes,1),1);
+                
+                for g=1:size(gt(i).bboxes,1)
+                    % gt bbox
+                    gt_bbox=gt(i).bboxes(g,:);
+                    
+                    % scale detections
+                    detection=reshape(detections(i,j,:),1,4);
+                    detection(1)=detection(1)*aspect_ratio_x;
+                    detection(2)=detection(2)*aspect_ratio_y;
+                    detection(3)=detection(3)*aspect_ratio_x;
+                    detection(4)=detection(4)*aspect_ratio_y;
                     overlaps(s,t,i,j).overlap(g)=bboxOverlapRatio(gt_bbox,detection);
                 end
             end
-        en
+        end
     end
 end
 
@@ -75,7 +79,6 @@ set(gcf, 'Color', [1,1,1]);
 plot(detection_rate(:,thresh_index))
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('detection rate','Interpreter','LaTex','FontSize',fontsize);
-
 
 % fix one sigma and plot all saliency thresholds
 sigma_index=1;

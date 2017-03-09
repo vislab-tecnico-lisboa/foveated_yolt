@@ -108,15 +108,7 @@ int main(int argc, char** argv){
     raw_bbox_file.open ("raw_bbox_parse.txt",ios::app);                  // file with 5 classes + scores; 5 bounding boxes
     feedback_detection.open ("feedback_detection_parse.txt", ios::app);  // file with 25 predicted classes for each image
 
-//    raw_bbox_file <<  std::fixed << std::setprecision(4) << "sigma;" << "thres;" << "class1;" << "score1;"<< "x1;" << "y1;" << "w1;" << "h1;" << "class2;" << "score2;"<< "x2;" << "y2;" << "w2;" << "h2;";
-//    raw_bbox_file << "class3;" << "score3;"<< "x3;" << "y3;" << "w3;" << "h3;" << "class4;" << "score4;" << "x4;" << "y4;" << "w4;" << "h4;" << "class5;" << "score5;" << "x5;" << "y5;" << "w5;" << "h5" << "\n";
-
-//    feedback_detection << std::fixed << std::setprecision(4) << "sigma;" << "thres;" << "class1;" << "score1;" << "class2;" << "score2;" << "class3;" << "score3;" << "class4;" << "score4;" << "class5;" << "score5;" ;
-//    feedback_detection << "class6;" << "score6;" << "class7;" << "score7;" << "class8;" << "score8;" << "class9;" << "score9;" << "class10;" << "score10;";
-//    feedback_detection << "class11;" << "score11;"  << "class12;" << "score12;"  << "class13;" << "score13;"  << "class14;" << "score14;"  << "class15;" << "score15;";
-//    feedback_detection << "class16;" << "score16;"  << "class17;" << "score17;"  << "class18;" << "score18;"  << "class19;" << "score19;"  << "class20;" << "score20;";
-//    feedback_detection << "class21;" << "score21;"  << "class22;" << "score22;"  << "class23;" << "score23;"  << "class24;" << "score24;"  << "class25;" << "score25" << "\n";
-
+    int ct=0;
 
 //    std::vector<string> new_labels;
 //    std::vector<float> new_scores;
@@ -137,8 +129,8 @@ int main(int argc, char** argv){
 //        feedback_detection.open ("feedback_detection_parse.txt", ios::app);  // file with 25 predicted classes for each image
 
         cv::Mat img = cv::imread(file, 1);		 // Read image
-        //cv::Mat copy_img;
-        //img.copyTo(copy_img);
+        cv::Mat copy_img;
+        img.copyTo(copy_img);
         ClassData mydata(N);
 
         // Predict top 5
@@ -236,6 +228,9 @@ int main(int argc, char** argv){
             else
              feedback_detection <<  new_labels[aux] << ";" << new_scores[aux] << ";";
         }
+
+        Network.VisualizeBBox(bboxes, N, copy_img, size_map, ct);
+
 
      }
      feedback_detection << endl;

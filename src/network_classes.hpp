@@ -17,6 +17,7 @@
 #include <memory>
 #include <math.h>
 #include <limits>
+#include<sstream>
 //#include </usr/include/numpy/ndarrayobject.h>
 //#include </usr/include/numpy/ndarraytypes.h>
 
@@ -75,7 +76,7 @@ public:
     // Return Top 5 prediction of image in mydata
     ClassData Classify(const cv::Mat& img, int N);
     Rect CalcBBox(int N, int i, const cv::Mat &img, ClassData mydata, float thresh); // NEW
-    void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map);
+    void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map, int ct);
     std::vector<String> GetDir(string dir, vector<String> &files);
 
     float* Limit_values(float* bottom_data); // NEW
@@ -407,8 +408,8 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
 
-//    imshow("Mask", foreground_mask);
-//    waitKey(0);
+    imshow("Mask", foreground_mask);
+    waitKey(0);
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
 
     Mat Points;
@@ -452,7 +453,7 @@ std::vector<String> Network::GetDir(string dir, vector<String> &files) {
 // Function VisualiseBbox
 /************************************************************************/
 
-void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int size_map){
+void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int size_map, int ct){
 
     // Transformation from (227*227) to (height*width) of input image
     for (int k =0; k< N; ++k){
@@ -467,7 +468,17 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
 
         rectangle(img, bboxes[k], Scalar(0, 0, 255), 1, 8, 0 );
 
-    imwrite("Figures/bbox.jpg",img);
+    stringstream ss;
+
+    string name = "Figures/bbox_";
+    string type = ".jpg";
+
+    ss<<name<<(ct + 1)<<type;
+
+    string filename = ss.str();
+    ss.str("");
+
+    imwrite(filename, img);
     imshow("box", img );
     waitKey(0);
 }

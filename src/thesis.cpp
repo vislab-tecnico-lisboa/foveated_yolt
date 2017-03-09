@@ -108,7 +108,7 @@ int main(int argc, char** argv){
     raw_bbox_file.open ("raw_bbox_parse.txt",ios::app);                  // file with 5 classes + scores; 5 bounding boxes
     feedback_detection.open ("feedback_detection_parse.txt", ios::app);  // file with 25 predicted classes for each image
 
-    int ct=0;
+  //  int ct=0;
 
 //    std::vector<string> new_labels;
 //    std::vector<float> new_scores;
@@ -129,8 +129,8 @@ int main(int argc, char** argv){
 //        feedback_detection.open ("feedback_detection_parse.txt", ios::app);  // file with 25 predicted classes for each image
 
         cv::Mat img = cv::imread(file, 1);		 // Read image
-        cv::Mat copy_img;
-        img.copyTo(copy_img);
+      //  cv::Mat copy_img;
+      //  img.copyTo(copy_img);
         ClassData mydata(N);
 
         // Predict top 5
@@ -229,7 +229,7 @@ int main(int argc, char** argv){
              feedback_detection <<  new_labels[aux] << ";" << new_scores[aux] << ";";
         }
 
-        Network.VisualizeBBox(bboxes, N, copy_img, size_map, ct);
+       // Network.VisualizeBBox(bboxes, N, copy_img, size_map, ct);
 
 
      }

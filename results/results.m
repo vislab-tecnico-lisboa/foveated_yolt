@@ -1,3 +1,5 @@
+addpath('export_fig');
+
 gt_folder='../dataset/gt/';
 detections_file='../dataset/detections/raw_bbox_parse.txt';
 
@@ -13,7 +15,11 @@ top_k=5;
 gt=parse_ground_truth(gt_folder,images_number);
 
 % get detections
-[sigmas,classes,scores,detections]=parse_detections(detections_file);
+[sigmas,threshs,classes,scores,detections]=parse_detections(...
+    sigmas_number,...
+    thresholds_number,...
+    images_number,...
+    detections_file);
 
 % check overlaps
 overlaps=[];
@@ -34,12 +40,13 @@ for s=1:sigmas_number
                     gt_bbox=gt(i).bboxes(g,:);
                     
                     % scale detections
-                    detection=reshape(detections(i,j,:),1,4);
+                    detection=reshape(detections(s,t,i,j,:),1,4);
                     detection(1)=detection(1)*aspect_ratio_x;
                     detection(2)=detection(2)*aspect_ratio_y;
                     detection(3)=detection(3)*aspect_ratio_x;
                     detection(4)=detection(4)*aspect_ratio_y;
                     overlaps(s,t,i,j).overlap(g)=bboxOverlapRatio(gt_bbox,detection);
+                    
                 end
             end
         end
@@ -76,9 +83,12 @@ thresh_index=1;
 figure(1)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
-plot(detection_rate(:,thresh_index))
+plot(sigmas,100*detection_rate(:,thresh_index))
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
-ylabel('detection rate','Interpreter','LaTex','FontSize',fontsize);
+ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
+ylim([0 100])
+
+export_fig localization_error_sigma -pdf
 
 % fix one sigma and plot all saliency thresholds
 sigma_index=1;
@@ -86,10 +96,11 @@ sigma_index=1;
 figure(2)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
-plot(detection_rate(sigma_index,:))
+plot(threshs,100*detection_rate(sigma_index,:))
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
-ylabel('detection rate','Interpreter','LaTex','FontSize',fontsize);
+ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
+ylim([0 100])
 
-%export_fig error_results -pdf
+export_fig localization_error_th -pdf
 
 

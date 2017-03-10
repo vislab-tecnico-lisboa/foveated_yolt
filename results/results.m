@@ -1,7 +1,13 @@
+close all
+clear all
 addpath('export_fig');
 
 gt_folder='../dataset/gt/';
 detections_file='../dataset/detections/raw_bbox_parse.txt';
+images_folder='../dataset/images/';
+
+% set to true to check detections
+view_detections=true;
 
 % parameters
 detections_resolution=227;
@@ -20,6 +26,27 @@ gt=parse_ground_truth(gt_folder,images_number);
     thresholds_number,...
     images_number,...
     detections_file);
+
+% view images
+
+if view_detections
+    for i=1:images_number
+        figure(i)
+        imshow(strcat(images_folder,gt(i).filename))
+        hold on
+        for g=1:size(gt(i).bboxes,1)
+            % gt bbox
+            gt_bbox=gt(i).bboxes(g,:);
+            rectangle('Position',...
+                gt_bbox,...
+                'EdgeColor',...
+                [0 1 0],...
+                'LineWidth',...
+                3);
+        end
+        hold off
+    end
+end
 
 % check overlaps
 overlaps=[];
@@ -80,7 +107,7 @@ detection_rate=sum(max_overlap,3)/size(max_overlap,3);
 % fix one threshold and plot all sigmas
 thresh_index=1;
 
-figure(1)
+figure(2)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
 plot(sigmas,100*detection_rate(:,thresh_index))
@@ -93,7 +120,7 @@ export_fig localization_error_sigma -pdf
 % fix one sigma and plot all saliency thresholds
 sigma_index=1;
 
-figure(2)
+figure(3)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
 plot(threshs,100*detection_rate(sigma_index,:))

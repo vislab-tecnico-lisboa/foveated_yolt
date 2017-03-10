@@ -10,6 +10,7 @@ for i=1:images_number
     size(1)=str2num(gt_.annotation.size.width.Text);
     size(2)=str2num(gt_.annotation.size.height.Text);
     gt(i).size=size;
+    gt(i).filename=strcat(gt_.annotation.filename.Text,'.JPEG');
     if length(gt_.annotation.object)>1
         gt(i).bboxes=zeros(length(gt_.annotation.object),4);
         for j=1:length(gt_.annotation.object)

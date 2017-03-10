@@ -3,16 +3,16 @@ clear all
 addpath('export_fig');
 
 gt_folder='../dataset/gt/';
-detections_file='../dataset/detections/raw_bbox_parse.txt';
+detections_file='../raw_bbox_parse.txt';
 images_folder='../dataset/images/';
 
 % set to true to check detections
-view_detections=true;
+view_detections=false;
 
 % parameters
 detections_resolution=227;
-sigmas_number=5;
-thresholds_number=5;
+sigmas_number=13;
+thresholds_number=20;
 images_number=100;
 overlap_correct=0.5;
 top_k=5;
@@ -28,7 +28,6 @@ gt=parse_ground_truth(gt_folder,images_number);
     detections_file);
 
 % view images
-
 if view_detections
     for i=1:images_number
         figure(i)
@@ -100,7 +99,7 @@ max_overlap(max_overlap>=overlap_correct)=1;
 max_overlap(max_overlap<overlap_correct)=0;
 
 % compute detection rate
-detection_rate=sum(max_overlap,3)/size(max_overlap,3);
+error_rate=(size(max_overlap,3)-sum(max_overlap,3))/size(max_overlap,3);
 
 %% plots
 
@@ -110,7 +109,7 @@ thresh_index=1;
 figure(2)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
-plot(sigmas,100*detection_rate(:,thresh_index))
+plot(sigmas,100*error_rate(:,15))
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
@@ -123,7 +122,7 @@ sigma_index=1;
 figure(3)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
-plot(threshs,100*detection_rate(sigma_index,:))
+plot(threshs,100*error_rate(:,:))
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])

@@ -1,3 +1,4 @@
 build/*
 files/bvlc_reference_caffenet.caffemodel
+*.pdf
 *~

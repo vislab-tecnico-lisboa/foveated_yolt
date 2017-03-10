@@ -55,9 +55,9 @@ echo "sigma;thres;class1;score1;x1;y1;w1;h1;class2;score2;x2;y2;w2;h2;class3;sco
 echo "sigma;thres;class1;score1;class2;score2;class3;score3;class4;score4;class5;score5;class6;score6;class7;score7;class8;score8;class9;score9;class10;score10;class11;score11;class12;score12;class13;score13;class14;score14;class15;score15;class16;score16;class17;score17;class18;score18;class19;score19;class20;score20;class21;score21;class22;score22;class23;score23;class24;score24;class25;score25">feedback_detection_parse.txt
 
 
-for SIGMA in {20,40,60,80,100}
+for SIGMA in {0,20,40,60,80,100}
 do
-    for THRESHOLD in {0.75,0.80,0.85,0.90,0.95}
+    for THRESHOLD in {0.0,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.80,0.85,0.90,0.95}
     do
 
         # /home/filipa/Documents/Foveated_YOLT/files/ deploy_caffenet.prototxt bvlc_caffenet.caffemodel imagenet_mean.binaryproto val.txt

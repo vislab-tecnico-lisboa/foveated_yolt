@@ -4,6 +4,7 @@ addpath('export_fig');
 
 gt_folder='../dataset/gt/';
 detections_file='../raw_bbox_parse.txt';
+classifications_file='../files/ground_truth_labels_ilsvrc12.txt';
 images_folder='../dataset/images/';
 
 % set to true to check detections
@@ -11,8 +12,6 @@ view_detections=false;
 
 % parameters
 detections_resolution=227;
-sigmas_number=13;
-thresholds_number=20;
 images_number=100;
 overlap_correct=0.5;
 top_k=5;
@@ -22,10 +21,9 @@ gt=parse_ground_truth(gt_folder,images_number);
 
 % get detections
 [sigmas,threshs,classes,scores,detections]=parse_detections(...
-    sigmas_number,...
-    thresholds_number,...
     images_number,...
     detections_file);
+
 
 % view images
 if view_detections
@@ -49,8 +47,8 @@ end
 
 % check overlaps
 overlaps=[];
-for s=1:sigmas_number
-    for t=1:thresholds_number
+for s=1:length(sigmas)
+    for t=1:length(threshs)
         for i=1:images_number
             gt_size=gt(i).size;
             aspect_ratio_x=gt_size(1)/detections_resolution;
@@ -80,9 +78,9 @@ for s=1:sigmas_number
 end
 
 % consider only the maximum overlap over ground truths
-max_overlap=zeros(sigmas_number,thresholds_number, images_number,top_k);
-for s=1:sigmas_number
-    for t=1:thresholds_number
+max_overlap=zeros(length(sigmas),length(threshs), images_number,top_k);
+for s=1:length(sigmas)
+    for t=1:length(threshs)
         for i=1:images_number
             for j=1:top_k
                 max_overlap(s,t,i,j)=max(overlaps(s,t,i,j).overlap);

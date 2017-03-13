@@ -1,4 +1,4 @@
-function [sigmas,thres,classes,scores,detections] = parse_detections(sigmas_number,thresholds_number,images_number,detections_file)
+function [sigmas,thres,classes,scores,detections] = parse_detections(images_number,detections_file)
 detections_ = tdfread(detections_file,';');
 
 sigmas=unique(detections_.sigma);
@@ -11,13 +11,13 @@ scores(:,4)=detections_.score4;
 scores(:,5)=detections_.score5;
 
 classes=[];
-detections=zeros(sigmas_number,thresholds_number,images_number,5,4);
+detections=zeros(length(sigmas),length(thres),images_number,5,4);
 
 
-for s=1:sigmas_number
-    for t=1:thresholds_number
+for s=1:length(sigmas)
+    for t=1:length(thres)
         for im=1:images_number
-            i=im+(t-1)*images_number +(s-1)*images_number*thresholds_number;
+            i=im+(t-1)*images_number +(s-1)*images_number*length(thres);
             classes=[classes; char(detections_.class1(i,:)),...
                 char(detections_.class2(i,:)),...
                 char(detections_.class3(i,:)),...

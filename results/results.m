@@ -3,7 +3,7 @@ clear all
 addpath('export_fig');
 
 gt_folder='../dataset/gt/';
-detections_file='../raw_bbox_parse.txt';
+detections_file='../dataset/detections/raw_bbox_muitos_parametros_100.txt';
 classifications_file='../files/ground_truth_labels_ilsvrc12.txt';
 images_folder='../dataset/images/';
 
@@ -12,7 +12,7 @@ view_detections=false;
 
 % parameters
 detections_resolution=227;
-images_number=100;
+images_number=100;  %100;  %5000;
 overlap_correct=0.5;
 top_k=5;
 
@@ -23,7 +23,6 @@ gt=parse_ground_truth(gt_folder,images_number);
 [sigmas,threshs,classes,scores,detections]=parse_detections(...
     images_number,...
     detections_file);
-
 
 % view images
 if view_detections
@@ -104,27 +103,40 @@ error_rate=(size(max_overlap,3)-sum(max_overlap,3))/size(max_overlap,3);
 % fix one threshold and plot all sigmas
 thresh_index=1;
 
+legend_thres = {};
+for i=1:length(threshs)
+    legend_thres = [legend_thres, strcat('th=', num2str(threshs(i))) ];
+end
+
 figure(2)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
-plot(sigmas,100*error_rate(:,15))
+plot(sigmas,100*error_rate(:,:)) %15       
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
-
-export_fig localization_error_sigma -pdf
+legend('show', 'DislpayName', legend_thres(:) ,'Location', 'bestoutside');
+saveas(figure(2),'localization_error_sigma_caffenet100.pdf')
+%export_fig localization_error_sigma -pdf
 
 % fix one sigma and plot all saliency thresholds
 sigma_index=1;
 
+legend_sigma = {};
+for i=1:length(sigmas)
+    legend_sigma = [legend_sigma, strcat('\sigma=', num2str(sigmas(i))) ];
+end
+
 figure(3)
 fontsize=15;
-set(gcf, 'Color', [1,1,1]);
+set(gcf, 'Color', [1,1,1]);  % set background color to white
 plot(threshs,100*error_rate(:,:))
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
+legend('show', 'DislpayName', legend_sigma(:) ,'Location', 'bestoutside');
+saveas(figure(3),'localization_error_threshold_caffenet100.pdf')
 
-export_fig localization_error_th -pdf
+%export_fig localization_error_th -pdf
 
 

@@ -13,11 +13,12 @@ scores(:,5)=detections_.score5;
 classes=[];
 detections=zeros(length(sigmas),length(thres),images_number,5,4);
 
+total_images=length(detections_.sigma)/(length(sigmas)*length(thres));
 
 for s=1:length(sigmas)
     for t=1:length(thres)
         for im=1:images_number
-            i=im+(t-1)*images_number +(s-1)*images_number*length(thres);
+            i=im+(t-1)*total_images +(s-1)*total_images*length(thres);
             classes=[classes; char(detections_.class1(i,:)),...
                 char(detections_.class2(i,:)),...
                 char(detections_.class3(i,:)),...

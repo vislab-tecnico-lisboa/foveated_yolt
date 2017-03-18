@@ -6,10 +6,10 @@ for s=1:length(sigmas)
     for t=1:length(threshs)
         for i=1:images_number
             gt_class=gt_classes{i};
-            top1_classification(s,t,i)=strcmpi(classes{s,t,i,1},gt_class);
+            top1_classification(s,t,i)=strcmpi(strtrim(classes{s,t,i,1}),gt_class);  
             % for each detection (of the 5)
             for j=1:top_k
-                top5_classification(s,t,i)= (strcmpi(classes{s,t,i,j},gt_class) | top5_classification(s,t,i));
+                top5_classification(s,t,i)= (strcmpi(strtrim(classes{s,t,i,j}),gt_class) | top5_classification(s,t,i));
             end
         end
     end

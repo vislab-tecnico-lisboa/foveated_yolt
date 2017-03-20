@@ -2,7 +2,8 @@ close all
 addpath('export_fig');
 
 gt_folder='../dataset/gt/';
-detections_file='../dataset/detections/raw_bbox_parse_vggnet_5000.txt';
+detections_file='../dataset/detections/raw_bbox_parse.txt';
+feedback_detections_file = '../dataset/detections/feedback_detection_parse_caffenet_100.txt';
 classifications_file='../files/ground_truth_labels_ilsvrc12.txt';
 images_folder='../dataset/images/';
 
@@ -22,6 +23,12 @@ top_k=5;
 [sigmas,threshs,classes,scores,detections]=parse_detections(...
     images_number,...
     detections_file);
+
+% get feedback detections
+[feedback_sigmas,feedback_threshs,feedback_classes,feedback_scores]=feedback_parse_detections(...
+    images_number,...
+    feedback_detections_file);
+
 
 % view images
 if view_detections
@@ -69,7 +76,7 @@ xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
 legend('show', 'DislpayName', legend_thres(:) ,'Location', 'bestoutside');
-saveas(figure(2),'localization_error_sigma_vggnet_100.pdf')
+saveas(figure(2),'localization_error_sigma_100.pdf')
 %export_fig localization_error_sigma -pdf
 
 % fix one sigma and plot all saliency thresholds
@@ -89,9 +96,9 @@ ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
 xlim([20 100])
 ylim([0 100])
 legend('show', 'DislpayName', legend_sigma(:) ,'Location', 'bestoutside');
-saveas(figure(3),'localization_error_threshold_vggnet_100.pdf')
+saveas(figure(3),'localization_error_threshold_100.pdf')
 
-%export_fig localization_error_th -pdf
+%export_fig localization_error_th -pdf 
 
 % %% classification (top 1) error plots
 % 

@@ -1,4 +1,4 @@
-function [feedback_sigmas,feedback_thres,feedback_classes,feedback_scores] = feedback_parse_detections(images_number,detections_file)
+function [feedback_sigmas,feedback_thres,feedback_classes,feedback_scores,rank_feedback_classes] = feedback_parse_detections(images_number,detections_file)
 detections_ = tdfread(detections_file,';');
 
 feedback_sigmas=unique(detections_.sigma);
@@ -70,3 +70,20 @@ for s=1:length(feedback_sigmas)
 end
 
 
+rank_feedback_classes = cell(length(feedback_sigmas),length(feedback_thres),images_number,5);
+
+for s=1:length(feedback_sigmas)
+    for t=1:length(feedback_thres)
+        for im=1:images_number
+
+            % Rank 25 predicted class labels to top5 final solution
+            [rank_feedback_scores, rank_score_index] = sort(feedback_scores(im,:), 'descend');
+            
+            rank_feedback_classes{s,t,im,1}=char(feedback_classes{s,t,im,rank_score_index(1)});
+            rank_feedback_classes{s,t,im,2}=char(feedback_classes{s,t,im,rank_score_index(2)});
+            rank_feedback_classes{s,t,im,3}=char(feedback_classes{s,t,im,rank_score_index(3)});
+            rank_feedback_classes{s,t,im,4}=char(feedback_classes{s,t,im,rank_score_index(4)});
+            rank_feedback_classes{s,t,im,5}=char(feedback_classes{s,t,im,rank_score_index(5)});
+        end
+    end
+end

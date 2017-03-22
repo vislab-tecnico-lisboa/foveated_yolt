@@ -2,7 +2,8 @@ close all
 addpath('export_fig');
 
 gt_folder='../dataset/gt/';
-detections_file='../dataset/detections/raw_bbox_parse.txt';
+detections_file='../dataset/detections/raw_bbox_parse_caffenet_100.txt';
+feedback_detections_crop_file='../dataset/detections/feedback_detection_parse_crop_caffenet_100.txt';
 feedback_detections_file = '../dataset/detections/feedback_detection_parse_caffenet_100.txt';
 classifications_file='../files/ground_truth_labels_ilsvrc12.txt';
 images_folder='../dataset/images/';
@@ -24,29 +25,18 @@ top_k=5;
     images_number,...
     detections_file);
 
-% get feedback detections
-[feedback_sigmas,feedback_threshs,feedback_classes,feedback_scores]=feedback_parse_detections(...
+% get feedback detections (foveation)
+[feedback_sigmas,feedback_threshs,feedback_classes,feedback_scores,rank_feedback_classes]=feedback_parse_detections(...
     images_number,...
     feedback_detections_file);
 
+% get feedback detections (crops)
+[feedback_crop_sigmas,feedback_crop_threshs,feedback_crop_classes,feedback_crop_scores,rank_feedback_crop_classes]=feedback_parse_detections(...
+    images_number,...
+    feedback_detections_crop_file);
 
-rank_feedback_classes = cell(length(feedback_sigmas),length(feedback_threshs),images_number,5);
 
-for s=1:length(feedback_sigmas)
-    for t=1:length(feedback_threshs)
-        for im=1:images_number
 
-            % Rank 25 predicted class labels to top5 final solution
-            [rank_feedback_scores, rank_score_index] = sort(feedback_scores(im,:), 'descend');
-            
-            rank_feedback_classes{s,t,im,1}=char(feedback_classes{s,t,im,rank_score_index(1)});
-            rank_feedback_classes{s,t,im,2}=char(feedback_classes{s,t,im,rank_score_index(2)});
-            rank_feedback_classes{s,t,im,3}=char(feedback_classes{s,t,im,rank_score_index(3)});
-            rank_feedback_classes{s,t,im,4}=char(feedback_classes{s,t,im,rank_score_index(4)});
-            rank_feedback_classes{s,t,im,5}=char(feedback_classes{s,t,im,rank_score_index(5)});
-        end
-    end
-end
 
 
 % view images
@@ -78,8 +68,12 @@ end
 % get classification error rates (YOLO)
 [top1_classification_error_rate, top5_classification_error_rate] = classification_error_rates(sigmas,threshs,images_number,classes,gt_classes,top_k);
 
-% get feedback classification error rates (YOLT)
+% get feedback classification error rates (YOLT foveation)
 [top1_feedback_classification_error_rate, top5_feedback_classification_error_rate] = classification_error_rates(feedback_sigmas,feedback_threshs,images_number,rank_feedback_classes,gt_classes,top_k);
+
+% get feedback classification error rates (YOLT crop)
+[top1_feedback_crop_classification_error_rate, top5_feedback_crop_classification_error_rate] = classification_error_rates(feedback_crop_sigmas,feedback_crop_threshs,images_number,rank_feedback_crop_classes,gt_classes,top_k);
+
 
 %% detection error plots
 
@@ -98,8 +92,9 @@ plot(sigmas,100*detection_error_rate(:,:))
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
+xlim([20 100])
 legend('show', 'DislpayName', legend_thres(:) ,'Location', 'bestoutside');
-saveas(figure(2),'localization_error_sigma_100.pdf')
+saveas(figure(2),'localization_error_sigma_crop_caffenet_5000.pdf')
 %export_fig localization_error_sigma -pdf
 
 % fix one sigma and plot all saliency thresholds
@@ -116,10 +111,10 @@ set(gcf, 'Color', [1,1,1]);  % set background color to white
 plot(threshs,100*detection_error_rate(:,:))
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
-xlim([20 100])
+%xlim([20 100])
 ylim([0 100])
 legend('show', 'DislpayName', legend_sigma(:) ,'Location', 'bestoutside');
-saveas(figure(3),'localization_error_threshold_100.pdf')
+saveas(figure(3),'localization_error_threshold_crop_caffenet_5000.pdf')
 
 %export_fig localization_error_th -pdf 
 
@@ -129,21 +124,32 @@ saveas(figure(3),'localization_error_threshold_100.pdf')
 
 % fix one threshold and plot all sigmas
 thresh_index=1;
+thresh_crop_index=15;
 
-legend_thres = {};
-for i=1:length(feedback_threshs)
-    legend_thres = [legend_thres, strcat('th=', num2str(feedback_threshs(i))) ];
-end
+classification_legend = {...
+    char('top 1 feedback (foveation)');...
+    char('top 5 feedback (foveation)');...
+    char('top 1 feedback (crop)');...
+    char('top 5 feedback (crop)');...
+    };
+
 
 figure(4)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
-plot(feedback_sigmas,100*top1_feedback_classification_error_rate(:,:)) %15
+plot(feedback_sigmas,100*top1_feedback_classification_error_rate(:,thresh_index),'r-'); %15
+hold on
+plot(feedback_sigmas,100*top5_feedback_classification_error_rate(:,thresh_index),'b-'); %15
+
+plot(feedback_sigmas,repmat(100*top1_feedback_crop_classification_error_rate(:,thresh_crop_index),length(feedback_sigmas)),'r--'); %15
+hold on
+plot(feedback_sigmas,repmat(100*top5_feedback_crop_classification_error_rate(:,thresh_crop_index),length(feedback_sigmas)),'b--'); %15
+
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
-ylabel('Classification Error (top 1) (%)','Interpreter','LaTex','FontSize',fontsize);
+ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
-legend('show', 'DislpayName', legend_thres(:) ,'Location', 'bestoutside');
-saveas(figure(4),'classification_top1_error_sigma_caffenet_100.pdf')
+[h,~]=legend('show', 'DislpayName', classification_legend(1:4) ,'Location', 'bestoutside');
+saveas(figure(4),'classification_top1_error_sigma_crop_caffenet_5000.pdf')
 %export_fig localization_error_sigma -pdf
 
 % fix one sigma and plot all saliency thresholds
@@ -161,10 +167,10 @@ plot(feedback_threshs,100*top1_feedback_classification_error_rate(:,:))
 
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (top 1) (%)','Interpreter','LaTex','FontSize',fontsize);
-xlim([20 100])
+%xlim([20 100])
 ylim([0 100])
 legend('show', 'DislpayName', legend_sigma(:) ,'Location', 'bestoutside');
-saveas(figure(5),'classification_top1_error_threshold_caffenet_100.pdf')
+saveas(figure(5),'classification_top1_error_threshold_crop_caffenet_5000.pdf')
 
 %% classification (top 5) error plots
 
@@ -184,7 +190,7 @@ xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (top 5) (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
 legend('show', 'DislpayName', legend_thres(:) ,'Location', 'bestoutside');
-saveas(figure(6),'classification_top5_error_sigma_caffenet_100.pdf')
+saveas(figure(6),'classification_top5_error_sigma_crop_caffenet_5000.pdf')
 %export_fig localization_error_sigma -pdf
 
 % fix one sigma and plot all saliency thresholds
@@ -202,8 +208,8 @@ plot(feedback_threshs,100*top5_feedback_classification_error_rate(:,:))
 
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (top 5) (%)','Interpreter','LaTex','FontSize',fontsize);
-xlim([20 100])
+%xlim([20 100])
 ylim([0 100])
 legend('show', 'DislpayName', legend_sigma(:) ,'Location', 'bestoutside');
-saveas(figure(7),'classification_top5_error_threshold_caffenet_100.pdf')
+saveas(figure(7),'classification_top5_error_threshold_crop_caffenet_5000.pdf')
 

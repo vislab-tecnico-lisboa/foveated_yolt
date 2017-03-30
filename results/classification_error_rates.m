@@ -2,6 +2,7 @@ function [top1_classification_error_rate, top5_classification_error_rate] = clas
 
 top1_classification=zeros(length(sigmas),length(threshs),images_number);
 top5_classification=zeros(length(sigmas),length(threshs),images_number);
+
 for s=1:length(sigmas)
     for t=1:length(threshs)
         for i=1:images_number

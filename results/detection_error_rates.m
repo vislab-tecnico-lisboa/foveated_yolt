@@ -52,3 +52,4 @@ max_overlap(max_overlap<overlap_correct)=0;
 
 % compute detection rate
 error_rate=(size(max_overlap,3)-sum(max_overlap,3))/size(max_overlap,3);
+

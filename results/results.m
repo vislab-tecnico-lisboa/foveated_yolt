@@ -2,7 +2,7 @@ close all
 addpath('export_fig');
 
 gt_folder='../dataset/gt/';
-detections_file='../dataset/detections/raw_bbox_parse_caffenet_100.txt';
+detections_file='../dataset/detections/raw_bbox_parse_caffenet_100.txt';   % raw_bbox_parse_caffenet_100.txt
 %detections_crop_file='../dataset/detections/raw_bbox_parse_crop_caffenet_100.txt';
 
 
@@ -141,34 +141,41 @@ thresh_index=1;
 thresh_crop_index=15;
 
 classification_legend = {...
+    %char('top 1 (yolo) ');...
+    %char('top 5 (yolo) ');...
     char('top 1 feedback (foveation)');...
     char('top 5 feedback (foveation)');...
     char('top 1 feedback (crop)');...
-    char('top 5 feedback (crop)');...
-    %char('top 1 ');...
-    %char('top 5 ');...
+    char('top 5 feedback (crop)');... 
+    %char('top 1');...
+    %char('top 5');...
     };
 
 
 figure(4)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
-plot(feedback_sigmas,100*top1_feedback_classification_error_rate(:,thresh_index),'r-*'); 
-hold on
-plot(feedback_sigmas,100*top5_feedback_classification_error_rate(:,thresh_index),'b-o'); 
+% plot(sigmas,100*repmat(top1_classification_error_rate(:,thresh_index),length(feedback_sigmas)),'g-*');
+% hold on
+% plot(sigmas,100*repmat(top5_classification_error_rate(:,thresh_index),length(feedback_sigmas)),'g-o');
 
-plot(feedback_sigmas,repmat(100*top1_feedback_crop_classification_error_rate(:,thresh_crop_index),length(feedback_sigmas)),'r--*'); 
+plot(feedback_sigmas,100*top1_feedback_classification_error_rate(:,17),'r-*'); 
 hold on
-plot(feedback_sigmas,repmat(100*top5_feedback_crop_classification_error_rate(:,thresh_crop_index),length(feedback_sigmas)),'b--o'); 
+plot(feedback_sigmas,100*top5_feedback_classification_error_rate(:,17),'r-o'); 
 
-%plot(sigmas,100*top1_classification_error_rate(:,thresh_index),'g-*');
-%plot(sigmas,100*top5_classification_error_rate(:,thresh_index),'g-o');
+plot(feedback_sigmas,100*top1_feedback_crop_classification_error_rate(:,17),'b--*'); 
+plot(feedback_sigmas,100*top5_feedback_crop_classification_error_rate(:,17),'b--o'); 
+
 
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
-legend('show', 'DislpayName', classification_legend(:) ,'Location', 'best');
-%saveas(figure(4),'classification_error_sigmacaffenet_100.pdf')
+%legend('show', 'DislpayName', classification_legend(:) ,'Location', 'best');
+legend(classification_legend(:));
+set(gcf, 'PaperPosition', [0 0 200 100]); %Position the plot further to the left and down. Extend the plot to fill entire paper.
+set(gcf, 'PaperSize', [200 100]); %Keep the same paper size
+%saveas(gcf, 'test', 'pdf')
+saveas(figure(4),'classification_error_sigma_caffenet_th0.8_100.pdf')
 %export_fig localization_error_sigma -pdf
 
 % fix one sigma and plot all saliency thresholds
@@ -251,7 +258,7 @@ plot(feedback_sigmas,100*detection_error_rate(:,1),'g-*');
 hold on
 plot(feedback_sigmas,100*detection_foveate_error_rate(:,:),'b-o'); 
 
-plot(feedback_sigmas,repmat(100*detection_crop_error_rate(:,:),length(feedback_sigmas)),'r-*'); 
+plot(feedback_sigmas,100*detection_crop_error_rate(:,:),'r-*'); 
 
 
 

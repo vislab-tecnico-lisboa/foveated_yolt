@@ -19,6 +19,10 @@ for s=1:length(sigmas)
                 % check overlaps for each ground truth bounding box
                 overlaps(s,t,i,j).overlap=zeros(size(gt_detections(i).bboxes,1),1);
                 
+                if detection(3)==0 && detection(4)==0
+                    detection(3)=1;
+                    detection(4)=1;
+                end
                 for g=1:size(gt_detections(i).bboxes,1)
                     % gt bbox
                     gt_bbox=gt_detections(i).bboxes(g,:);

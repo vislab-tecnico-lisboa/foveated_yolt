@@ -3,7 +3,7 @@ addpath('export_fig');
 
 gt_folder='../dataset/gt/';
 
-detections_file='../dataset/detections/new/raw_bbox_parse_fovea_high_blur_caffenet_100.txt';   % raw_bbox_parse_caffenet_100.txt
+detections_file='../dataset/detections/new/raw_bbox_parse_crop_high_blur_caffenet_100.txt';   % raw_bbox_parse_caffenet_100.txt
 feedback_detections_file = '../dataset/detections/new/feedback_detection_parse_fovea_high_blur_caffenet_100.txt';
 feedback_crop_detections_file = '../dataset/detections/new/feedback_detection_parse_crop_high_blur_caffenet_100.txt';
 
@@ -44,13 +44,13 @@ top_k=5;
 
 %% LOCALIZATION
 % get detection error rates (YOLO)
-%[detection_error_rate] = detection_error_rates(sigmas,threshs,images_number,detections,gt_detections,detections_resolution,top_k,overlap_correct);
+[detection_error_rate] = detection_error_rates(sigmas,threshs,images_number,detections,gt_detections,detections_resolution,top_k,overlap_correct);
 
 % % get detection crop error rate (CROP)
-% [detection_crop_error_rate] = detection_error_rates(feedback_crop_sigmas,feedback_crop_threshs,images_number,feedback_crop_detections,gt_detections,detections_resolution,top_k,overlap_correct);
+[detection_crop_error_rate] = detection_error_rates(feedback_crop_sigmas,feedback_crop_threshs,images_number,feedback_crop_detections,gt_detections,detections_resolution,top_k,overlap_correct);
 % 
 % % get detection foveate error rate  (FOVEA)
-% [detection_foveate_error_rate] = detection_error_rates(feedback_sigmas,feedback_threshs,images_number,feedback_detections,gt_detections,detections_resolution,top_k,overlap_correct);
+[detection_foveate_error_rate] = detection_error_rates(feedback_sigmas,feedback_threshs,images_number,feedback_detections,gt_detections,detections_resolution,top_k,overlap_correct);
 
 
 %% CLASSIFICATION
@@ -110,6 +110,45 @@ set(gcf, 'PaperPosition', [0 0 200 100]); %Position the plot further to the left
 set(gcf, 'PaperSize', [200 100]); %Keep the same paper size
 %saveas(gcf, 'test', 'pdf')
 saveas(figure(1),'classification_error_high_blur_caffenet_100.pdf')
+%export_fig localization_error_sigma -pdf
+
+
+
+%%
+
+thresh_index=1;
+thresh_crop_index=15;
+
+localizaion_legend = {...
+    char('YOLO');...    
+    char('YOLT (fovea)');...
+    char('YOLT (crop)');...
+    };
+
+
+figure(2)
+fontsize=15;
+set(gcf, 'Color', [1,1,1]);
+% plot(sigmas,100*repmat(top1_classification_error_rate(:,thresh_index),length(feedback_sigmas)),'g-*');
+% hold on
+% plot(sigmas,100*repmat(top5_classification_error_rate(:,thresh_index),length(feedback_sigmas)),'g-o');
+
+plot(sigmas,100*detection_error_rate(:,3),'k-o'); 
+hold on
+plot(sigmas,100*detection_foveate_error_rate(:,3),'b-o'); 
+
+plot(sigmas,100*detection_crop_error_rate(:,3),'r-o'); 
+
+
+xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
+ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
+ylim([0 100])
+%legend('show', 'DislpayName', classification_legend(:) ,'Location', 'best');
+legend(localizaion_legend(:),'Location', 'southeast');
+set(gcf, 'PaperPosition', [0 0 200 100]); %Position the plot further to the left and down. Extend the plot to fill entire paper.
+set(gcf, 'PaperSize', [200 100]); %Keep the same paper size
+%saveas(gcf, 'test', 'pdf')
+saveas(figure(2),'localization_error_high_blur_caffenet_100.pdf')
 %export_fig localization_error_sigma -pdf
 
 

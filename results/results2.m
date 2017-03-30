@@ -67,11 +67,7 @@ top_k=5;
 
 
 
-%% classification (top 1) error plots
-% SIGMA
-
-thresh_index=1;
-thresh_crop_index=15;
+%% CLASSIFICATION ERROR PLOTS
 
 classification_legend = {...
     char('top 1 ');...
@@ -86,9 +82,6 @@ classification_legend = {...
 figure(1)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
-% plot(sigmas,100*repmat(top1_classification_error_rate(:,thresh_index),length(feedback_sigmas)),'g-*');
-% hold on
-% plot(sigmas,100*repmat(top5_classification_error_rate(:,thresh_index),length(feedback_sigmas)),'g-o');
 
 plot(sigmas,100*top1_classification_error_rate(:,2),'k-*'); 
 hold on
@@ -106,18 +99,14 @@ ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
 %legend('show', 'DislpayName', classification_legend(:) ,'Location', 'best');
 legend(classification_legend(:),'Location', 'southeast');
-set(gcf, 'PaperPosition', [0 0 200 100]); %Position the plot further to the left and down. Extend the plot to fill entire paper.
-set(gcf, 'PaperSize', [200 100]); %Keep the same paper size
-%saveas(gcf, 'test', 'pdf')
+set(gcf, 'PaperPosition', [0 0 200 100]);   %Position the plot further to the left and down. Extend the plot to fill entire paper.
+set(gcf, 'PaperSize', [200 100]);           %Keep the same paper size
 saveas(figure(1),'classification_error_high_blur_caffenet_100.pdf')
 %export_fig localization_error_sigma -pdf
 
 
 
-%%
-
-thresh_index=1;
-thresh_crop_index=15;
+%% LOCALIZATION ERROR PLOTS
 
 localizaion_legend = {...
     char('YOLO');...    
@@ -129,15 +118,12 @@ localizaion_legend = {...
 figure(2)
 fontsize=15;
 set(gcf, 'Color', [1,1,1]);
-% plot(sigmas,100*repmat(top1_classification_error_rate(:,thresh_index),length(feedback_sigmas)),'g-*');
-% hold on
-% plot(sigmas,100*repmat(top5_classification_error_rate(:,thresh_index),length(feedback_sigmas)),'g-o');
 
-plot(sigmas,100*detection_error_rate(:,3),'k-o'); 
+plot(sigmas,100*detection_error_rate(:,3),'k-o');           % first pass
 hold on
-plot(sigmas,100*detection_foveate_error_rate(:,3),'b-o'); 
+plot(sigmas,100*detection_foveate_error_rate(:,3),'b-o');   % fovea
 
-plot(sigmas,100*detection_crop_error_rate(:,3),'r-o'); 
+plot(sigmas,100*detection_crop_error_rate(:,3),'r-o');      % crop
 
 
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
@@ -145,9 +131,8 @@ ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
 %legend('show', 'DislpayName', classification_legend(:) ,'Location', 'best');
 legend(localizaion_legend(:),'Location', 'southeast');
-set(gcf, 'PaperPosition', [0 0 200 100]); %Position the plot further to the left and down. Extend the plot to fill entire paper.
-set(gcf, 'PaperSize', [200 100]); %Keep the same paper size
-%saveas(gcf, 'test', 'pdf')
+set(gcf, 'PaperPosition', [0 0 200 100]);   %Position the plot further to the left and down. Extend the plot to fill entire paper.
+set(gcf, 'PaperSize', [200 100]);           %Keep the same paper size
 saveas(figure(2),'localization_error_high_blur_caffenet_100.pdf')
 %export_fig localization_error_sigma -pdf
 

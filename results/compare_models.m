@@ -128,7 +128,7 @@ classification_legend = {...
 
 
 figure(1)
-fontsize=15;
+fontsize=19;
 set(gcf, 'Color', [1,1,1]);
 aux=feedback_crop_vgg_sigmas;
 aux = aux(1:11,:);
@@ -146,8 +146,8 @@ plot(feedback_crop_sigmas,100*top5_feedback_crop_classification_error_rate(:,4),
 %plot(feedback_vgg_sigmas,100*top1_vgg_feedback_classification_error_rate(:,3),'r--^'); 
 %plot(feedback_vgg_sigmas,100*top5_vgg_feedback_classification_error_rate(:,3),'r-^'); 
 
-plot(aux,100*repmat(top1_vgg_feedback_crop_classification_error_rate(:,4),length(aux)),'m--s'); 
-plot(aux,100*repmat(top5_vgg_feedback_crop_classification_error_rate(:,4),length(aux)),'m-s'); 
+plot(feedback_crop_vgg_sigmas,100*top1_vgg_feedback_crop_classification_error_rate(:,4),'m--s'); 
+plot(feedback_crop_vgg_sigmas,100*top5_vgg_feedback_crop_classification_error_rate(:,4),'m-s'); 
 
 
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
@@ -155,6 +155,7 @@ ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
 %legend('show', 'DislpayName', classification_legend(:) ,'Location', 'best');
 legend(classification_legend(:),'Location', 'southeast');
+set(gca, 'FontSize', fontsize);
 set(gcf, 'PaperPosition', [0 0 200 100]);   %Position the plot further to the left and down. Extend the plot to fill entire paper.
 set(gcf, 'PaperSize', [200 100]);           %Keep the same paper size
 saveas(figure(1),'classification_error_high_blur_caffe_vs_vgg_100.pdf')

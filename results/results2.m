@@ -12,7 +12,7 @@ feedback_crop_detections_file = '../dataset/detections/new/feedback_detection_pa
 
 % VGG
 detections_vgg_file = '../dataset/detections/new/raw_bbox_parse_crop_high_blur_vggnet_100.txt';
-%feedback_detections_vgg_file = '../dataset/detections/new/feedback_detection_parse_fovea_high_blur_vggnet_100.txt';
+feedback_detections_vgg_file = '../dataset/detections/new/feedback_detection_parse_fovea_high_blur_vggnet_100.txt';
 feedback_crop_vgg_detections_file = '../dataset/detections/new/feedback_detection_parse_crop_high_blur_vggnet_100.txt';
 
 % Google
@@ -73,9 +73,9 @@ top_k=5;
 
 % VGG
 % get feedback detections (Fovea) 
-% [vgg_feedback_sigmas,vgg_feedback_threshs,vgg_feedback_classes,vgg_feedback_scores,vgg_rank_feedback_classes,vgg_feedback_detections]=feedback_parse_detections2(...
-%     images_number,...
-%     feedback_detections_vgg_file);
+[vgg_feedback_sigmas,vgg_feedback_threshs,vgg_feedback_classes,vgg_feedback_scores,vgg_rank_feedback_classes,vgg_feedback_detections]=feedback_parse_detections2(...
+    50,...
+    feedback_detections_vgg_file);
 
 % get feedback detections (Crop) 
 [vgg_feedback_crop_sigmas,vgg_feedback_crop_threshs,vgg_feedback_crop_classes,vgg_feedback_crop_scores,vgg_rank_feedback_crop_classes,vgg_feedback_crop_detections]=feedback_parse_detections2(...
@@ -126,7 +126,7 @@ top_k=5;
 [top1_vgg_classification_error_rate, top5_vgg_classification_error_rate] = classification_error_rates(vgg_sigmas,vgg_threshs,images_number,vgg_classes,gt_classes,top_k);
 
 % get feedback classification error rates (Fovea)
-%[top1_vgg_feedback_classification_error_rate, top5_vgg_feedback_classification_error_rate] = classification_error_rates(vgg_feedback_sigmas,vgg_feedback_threshs,images_number,vgg_rank_feedback_classes,gt_classes,top_k);
+[top1_vgg_feedback_classification_error_rate, top5_vgg_feedback_classification_error_rate] = classification_error_rates(vgg_feedback_sigmas,vgg_feedback_threshs,50,vgg_rank_feedback_classes,gt_classes,top_k);
 
 % get feedback classification error rates (crop)
 [top1_vgg_feedback_crop_classification_error_rate, top5_vgg_feedback_crop_classification_error_rate] = classification_error_rates(vgg_feedback_crop_sigmas,vgg_feedback_crop_threshs,images_number,vgg_rank_feedback_crop_classes,gt_classes,top_k);
@@ -188,8 +188,8 @@ saveas(figure(1),'classification_error_high_blur_caffenet_100.pdf')
 classification_legend = {...
     char('top 1 ');...
     char('top 5 ');...
-    %char('top 1 feedback (fovea) ');...
-    %char('top 5 feedback (fovea) ');... 
+    char('top 1 feedback (fovea) ');...
+    char('top 5 feedback (fovea) ');... 
     char('top 1 feedback (crop) ');...
     char('top 5 feedback (crop) ');...
     };
@@ -203,8 +203,8 @@ plot(vgg_sigmas,100*top1_vgg_classification_error_rate(:,3),'k--o');
 hold on
 plot(vgg_sigmas,100*top5_vgg_classification_error_rate(:,3),'k-o'); 
 
-%plot(vgg_feedback_sigmas,100*top1_vgg_feedback_classification_error_rate(:,3),'b--s'); 
-%plot(vgg_feedback_sigmas,100*top5_vgg_feedback_classification_error_rate(:,3),'b-s'); 
+plot(vgg_feedback_sigmas,100*top1_vgg_feedback_classification_error_rate(:,3),'b--s'); 
+plot(vgg_feedback_sigmas,100*top5_vgg_feedback_classification_error_rate(:,3),'b-s'); 
 
 plot(vgg_feedback_crop_sigmas,100*top1_vgg_feedback_crop_classification_error_rate(:,3),'m--^'); 
 plot(vgg_feedback_crop_sigmas,100*top5_vgg_feedback_crop_classification_error_rate(:,3),'m-^'); 

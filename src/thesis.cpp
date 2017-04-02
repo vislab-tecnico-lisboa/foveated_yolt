@@ -215,8 +215,6 @@ int main(int argc, char** argv){
 
                 new_labels.push_back(feedback_data.label[m]);
                 new_scores.push_back(feedback_data.score[m]);
-
-                //feedback_detection <<  feedback_data.label[m] << " " << feedback_data.score[m] << " ";
             }
         }
 
@@ -224,7 +222,7 @@ int main(int argc, char** argv){
 
         for (int aux=0; aux<N*N; ++aux){
             if (aux==N*N-1)
-                 feedback_detection <<  new_labels[aux] << ";" << new_scores[aux];
+				feedback_detection << new_labels[aux] << ";" << new_scores[aux] << endl ;
             else
              feedback_detection <<  new_labels[aux] << ";" << new_scores[aux] << ";";
         }
@@ -233,7 +231,6 @@ int main(int argc, char** argv){
 
 
      }
-     feedback_detection << endl;
 
 
         /*********************************************************/

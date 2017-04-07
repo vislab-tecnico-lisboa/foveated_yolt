@@ -22,21 +22,24 @@ array_psnr = [21.1969  20.0054  19.5902 19.2689  18.9759 18.6994 18.4334 18.1864
 array_snr = [14.1472  12.9557 12.5405 12.2192 11.9263 11.6497 11.3837 11.1368 10.9083 10.6957];
 
 figure(1)
-fontsize=20;
+fontsize=30;
 set(gcf, 'Color', [1,1,1]);
 plot(sigmas,array_psnr,'m--o'); 
-xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
+xlabel('$\sigma$','Interpreter','LaTex','FontSize',40);
 ylabel('PSNR [dB]','Interpreter','LaTex','FontSize',fontsize);
 xlim([1 10])
+set(gca, 'FontSize', 30);
 saveas(figure(1),'puma_psnr_sigma.png')
 
 figure(2)
-fontsize=20;
+fontsize=30;
 set(gcf, 'Color', [1,1,1]);
+set(gca, 'FontSize', fontsize);
 plot(sigmas,array_snr,'b--o'); 
-xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
+xlabel('$\sigma$','Interpreter','LaTex','FontSize',40);
 ylabel('SNR [dB]','Interpreter','LaTex','FontSize',fontsize);
 xlim([1 10])
+set(gca, 'FontSize', 30);
 saveas(figure(2),'puma_snr_sigma.png')
 
 
@@ -57,15 +60,17 @@ temp10 = imfinfo('../Figures/psnr_images/puma_blur_10.JPEG');
 %original = (orig.Width * orig.Height * orig.BitDepth)/8
 %compress = (temp.Width * temp.Height * temp.BitDepth)/8
 compression_ratio = [orig.FileSize/temp1.FileSize orig.FileSize/temp2.FileSize orig.FileSize/temp3.FileSize orig.FileSize/temp4.FileSize orig.FileSize/temp5.FileSize ...
-                    orig.FileSize/temp6.FileSize orig.FileSize/temp7.FileSize orig.FileSize/temp8.FileSize orig.FileSize/temp9.FileSize orig.FileSize/temp10.FileSize]
+                    orig.FileSize/temp6.FileSize orig.FileSize/temp7.FileSize orig.FileSize/temp8.FileSize orig.FileSize/temp9.FileSize orig.FileSize/temp10.FileSize];
 
 
 figure(3)
-fontsize=20;
+fontsize=30;
 set(gcf, 'Color', [1,1,1]);
+set(gca, 'FontSize', fontsize);
 plot(sigmas,compression_ratio,'b--o'); 
-xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
+xlabel('$\sigma$','Interpreter','LaTex','FontSize',40);
 ylabel('Compression Ratio','Interpreter','LaTex','FontSize',fontsize);
 xlim([1 10])
+set(gca, 'FontSize', 30);
 saveas(figure(3),'puma_cr_sigma.png')
 

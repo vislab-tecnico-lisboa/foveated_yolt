@@ -6,7 +6,7 @@ gt_folder='../dataset/gt/';
 
 cartesian_detection ='../dataset/detections/new/raw_bbox_parse_cartesian_caffe.txt';
 google_cartesian_detection ='../dataset/detections/new/raw_bbox_parse_cartesian_google.txt';
-% vgg_cartesian_detection ='../dataset/detections/new/raw_bbox_parse_cartesian_vgg.txt';
+vgg_cartesian_detection ='../dataset/detections/new/raw_bbox_parse_cartesian_vgg.txt';
 
 classifications_file='../files/ground_truth_labels_ilsvrc12.txt';
 images_folder='../dataset/images/';
@@ -37,12 +37,12 @@ top_k=5;
     images_number,...
     google_cartesian_detection);
  
-% % get detections (YOLO) - FOVEAL - VGG
-% [vgg_cartesian_sigmas,vgg_cartesian_threshs,vgg_cartesian_classes,vgg_cartesian_scores,vgg_cartesian_detections]=parse_detections(...
-%     images_number,...
-%     vgg_cartesian_detection);
-% 
-%  
+% get detections (YOLO) - FOVEAL - VGG
+[vgg_cartesian_sigmas,vgg_cartesian_threshs,vgg_cartesian_classes,vgg_cartesian_scores,vgg_cartesian_detections]=parse_detections(...
+    images_number,...
+    vgg_cartesian_detection);
+
+ 
 %% VIEW DETECTIONS (BBOX)
 
 % view images
@@ -75,8 +75,8 @@ end
 % get detection error rates (YOLO) - FOVEAL - GOOGLE
 [google_cartesian_detection_error_rate] = detection_error_rates(google_cartesian_sigmas,google_cartesian_threshs,images_number,google_cartesian_detections,gt_detections,detections_resolution,top_k,overlap_correct);
 
-% % get detection error rates (YOLO) - FOVEAL - VGG
-% [vgg_cartesian_detection_error_rate] = detection_error_rates(vgg_cartesian_sigmas,vgg_cartesian_threshs,images_number,vgg_cartesian_detections,gt_detections,detections_resolution,top_k,overlap_correct);
+% get detection error rates (YOLO) - FOVEAL - VGG
+[vgg_cartesian_detection_error_rate] = detection_error_rates(vgg_cartesian_sigmas,vgg_cartesian_threshs,images_number,vgg_cartesian_detections,gt_detections,detections_resolution,top_k,overlap_correct);
 
 
 
@@ -87,12 +87,12 @@ end
 % get classification error rates (YOLO) - CAFFE - FOVEAL - GOOGLE
 [google_cartesian_top1_classification_error_rate, google_cartesian_top5_classification_error_rate] = classification_error_rates(google_cartesian_sigmas,google_cartesian_threshs,images_number,google_cartesian_classes,gt_classes,top_k);
 
-% % get classification error rates (YOLO) - CAFFE - FOVEAL - VGG
-% [vgg_cartesian_top1_classification_error_rate, vgg_cartesian_top5_classification_error_rate] = classification_error_rates(vgg_cartesian_sigmas,vgg_cartesian_threshs,images_number,vgg_cartesian_classes,gt_classes,top_k);
+% get classification error rates (YOLO) - CAFFE - FOVEAL - VGG
+[vgg_cartesian_top1_classification_error_rate, vgg_cartesian_top5_classification_error_rate] = classification_error_rates(vgg_cartesian_sigmas,vgg_cartesian_threshs,images_number,vgg_cartesian_classes,gt_classes,top_k);
 
 
 
-%% detection error plots - CAFFE - 1 passagem - FOVEAL
+%% detection error plots - FOVEAL - 1 passagem - Different models
 
 % fix one sigma and plot all saliency thresholds
 sigma_index=1;
@@ -109,11 +109,9 @@ localization_legend = {...
     char('Backward (Cartesian) CaffeNet \sigma = 5 ');...
     char('Backward (Cartesian) GoogLeNet \sigma = 1 ');...
     char('Backward (Cartesian) GoogLeNet \sigma = 5 ');...
-    %char('Backward (Cartesian) VGGNet \sigma = ');...
-    %char('Backward (Cartesian) VGGNet \sigma = ');...
+    char('Backward (Cartesian) VGGNet \sigma = 1 ');...
+    char('Backward (Cartesian) VGGNet \sigma = 5 ');...
     };
-
-
 
 figure(1)
 fontsize=30;
@@ -123,28 +121,28 @@ hold on
 plot(threshs,100*cartesian_detection_error_rate(5,:), 'm-o'); 
 plot(threshs,100*google_cartesian_detection_error_rate(1,:), 'b--s');   
 plot(threshs,100*google_cartesian_detection_error_rate(5,:), 'b-s'); 
-%plot(threshs,100*vgg_cartesian_detection_error_rate(9,:), 'r--*');   
-%plot(threshs,100*vgg_cartesian_detection_error_rate(11,:), 'r-*'); 
+plot(threshs,100*vgg_cartesian_detection_error_rate(1,:), 'r--*');   
+plot(threshs,100*vgg_cartesian_detection_error_rate(5,:), 'r-*'); 
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
-%xlim([20 100])
+xlim([0 0.95])
 ylim([0 100])
 set(gca, 'FontSize', 18);
-legend('show', 'DislpayName', localization_legend(:) ,'Location', 'northwest');
+legend('show', 'DislpayName', localization_legend(:) ,'Location', 'southwest');
 saveas(figure(1), 'localization_error_cartesian_100.png');
 %export_fig localization_error_cartesian_100 -pdf 
 
 
 
-%% CLASSIFICATION ERROR PLOTS - FOVEAL - Different models
+%% CLASSIFICATION ERROR PLOTS - FOVEAL - 1 passagem - Different models
 
 classification_legend = {...
     char('top-1 feed-foward (Cartesian) CaffeNet ');...
     char('top-5 feed-foward (Cartesian) CaffeNet ');...
-    char('top-1 feed-foward (Cartesian) GoogLeNet');...
-    char('top-5 feed-foward (Cartesian) GoogLeNet');...
-    %char('top-1 feed-foward (Cartesian) VGGNet');...
-    %char('top-5 feed-foward (Cartesian) VGGNet');...
+    char('top-1 feed-foward (Cartesian) GoogLeNet ');...
+    char('top-5 feed-foward (Cartesian) GoogLeNet ');...
+    char('top-1 feed-foward (Cartesian) VGGNet ');...
+    char('top-5 feed-foward (Cartesian) VGGNet ');...
     };
 
 
@@ -156,9 +154,8 @@ hold on
 plot(cartesian_sigmas,100*cartesian_top5_classification_error_rate(:,1),'m-o');
 plot(cartesian_sigmas,100*google_cartesian_top1_classification_error_rate(:,1),'b--s'); 
 plot(cartesian_sigmas,100*google_cartesian_top5_classification_error_rate(:,1),'b-s');
-%plot(cartesian_sigmas,100*vgg_cartesian_top1_classification_error_rate(:,1),'r--*'); 
-%plot(cartesian_sigmas,100*vgg_cartesian_top5_classification_error_rate(:,1),'r-*');
-
+plot(cartesian_sigmas,100*vgg_cartesian_top1_classification_error_rate(:,1),'r--*'); 
+plot(cartesian_sigmas,100*vgg_cartesian_top5_classification_error_rate(:,1),'r-*');
 
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);

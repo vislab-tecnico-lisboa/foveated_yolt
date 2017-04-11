@@ -161,10 +161,10 @@ sigma_index=1;
 localization_legend = {...
     char('Backward (Cartesian) CaffeNet \sigma = 1 ');...
     char('Backward (Cartesian) CaffeNet \sigma = 5 ');...
-    char('Backward (Cartesian) GoogLeNet \sigma = 1 ');...
-    char('Backward (Cartesian) GoogLeNet \sigma = 5 ');...
     char('Backward (Cartesian) VGGNet \sigma = 1 ');...
     char('Backward (Cartesian) VGGNet \sigma = 5 ');...
+    char('Backward (Cartesian) GoogLeNet \sigma = 1 ');...
+    char('Backward (Cartesian) GoogLeNet \sigma = 5 ');...
     };
 
 figure(1)
@@ -173,18 +173,19 @@ set(gcf, 'Color', [1,1,1]);  %
 plot(cartesian_threshs,100*cartesian_detection_error_rate(1,:), 'r--o');   
 hold on
 plot(cartesian_threshs,100*cartesian_detection_error_rate(5,:), 'r-o'); 
-plot(cartesian_threshs,100*google_cartesian_detection_error_rate(1,:), 'g--s');   
-plot(cartesian_threshs,100*google_cartesian_detection_error_rate(5,:), 'g-s'); 
-plot(cartesian_threshs,100*vgg_cartesian_detection_error_rate(1,:), 'b--*');   
-plot(cartesian_threshs,100*vgg_cartesian_detection_error_rate(5,:), 'b-*'); 
+plot(cartesian_threshs,100*vgg_cartesian_detection_error_rate(1,:), 'g--*');   
+plot(cartesian_threshs,100*vgg_cartesian_detection_error_rate(5,:), 'g-*'); 
+plot(cartesian_threshs,100*google_cartesian_detection_error_rate(1,:), 'b--s');   
+plot(cartesian_threshs,100*google_cartesian_detection_error_rate(5,:), 'b-s'); 
+
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
 xlim([0 0.95])
 ylim([0 100])
-set(gca, 'FontSize', 18);
-legend('show', 'DislpayName', localization_legend(:) ,'Location', 'southwest');
-saveas(figure(1), 'localization_error_cartesian_100.png');
-%export_fig localization_error_cartesian_100 -pdf 
+set(gca, 'YTick',[0:20:100],'FontSize', fontsize);
+%legend('show', 'DislpayName', localization_legend(:) ,'Location', 'southwest');
+saveas(figure(1), 'localization_error_cartesian.png');
+%export_fig localization_error_cartesian_ -pdf 
 
 
 
@@ -193,10 +194,10 @@ saveas(figure(1), 'localization_error_cartesian_100.png');
 classification_legend = {...
     char('top-1 feed-foward (Cartesian) CaffeNet ');...
     char('top-5 feed-foward (Cartesian) CaffeNet ');...
-    char('top-1 feed-foward (Cartesian) GoogLeNet ');...
-    char('top-5 feed-foward (Cartesian) GoogLeNet ');...
     char('top-1 feed-foward (Cartesian) VGGNet ');...
     char('top-5 feed-foward (Cartesian) VGGNet ');...
+    char('top-1 feed-foward (Cartesian) GoogLeNet ');...
+    char('top-5 feed-foward (Cartesian) GoogLeNet ');...
     };
 
 
@@ -206,19 +207,19 @@ set(gcf, 'Color', [1,1,1]);
 plot(cartesian_sigmas,100*cartesian_top1_classification_error_rate(:,1),'r--o'); 
 hold on
 plot(cartesian_sigmas,100*cartesian_top5_classification_error_rate(:,1),'r-o');
-plot(cartesian_sigmas,100*google_cartesian_top1_classification_error_rate(:,1),'g--s'); 
-plot(cartesian_sigmas,100*google_cartesian_top5_classification_error_rate(:,1),'g-s');
-plot(cartesian_sigmas,100*vgg_cartesian_top1_classification_error_rate(:,1),'b--*'); 
-plot(cartesian_sigmas,100*vgg_cartesian_top5_classification_error_rate(:,1),'b-*');
+plot(cartesian_sigmas,100*vgg_cartesian_top1_classification_error_rate(:,1),'g--*'); 
+plot(cartesian_sigmas,100*vgg_cartesian_top5_classification_error_rate(:,1),'g-*');
+plot(cartesian_sigmas,100*google_cartesian_top1_classification_error_rate(:,1),'b--s'); 
+plot(cartesian_sigmas,100*google_cartesian_top5_classification_error_rate(:,1),'b-s');
 
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
 xlim([1 10])
-set(gca, 'FontSize', 18);
+set(gca, 'XTick',[0:20:100], 'YTick',[0:20:100], 'FontSize', fontsize);
 legend(classification_legend(:),'Location', 'northwest');  % southeast
-saveas(figure(2),'classification_error_cartesian_100.png')
-%export_fig classification_error_cartesian_100 -pdf
+saveas(figure(2),'classification_error_cartesian.png')
+%export_fig classification_error_cartesian -pdf
 
 
 
@@ -241,10 +242,10 @@ saveas(figure(2),'classification_error_cartesian_100.png')
 % feedback_localization_legend = {...
 %     char('2º Backward (Cartesian) CaffeNet \sigma = 1 ');...
 %     char('2º Backward (Cartesian) CaffeNet \sigma = 5 ');...
-%     char('2º Backward (Cartesian) GoogLeNet \sigma = 1 ');...
-%     char('2º Backward (Cartesian) GoogLeNet \sigma = 5 ');...
 %     char('2º Backward (Cartesian) VGGNet \sigma = 1 ');...
 %     char('2º Backward (Cartesian) VGGNet \sigma = 5 ');...
+%     char('2º Backward (Cartesian) GoogLeNet \sigma = 1 ');...
+%     char('2º Backward (Cartesian) GoogLeNet \sigma = 5 ');...
 %     };
 % 
 % figure(3)
@@ -253,18 +254,20 @@ saveas(figure(2),'classification_error_cartesian_100.png')
 % plot(cartesian_feedback_threshs,100*cartesian_feedback_detection_error_rate(1,:), 'r--o');   
 % hold on
 % plot(cartesian_feedback_threshs,100*cartesian_feedback_detection_error_rate(5,:), 'r-o'); 
-% plot(cartesian_feedback_threshs,100*google_cartesian_feedback_detection_error_rate(1,:), 'g--s');   
-% plot(cartesian_feedback_threshs,100*google_cartesian_feedback_detection_error_rate(5,:), 'g-s'); 
-% plot(cartesian_feedback_threshs,100*vgg_cartesian_feedback_detection_error_rate(1,:), 'b--*');   
-% plot(cartesian_feedback_threshs,100*vgg_cartesian_feedback_detection_error_rate(5,:), 'b-*'); 
+% plot(cartesian_feedback_threshs,100*vgg_cartesian_feedback_detection_error_rate(1,:), 'g--*');   
+% plot(cartesian_feedback_threshs,100*vgg_cartesian_feedback_detection_error_rate(5,:), 'g-*'); 
+% plot(cartesian_feedback_threshs,100*google_cartesian_feedback_detection_error_rate(1,:), 'b--s');   
+% plot(cartesian_feedback_threshs,100*google_cartesian_feedback_detection_error_rate(5,:), 'b-s'); 
+
+
 % xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 % ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
 % xlim([0 0.95])
 % ylim([0 100])
-% set(gca, 'FontSize', 18);
+% set(gca, 'XTick',[0:20:100],'FontSize', fonsize);
 % legend('show', 'DislpayName', feedback_localization_legend(:) ,'Location', 'southwest');
-% saveas(figure(3), 'localization_error_cartesian_feedback_100.png');
-% %export_fig localization_error_cartesian_feedback_100 -pdf 
+% saveas(figure(3), 'localization_error_cartesian_feedback.png');
+% %export_fig localization_error_cartesian_feedback -pdf 
 % 
 % 
 % 
@@ -273,10 +276,10 @@ saveas(figure(2),'classification_error_cartesian_100.png')
 % feedback_classification_legend = {...
 %     char('top-1 2º feed-foward (Cartesian) CaffeNet ');...
 %     char('top-5 2º feed-foward (Cartesian) CaffeNet ');...
-%     char('top-1 2º feed-foward (Cartesian) GoogLeNet ');...
-%     char('top-5 2º feed-foward (Cartesian) GoogLeNet ');...
 %     char('top-1 2º feed-foward (Cartesian) VGGNet ');...
 %     char('top-5 2º feed-foward (Cartesian) VGGNet ');...
+%     char('top-1 2º feed-foward (Cartesian) GoogLeNet ');...
+%     char('top-5 2º feed-foward (Cartesian) GoogLeNet ');...
 %     };
 % 
 % 
@@ -286,18 +289,18 @@ saveas(figure(2),'classification_error_cartesian_100.png')
 % plot(cartesian_feedback_sigmas,100*cartesian_feedback_top1_classification_error_rate(:,1),'r--o'); 
 % hold on
 % plot(cartesian_feedback_sigmas,100*cartesian_feedback_top5_classification_error_rate(:,1),'r-o');
-% plot(cartesian_feedback_sigmas,100*google_cartesian_feedback_top1_classification_error_rate(:,1),'g--s'); 
-% plot(cartesian_feedback_sigmas,100*google_cartesian_feedback_top5_classification_error_rate(:,1),'g-s');
-% plot(cartesian_feedback_sigmas,100*vgg_cartesian_feedback_top1_classification_error_rate(:,1),'b--*'); 
-% plot(cartesian_feedback_sigmas,100*vgg_cartesian_feedback_top5_classification_error_rate(:,1),'b-*');
+% plot(cartesian_feedback_sigmas,100*vgg_cartesian_feedback_top1_classification_error_rate(:,1),'g--*'); 
+% plot(cartesian_feedback_sigmas,100*vgg_cartesian_feedback_top5_classification_error_rate(:,1),'g-*');
+% plot(cartesian_feedback_sigmas,100*google_cartesian_feedback_top1_classification_error_rate(:,1),'b--s'); 
+% plot(cartesian_feedback_sigmas,100*google_cartesian_feedback_top5_classification_error_rate(:,1),'b-s');
 % 
 % xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 % ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 % ylim([0 100])
 % xlim([1 10])
-% set(gca, 'FontSize', 18);
+% set(gca, 'XTick',[0:20:100], 'YTick',[0:20:100], 'FontSize', fontsize);
 % legend(feedback_classification_legend(:),'Location', 'northwest');  % southeast
-% saveas(figure(4),'classification_error_cartesian_feedback_100.png')
-% %export_fig classification_error_cartesian_feedback_100 -pdf
+% saveas(figure(4),'classification_error_cartesian_feedback.png')
+% %export_fig classification_error_cartesian_feedback -pdf
 
 

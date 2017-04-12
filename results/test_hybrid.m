@@ -50,7 +50,7 @@ top_k=5;
 
  
 
-%% DETECTIONS - Second passage - Imagem com alta resolução que é foveada no centro da bbox (varios sigmas)
+%% DETECTIONS - Second passage - Imagem com alta resoluï¿½ï¿½o que ï¿½ foveada no centro da bbox (varios sigmas)
 
 % get detections (YOLT) - HYBRID - CAFFE 
 [feedback_sigmas,feedback_threshs,feedback_classes,feedback_scores,rank_feedback_classes,feedback_detections]=feedback_parse_detections2(...
@@ -157,9 +157,9 @@ sigma_index=1;
 % end
 
 localization_legend = {...
-    char('Backward CaffeNet (\sigma = 5)');...
-    char('Backward VGGNet (\sigma = 5)');...
-    char('Backward GoogLeNet (\sigma = 5)');...
+    'Backward CaffeNet (\sigma_u = 5)';...
+    'Backward VGGNet (\sigma_u = 5)';...
+    'Backward GoogLeNet (\sigma_u = 5)';...
     };
 
 figure(1)
@@ -177,7 +177,7 @@ ylim([0 100])
 set(gca, 'FontSize', fontsize);
 set(gca,'YTick',[0:20:100], 'FontSize', fontsize);
 legend('show', 'DislpayName', localization_legend(:) ,'Location', 'southwest');
-saveas(figure(1), 'localization_error_hybrid.png');
+%saveas(figure(1), 'localization_error_hybrid.png');
 export_fig localization_error_hybrid -pdf 
 
 
@@ -195,7 +195,6 @@ classification_legend = {...
 
 
 figure(2)
-fontsize=30;
 set(gcf, 'Color', [1,1,1]);
 plot(hybrid_sigmas,100*hybrid_top1_classification_error_rate(:,1),'r--o'); 
 hold on
@@ -204,14 +203,14 @@ plot(hybrid_sigmas,100*vgg_hybrid_top1_classification_error_rate(:,1),'g--*');
 plot(hybrid_sigmas,100*vgg_hybrid_top5_classification_error_rate(:,1),'g-*');
 plot(hybrid_sigmas,100*google_hybrid_top1_classification_error_rate(:,1),'b--s'); 
 plot(hybrid_sigmas,100*google_hybrid_top5_classification_error_rate(:,1),'b-s');
+ylim([0 100])
 
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
-ylim([0 100])
 set(gca,'XTick',[0:20:100], 'FontSize', fontsize);
 set(gca,'YTick',[0:20:100], 'FontSize', fontsize);
 %legend(classification_legend(:),'Location', 'southwest');  % southeast
-saveas(figure(2),'classification_error_hybrid.png')
+%saveas(figure(2),'classification_error_hybrid.png')
 export_fig classification_error_hybrid -pdf
 
 
@@ -234,12 +233,12 @@ sigma_index=1;
 % end
 
 feedback_localization_legend = {...
-    char('2º Backward (Foveal) CaffeNet \sigma = 80');...
-    char('2º Backward (Foveal) CaffeNet \sigma = 100');...
-    char('2º Backward (Foveal) VGGNet \sigma = 80');...
-    char('2º Backward (Foveal) VGGNet \sigma = 100');...
-    char('2º Backward (Foveal) GoogLeNet \sigma = 80');...
-    char('2º Backward (Foveal) GoogLeNet \sigma = 100');...
+    char('2ï¿½ Backward (Foveal) CaffeNet \sigma = 80');...
+    char('2ï¿½ Backward (Foveal) CaffeNet \sigma = 100');...
+    char('2ï¿½ Backward (Foveal) VGGNet \sigma = 80');...
+    char('2ï¿½ Backward (Foveal) VGGNet \sigma = 100');...
+    char('2ï¿½ Backward (Foveal) GoogLeNet \sigma = 80');...
+    char('2ï¿½ Backward (Foveal) GoogLeNet \sigma = 100');...
     };
 
 figure(3)
@@ -260,7 +259,7 @@ ylim([0 100])
 set(gca, 'FontSize', fontsize);
 set(gca,'YTick',[0:20:100], 'FontSize', fontsize);
 %legend('show', 'DislpayName', feedback_localization_legend(:) ,'Location', 'southwest');
-saveas(figure(3), 'localization_error_hybrid_feedback.png');
+%saveas(figure(3), 'localization_error_hybrid_feedback.png');
 export_fig localization_error_hybrid_feedback -pdf 
 
 
@@ -268,17 +267,16 @@ export_fig localization_error_hybrid_feedback -pdf
 %% CLASSIFICATION ERROR PLOTS - HYBRID - Different models - SECOND PASS
 
 feedback_classification_legend = {...
-    char('top-1 2º feed-foward (Foveal) CaffeNet ');...
-    char('top-5 2º feed-foward (Foveal) CaffeNet ');...
-    char('top-1 2º feed-foward (Foveal) VGGNet');...
-    char('top-5 2º feed-foward (Foveal) VGGNet');...
-    char('top-1 2º feed-foward (Foveal) GoogLeNet');...
-    char('top-5 2º feed-foward (Foveal) GoogLeNet');...
+    char('top-1 2ï¿½ feed-foward (Foveal) CaffeNet ');...
+    char('top-5 2ï¿½ feed-foward (Foveal) CaffeNet ');...
+    char('top-1 2ï¿½ feed-foward (Foveal) VGGNet');...
+    char('top-5 2ï¿½ feed-foward (Foveal) VGGNet');...
+    char('top-1 2ï¿½ feed-foward (Foveal) GoogLeNet');...
+    char('top-5 2ï¿½ feed-foward (Foveal) GoogLeNet');...
     };
 
 
 figure(4)
-fontsize=30;
 set(gcf, 'Color', [1,1,1]);
 plot(feedback_sigmas,100*hybrid2_top1_classification_error_rate(:,1),'r--o'); 
 hold on
@@ -294,7 +292,7 @@ ylim([0 100])
 set(gca,'XTick',[0:20:100],'YTick',[0:20:100], 'FontSize', fontsize);
 %set(gca, 'FontSize', fontsize);
 %legend(feedback_classification_legend(:),'Location', 'southwest');  % southeast
-saveas(figure(4),'classification_error_hybrid_feedback.png')
+%saveas(figure(4),'classification_error_hybrid_feedback.png')
 export_fig classification_error_hybrid_feedback -pdf
 
 

@@ -12,7 +12,7 @@ vgg_foveal_detection ='../dataset/detections/new/raw_bbox_parse_foveal_vgg.txt';
 %% Second passage
 foveal2_detection ='../dataset/detections/new/feedback_detection_foveal_caffe.txt';
 google_foveal2_detection ='../dataset/detections/new/feedback_detection_foveal_google.txt';
-%vgg_foveal2_detection ='../dataset/detections/new/feedback_detection_foveal_vgg.txt';
+vgg_foveal2_detection ='../dataset/detections/new/feedback_detection_foveal_vgg.txt';
 
 
 classifications_file='../files/ground_truth_labels_ilsvrc12.txt';
@@ -62,10 +62,10 @@ top_k=5;
     images_number,...
     google_foveal2_detection);
 
-% % get detections (YOLT) - FOVEAL - VGG 
-% [vgg_feedback_sigmas,vgg_feedback_threshs,vgg_feedback_classes,vgg_feedback_scores,vgg_rank_feedback_classes,vgg_feedback_detections]=feedback_parse_detections2(...
-%     images_number,...
-%     vgg_foveal2_detection);
+% get detections (YOLT) - FOVEAL - VGG 
+[vgg_feedback_sigmas,vgg_feedback_threshs,vgg_feedback_classes,vgg_feedback_scores,vgg_rank_feedback_classes,vgg_feedback_detections]=feedback_parse_detections2(...
+    images_number,...
+    vgg_foveal2_detection);
 
 
 
@@ -114,8 +114,8 @@ end
 % get detection error rates (YOLT) - FOVEAL - GOOGLE
 [google_foveal2_detection_error_rate] = detection_error_rates(google_feedback_sigmas,google_feedback_threshs,images_number,google_feedback_detections,gt_detections,detections_resolution,top_k,overlap_correct);
 
-% % get detection error rates (YOLT) - FOVEAL - VGG
-% [vgg_foveal2_detection_error_rate] = detection_error_rates(vgg_feedback_sigmas,vgg_feedback_threshs,images_number,vgg_feedback_detections,gt_detections,detections_resolution,top_k,overlap_correct);
+% get detection error rates (YOLT) - FOVEAL - VGG
+[vgg_foveal2_detection_error_rate] = detection_error_rates(vgg_feedback_sigmas,vgg_feedback_threshs,images_number,vgg_feedback_detections,gt_detections,detections_resolution,top_k,overlap_correct);
 
 
 
@@ -139,8 +139,8 @@ end
 % get classification error rates (YOLT) - CAFFE - FOVEAL - GOOGLE
 [google_foveal2_top1_classification_error_rate, google_foveal2_top5_classification_error_rate] = classification_error_rates(google_feedback_sigmas,google_feedback_threshs,images_number,google_feedback_classes,gt_classes,top_k);
 
-% % get classification error rates (YOLT) - CAFFE - FOVEAL - VGG
-% [vgg_foveal2_top1_classification_error_rate, vgg_foveal2_top5_classification_error_rate] = classification_error_rates(vgg_feedback_sigmas,vgg_feedback_threshs,images_number,vgg_feedback_classes,gt_classes,top_k);
+% get classification error rates (YOLT) - CAFFE - FOVEAL - VGG
+[vgg_foveal2_top1_classification_error_rate, vgg_foveal2_top5_classification_error_rate] = classification_error_rates(vgg_feedback_sigmas,vgg_feedback_threshs,images_number,vgg_feedback_classes,gt_classes,top_k);
 
 
 
@@ -183,7 +183,7 @@ ylim([0 100])
 set(gca, 'YTick', [0:20:100], 'FontSize', fontsize);
 legend('show', 'DislpayName', localization_legend(:) ,'Location', 'southwest');
 saveas(figure(1), 'localization_error_foveal.png');
-export_fig localization_error_foveal -pdf 
+%export_fig localization_error_foveal -pdf 
 
 
 
@@ -216,7 +216,7 @@ ylim([0 100])
 set(gca, 'XTick',[0:20:100], 'YTick',[0:20:100], 'FontSize', fontsize);
 legend(classification_legend(:),'Location', 'southwest');  % southeast
 saveas(figure(2),'classification_error_foveal.png')
-export_fig classification_error_foveal -pdf
+%export_fig classification_error_foveal -pdf
 
 
 
@@ -240,8 +240,8 @@ sigma_index=1;
 feedback_localization_legend = {...
     char('2º Backward (Foveal) CaffeNet \sigma = 80');...
     char('2º Backward (Foveal) CaffeNet \sigma = 100');...
-    %char('2º Backward (Foveal) VGGNet \sigma = 80');...
-    %char('2º Backward (Foveal) VGGNet \sigma = 100');...
+    char('2º Backward (Foveal) VGGNet \sigma = 80');...
+    char('2º Backward (Foveal) VGGNet \sigma = 100');...
     char('2º Backward (Foveal) GoogLeNet \sigma = 80');...
     char('2º Backward (Foveal) GoogLeNet \sigma = 100');...
     };
@@ -252,8 +252,8 @@ set(gcf, 'Color', [1,1,1]);  %
 plot(feedback_threshs,100*foveal2_detection_error_rate(9,:), 'r--o');   
 hold on
 plot(feedback_threshs,100*foveal2_detection_error_rate(11,:), 'r-o');  
-%plot(feedback_threshs,100*vgg_foveal2_detection_error_rate(9,:), 'g--*');   
-%plot(feedback_threshs,100*vgg_foveal2_detection_error_rate(11,:), 'g-*');
+plot(feedback_threshs,100*vgg_foveal2_detection_error_rate(9,:), 'g--*');   
+plot(feedback_threshs,100*vgg_foveal2_detection_error_rate(11,:), 'g-*');
 plot(feedback_threshs,100*google_foveal2_detection_error_rate(9,:), 'b--s');   
 plot(feedback_threshs,100*google_foveal2_detection_error_rate(11,:), 'b-s'); 
  
@@ -264,7 +264,7 @@ ylim([0 100])
 set(gca, 'YTick',[0:20:100], 'FontSize', fontsize);
 legend('show', 'DislpayName', feedback_localization_legend(:) ,'Location', 'southwest');
 saveas(figure(3), 'localization_error_foveal_feedback.png');
-export_fig localization_error_foveal -pdf 
+%export_fig localization_error_foveal -pdf 
 
 
 
@@ -273,8 +273,8 @@ export_fig localization_error_foveal -pdf
 feedback_classification_legend = {...
     char('top-1 2º feed-foward (Foveal) CaffeNet ');...
     char('top-5 2º feed-foward (Foveal) CaffeNet ');...
-    %char('top-1 2º feed-foward (Foveal) VGGNet');...
-    %char('top-5 2º feed-foward (Foveal) VGGNet');...
+    char('top-1 2º feed-foward (Foveal) VGGNet');...
+    char('top-5 2º feed-foward (Foveal) VGGNet');...
     char('top-1 2º feed-foward (Foveal) GoogLeNet');...
     char('top-5 2º feed-foward (Foveal) GoogLeNet');...
     };
@@ -286,8 +286,8 @@ set(gcf, 'Color', [1,1,1]);
 plot(feedback_sigmas,100*foveal2_top1_classification_error_rate(:,1),'r--o'); 
 hold on
 plot(feedback_sigmas,100*foveal2_top5_classification_error_rate(:,1),'r-o');
-%plot(feedback_sigmas,100*vgg_foveal2_top1_classification_error_rate(:,1),'g--*'); 
-%plot(feedback_sigmas,100*vgg_foveal2_top5_classification_error_rate(:,1),'g-*');
+plot(feedback_sigmas,100*vgg_foveal2_top1_classification_error_rate(:,1),'g--*'); 
+plot(feedback_sigmas,100*vgg_foveal2_top5_classification_error_rate(:,1),'g-*');
 plot(feedback_sigmas,100*google_foveal2_top1_classification_error_rate(:,1),'b--s'); 
 plot(feedback_sigmas,100*google_foveal2_top5_classification_error_rate(:,1),'b-s');
 
@@ -298,7 +298,7 @@ ylim([0 100])
 set(gca, 'XTick',[0:20:100], 'YTick',[0:20:100], 'FontSize', fontsize);
 legend(feedback_classification_legend(:),'Location', 'southwest');  % southeast
 saveas(figure(4),'classification_error_foveal_feedback.png')
-export_fig classification_error_foveal -pdf
+%export_fig classification_error_foveal -pdf
 
 
 

@@ -205,7 +205,7 @@ plot(hybrid_sigmas,100*google_hybrid_top1_classification_error_rate(:,1),'b--s')
 plot(hybrid_sigmas,100*google_hybrid_top5_classification_error_rate(:,1),'b-s');
 ylim([0 100])
 
-xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
+xlabel('$\sigma_u$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 set(gca,'XTick',[0:20:100], 'FontSize', fontsize);
 set(gca,'YTick',[0:20:100], 'FontSize', fontsize);
@@ -286,7 +286,7 @@ plot(feedback_sigmas,100*vgg_hybrid2_top5_classification_error_rate(:,1),'g-*');
 plot(feedback_sigmas,100*google_hybrid2_top1_classification_error_rate(:,1),'b--s'); 
 plot(feedback_sigmas,100*google_hybrid2_top5_classification_error_rate(:,1),'b-s');
 
-xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
+xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
 set(gca,'XTick',[0:20:100],'YTick',[0:20:100], 'FontSize', fontsize);

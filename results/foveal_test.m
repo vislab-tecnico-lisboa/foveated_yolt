@@ -4,14 +4,14 @@ addpath('export_fig');
 gt_folder='../dataset/gt/';
 
 %% First passage
-foveal_detection ='../dataset/detections/new/raw_bbox_parse_foveal_caffe.txt';
-google_foveal_detection ='../dataset/detections/new/raw_bbox_parse_foveal_google.txt';
+foveal_detection ='../dataset/detections/new/raw_bbox_parse_foveal_caffe2.txt';
+google_foveal_detection ='../dataset/detections/new/raw_bbox_parse_foveal_google2.txt';
 vgg_foveal_detection ='../dataset/detections/new/raw_bbox_parse_foveal_vgg.txt';
 
 
 %% Second passage
-foveal2_detection ='../dataset/detections/new/feedback_detection_foveal_caffe.txt';
-google_foveal2_detection ='../dataset/detections/new/feedback_detection_foveal_google.txt';
+foveal2_detection ='../dataset/detections/new/feedback_detection_foveal_caffe2.txt';
+google_foveal2_detection ='../dataset/detections/new/feedback_detection_foveal_google2.txt';
 vgg_foveal2_detection ='../dataset/detections/new/feedback_detection_foveal_vgg.txt';
 
 
@@ -157,24 +157,22 @@ sigma_index=1;
 % end
 
 localization_legend = {...
-    char('Backward (Foveal) CaffeNet \sigma = 80');...
-    char('Backward (Foveal) CaffeNet \sigma = 100');...
-    char('Backward (Foveal) VGGNet \sigma = 80');...
-    char('Backward (Foveal) VGGNet \sigma = 100');...
-    char('Backward (Foveal) GoogLeNet \sigma = 80');...
-    char('Backward (Foveal) GoogLeNet \sigma = 100');...
+    char('Backward (CaffeNet)');...
+    char('Backward (VGGNet)');...
+    char('Backward (GoogLeNet)');...
     };
 
 figure(1)
 fontsize=30;
 set(gcf, 'Color', [1,1,1]);  % 
-plot(foveal_threshs,100*foveal_detection_error_rate(9,:), 'r--o');   
-hold on
 plot(foveal_threshs,100*foveal_detection_error_rate(11,:), 'r-o');  
+hold on
+plot(foveal_threshs,100*vgg_foveal_detection_error_rate(11,:), 'g-*');  
+plot(foveal_threshs,100*google_foveal_detection_error_rate(11,:), 'b-s');
+plot(foveal_threshs,100*foveal_detection_error_rate(9,:), 'r--o');   
 plot(foveal_threshs,100*vgg_foveal_detection_error_rate(9,:), 'g--*');   
-plot(foveal_threshs,100*vgg_foveal_detection_error_rate(11,:), 'g-*'); 
-plot(foveal_threshs,100*google_foveal_detection_error_rate(9,:), 'b--s');   
-plot(foveal_threshs,100*google_foveal_detection_error_rate(11,:), 'b-s'); 
+plot(foveal_threshs,100*google_foveal_detection_error_rate(9,:), 'b--s'); 
+ 
 
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
@@ -182,41 +180,38 @@ xlim([0 0.95])
 ylim([0 100])
 set(gca, 'YTick', [0:20:100], 'FontSize', fontsize);
 legend('show', 'DislpayName', localization_legend(:) ,'Location', 'southwest');
-saveas(figure(1), 'localization_error_foveal.png');
-%export_fig localization_error_foveal -pdf 
+%saveas(figure(1), 'localization_error_foveal.png');
+export_fig localization_error_foveal -pdf 
 
 
 
 %% CLASSIFICATION ERROR PLOTS - FOVEAL - Different models - FIRST PASS
 
 classification_legend = {...
-    char('top-1 feed-foward (Foveal) CaffeNet ');...
-    char('top-5 feed-foward (Foveal) CaffeNet ');...
-    char('top-1 feed-foward (Foveal) VGGNet');...
-    char('top-5 feed-foward (Foveal) VGGNet');...
-    char('top-1 feed-foward (Foveal) GoogLeNet');...
-    char('top-5 feed-foward (Foveal) GoogLeNet');...
+    char('Feed-foward (CaffeNet) ');...
+    char('Feed-foward (VGGNet)');...
+    char('Feed-foward (GoogLeNet)');...
     };
 
 
 figure(2)
 fontsize=30;
 set(gcf, 'Color', [1,1,1]);
-plot(foveal_sigmas,100*foveal_top1_classification_error_rate(:,1),'r--o'); 
-hold on
 plot(foveal_sigmas,100*foveal_top5_classification_error_rate(:,1),'r-o');
-plot(foveal_sigmas,100*vgg_foveal_top1_classification_error_rate(:,1),'g--*'); 
+hold on
 plot(foveal_sigmas,100*vgg_foveal_top5_classification_error_rate(:,1),'g-*');
-plot(foveal_sigmas,100*google_foveal_top1_classification_error_rate(:,1),'b--s'); 
 plot(foveal_sigmas,100*google_foveal_top5_classification_error_rate(:,1),'b-s');
+plot(foveal_sigmas,100*foveal_top1_classification_error_rate(:,1),'r--o'); 
+plot(foveal_sigmas,100*vgg_foveal_top1_classification_error_rate(:,1),'g--*'); 
+plot(foveal_sigmas,100*google_foveal_top1_classification_error_rate(:,1),'b--s');
 
-xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
+xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
 set(gca, 'XTick',[0:20:100], 'YTick',[0:20:100], 'FontSize', fontsize);
 legend(classification_legend(:),'Location', 'southwest');  % southeast
-saveas(figure(2),'classification_error_foveal.png')
-%export_fig classification_error_foveal -pdf
+%saveas(figure(2),'classification_error_foveal.png')
+export_fig classification_error_foveal -pdf
 
 
 
@@ -238,24 +233,22 @@ sigma_index=1;
 % end
 
 feedback_localization_legend = {...
-    char('2º Backward (Foveal) CaffeNet \sigma = 80');...
-    char('2º Backward (Foveal) CaffeNet \sigma = 100');...
-    char('2º Backward (Foveal) VGGNet \sigma = 80');...
-    char('2º Backward (Foveal) VGGNet \sigma = 100');...
-    char('2º Backward (Foveal) GoogLeNet \sigma = 80');...
-    char('2º Backward (Foveal) GoogLeNet \sigma = 100');...
+    char('Backward (CaffeNet)');...
+    char('Backward (VGGNet)');...
+    char('Backward (GoogLeNet)');...
     };
 
 figure(3)
 fontsize=30;
-set(gcf, 'Color', [1,1,1]);  % 
-plot(feedback_threshs,100*foveal2_detection_error_rate(9,:), 'r--o');   
-hold on
+set(gcf, 'Color', [1,1,1]);   
 plot(feedback_threshs,100*foveal2_detection_error_rate(11,:), 'r-o');  
-plot(feedback_threshs,100*vgg_foveal2_detection_error_rate(9,:), 'g--*');   
+hold on
 plot(feedback_threshs,100*vgg_foveal2_detection_error_rate(11,:), 'g-*');
-plot(feedback_threshs,100*google_foveal2_detection_error_rate(9,:), 'b--s');   
 plot(feedback_threshs,100*google_foveal2_detection_error_rate(11,:), 'b-s'); 
+plot(feedback_threshs,100*foveal2_detection_error_rate(9,:), 'r--o');
+plot(feedback_threshs,100*vgg_foveal2_detection_error_rate(9,:), 'g--*');   
+plot(feedback_threshs,100*google_foveal2_detection_error_rate(9,:), 'b--s');
+
  
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
@@ -263,42 +256,39 @@ xlim([0 0.95])
 ylim([0 100])
 set(gca, 'YTick',[0:20:100], 'FontSize', fontsize);
 legend('show', 'DislpayName', feedback_localization_legend(:) ,'Location', 'southwest');
-saveas(figure(3), 'localization_error_foveal_feedback.png');
-%export_fig localization_error_foveal -pdf 
+%saveas(figure(3), 'localization_error_foveal_feedback.png');
+export_fig localization_error_foveal_feedback -pdf 
 
 
 
 %% CLASSIFICATION ERROR PLOTS - FOVEAL - Different models - SECOND PASS
 
 feedback_classification_legend = {...
-    char('top-1 2º feed-foward (Foveal) CaffeNet ');...
-    char('top-5 2º feed-foward (Foveal) CaffeNet ');...
-    char('top-1 2º feed-foward (Foveal) VGGNet');...
-    char('top-5 2º feed-foward (Foveal) VGGNet');...
-    char('top-1 2º feed-foward (Foveal) GoogLeNet');...
-    char('top-5 2º feed-foward (Foveal) GoogLeNet');...
+    char('Feed-foward (CaffeNet) ');...
+    char('Feed-foward (VGGNet) ');...
+    char('Feed-foward (GoogLeNet) ');...
     };
 
 
 figure(4)
 fontsize=30;
 set(gcf, 'Color', [1,1,1]);
-plot(feedback_sigmas,100*foveal2_top1_classification_error_rate(:,1),'r--o'); 
-hold on
 plot(feedback_sigmas,100*foveal2_top5_classification_error_rate(:,1),'r-o');
-plot(feedback_sigmas,100*vgg_foveal2_top1_classification_error_rate(:,1),'g--*'); 
+hold on
 plot(feedback_sigmas,100*vgg_foveal2_top5_classification_error_rate(:,1),'g-*');
-plot(feedback_sigmas,100*google_foveal2_top1_classification_error_rate(:,1),'b--s'); 
 plot(feedback_sigmas,100*google_foveal2_top5_classification_error_rate(:,1),'b-s');
+plot(feedback_sigmas,100*foveal2_top1_classification_error_rate(:,1),'r--o'); 
+plot(feedback_sigmas,100*vgg_foveal2_top1_classification_error_rate(:,1),'g--*'); 
+plot(feedback_sigmas,100*google_foveal2_top1_classification_error_rate(:,1),'b--s');
 
 
-xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
+xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
 set(gca, 'XTick',[0:20:100], 'YTick',[0:20:100], 'FontSize', fontsize);
 legend(feedback_classification_legend(:),'Location', 'southwest');  % southeast
-saveas(figure(4),'classification_error_foveal_feedback.png')
-%export_fig classification_error_foveal -pdf
+%saveas(figure(4),'classification_error_foveal_feedback.png')
+export_fig classification_error_foveal_feedback -pdf
 
 
 

@@ -4,7 +4,7 @@ close all
 f=60;
 fov_min=0;
 fov_max=101;
-fovea = [fov_min:1:fov_max];
+fovea = [fov_min:0.01:fov_max];
 info = zeros(1,fov_max-fov_min);
 N=5;
 [x,y]=meshgrid(-113:113,-113:113);
@@ -58,14 +58,16 @@ saveas(figure(2),'uniform_info_reduction.png')
 figure(5)
 set(gcf, 'Color', [1,1,1]);
 fontsize=30;
-plot(sigma,10*log(1./reduced_info), 'r-')
+semilogx(sigma,10*log(1./reduced_info), 'r-')
 hold on
-plot(fovea,10*log(info), 'b-')
+semilogx(fovea,10*log(info), 'b-')
 xlabel('$\sigma$','Interpreter','LaTex','FontSize',fontsize);
-ylabel('Information Compression [dB]','Interpreter','LaTex','FontSize',fontsize);
+ylabel('Gain [dB]','Interpreter','LaTex','FontSize',fontsize);
 legend('Uniform Vision', 'Foveal Vision');
-xlim([0 100]);
-ylim([-60 0]);
-set(gca, 'XTick',[0:10:100], 'YTick',[-60:10:0], 'FontSize', fontsize);
+xlim([1 100]);
+ylim([-100 0]);
+%set(gca, 'XTick',[0:10:100], 'YTick',[-60:10:0], 'FontSize', fontsize);
+set(gca, 'FontSize', fontsize);
+
 saveas(figure(5), 'info_compress_db.png')
-%export_fig info_compress_db.png
+%export_fig -pdf info_compress_db

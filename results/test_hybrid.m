@@ -204,10 +204,10 @@ plot(hybrid_sigmas,100*vgg_hybrid_top5_classification_error_rate(:,1),'g-*');
 plot(hybrid_sigmas,100*google_hybrid_top1_classification_error_rate(:,1),'b--s'); 
 plot(hybrid_sigmas,100*google_hybrid_top5_classification_error_rate(:,1),'b-s');
 ylim([0 100])
-
+xlim([1 100])
 xlabel('$\sigma_u$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
-set(gca,'XTick',[0:20:100], 'FontSize', fontsize);
+set(gca,'XTick',[1 10:10:100], 'FontSize', fontsize);
 set(gca,'YTick',[0:20:100], 'FontSize', fontsize);
 %legend(classification_legend(:),'Location', 'southwest');  % southeast
 %saveas(figure(2),'classification_error_hybrid.png')
@@ -289,7 +289,8 @@ plot(feedback_sigmas,100*google_hybrid2_top5_classification_error_rate(:,1),'b-s
 xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
-set(gca,'XTick',[0:20:100],'YTick',[0:20:100], 'FontSize', fontsize);
+xlim([1 100])
+set(gca,'XTick',[1 10:10:100],'YTick',[0:20:100], 'FontSize', fontsize);
 %set(gca, 'FontSize', fontsize);
 %legend(feedback_classification_legend(:),'Location', 'southwest');  % southeast
 %saveas(figure(4),'classification_error_hybrid_feedback.png')

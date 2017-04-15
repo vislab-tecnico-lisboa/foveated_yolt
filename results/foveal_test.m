@@ -174,7 +174,6 @@ localization_legend = {...
 figure(1)
 fontsize=30;
 set(gcf, 'Color', [1,1,1]);  % 
-<<<<<<< HEAD
 plot(foveal_threshs,100*foveal_detection_error_rate(11,:), 'r-o');
 
 hold on
@@ -184,16 +183,7 @@ plot(foveal_threshs,100*foveal_detection_error_rate(9,:), 'r--o');
 
 plot(foveal_threshs,100*vgg_foveal_detection_error_rate(9,:), 'g--*');   
 plot(foveal_threshs,100*google_foveal_detection_error_rate(9,:), 'b--s');   
-=======
-plot(foveal_threshs,100*foveal_detection_error_rate(11,:), 'r-o');  
-hold on
-plot(foveal_threshs,100*vgg_foveal_detection_error_rate(11,:), 'g-*');  
-plot(foveal_threshs,100*google_foveal_detection_error_rate(11,:), 'b-s');
-plot(foveal_threshs,100*foveal_detection_error_rate(9,:), 'r--o');   
-plot(foveal_threshs,100*vgg_foveal_detection_error_rate(9,:), 'g--*');   
-plot(foveal_threshs,100*google_foveal_detection_error_rate(9,:), 'b--s'); 
- 
->>>>>>> 53d589017423b99f345f389de050fd16d1b5ed62
+
 
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
@@ -209,11 +199,8 @@ export_fig localization_error_foveal -pdf
 %% CLASSIFICATION ERROR PLOTS - FOVEAL - Different models - FIRST PASS
 
 classification_legend = {...
-<<<<<<< HEAD
-    char('Feed-foward (CaffeNet)');...
-=======
+
     char('Feed-foward (CaffeNet) ');...
->>>>>>> 53d589017423b99f345f389de050fd16d1b5ed62
     char('Feed-foward (VGGNet)');...
     char('Feed-foward (GoogLeNet)');...
     };
@@ -232,10 +219,6 @@ figure(2)
 %fontsize=30;
 set(gcf, 'Color', [1,1,1]);
 plot(foveal_sigmas,100*foveal_top5_classification_error_rate(:,1),'r-o');
-<<<<<<< HEAD
-
-=======
->>>>>>> 53d589017423b99f345f389de050fd16d1b5ed62
 hold on
 plot(foveal_sigmas,100*vgg_foveal_top5_classification_error_rate(:,1),'g-*');
 plot(foveal_sigmas,100*google_foveal_top5_classification_error_rate(:,1),'b-s');
@@ -243,27 +226,14 @@ plot(foveal_sigmas,100*foveal_top1_classification_error_rate(:,1),'r--o');
 plot(foveal_sigmas,100*vgg_foveal_top1_classification_error_rate(:,1),'g--*'); 
 plot(foveal_sigmas,100*google_foveal_top1_classification_error_rate(:,1),'b--s');
 
-<<<<<<< HEAD
-plot(foveal_sigmas,100*foveal_top1_classification_error_rate(:,1),'r--o'); 
-plot(foveal_sigmas,100*vgg_foveal_top1_classification_error_rate(:,1),'g--*'); 
-
-plot(foveal_sigmas,100*google_foveal_top1_classification_error_rate(:,1),'b--s'); 
-
-=======
->>>>>>> 53d589017423b99f345f389de050fd16d1b5ed62
 xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
-set(gca, 'XTick',[0:20:100], 'YTick',[0:20:100], 'FontSize', fontsize);
+xlim([1 100])
+set(gca, 'XTick',[1 10:10:100], 'YTick',[0:20:100], 'FontSize', fontsize);
 legend(classification_legend(:),'Location', 'southwest');  % southeast
 %saveas(figure(2),'classification_error_foveal.png')
 export_fig classification_error_foveal -pdf
-
-
-
-
-
-
 
 
 %% LOCALIZATION ERROR PLOTS - FOVEAL - Different models - SECOND PASS
@@ -296,28 +266,18 @@ feedback_localization_legend = {...
     };
 
 figure(3)
-<<<<<<< HEAD
 %fontsize=30;
 set(gcf, 'Color', [1,1,1]);  % 
-=======
-fontsize=30;
-set(gcf, 'Color', [1,1,1]);   
->>>>>>> 53d589017423b99f345f389de050fd16d1b5ed62
+
 plot(feedback_threshs,100*foveal2_detection_error_rate(11,:), 'r-o');  
 hold on
 plot(feedback_threshs,100*vgg_foveal2_detection_error_rate(11,:), 'g-*');
 plot(feedback_threshs,100*google_foveal2_detection_error_rate(11,:), 'b-s'); 
-<<<<<<< HEAD
 
 plot(feedback_threshs,100*foveal2_detection_error_rate(9,:), 'r--o');   
 plot(feedback_threshs,100*vgg_foveal2_detection_error_rate(9,:), 'g--*');   
 plot(feedback_threshs,100*google_foveal2_detection_error_rate(9,:), 'b--s');   
-=======
-plot(feedback_threshs,100*foveal2_detection_error_rate(9,:), 'r--o');
-plot(feedback_threshs,100*vgg_foveal2_detection_error_rate(9,:), 'g--*');   
-plot(feedback_threshs,100*google_foveal2_detection_error_rate(9,:), 'b--s');
 
->>>>>>> 53d589017423b99f345f389de050fd16d1b5ed62
  
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
@@ -333,15 +293,10 @@ export_fig localization_error_foveal_feedback -pdf
 %% CLASSIFICATION ERROR PLOTS - FOVEAL - Different models - SECOND PASS
 
 feedback_classification_legend = {...
-<<<<<<< HEAD
-    char('Feed-foward (CaffeNet)');...
-    char('Feed-foward (VGGNet)');...
-    char('Feed-foward (GoogLeNet)');...
-=======
+
     char('Feed-foward (CaffeNet) ');...
     char('Feed-foward (VGGNet) ');...
     char('Feed-foward (GoogLeNet) ');...
->>>>>>> 53d589017423b99f345f389de050fd16d1b5ed62
     };
 
 
@@ -375,7 +330,8 @@ plot(feedback_sigmas,100*google_foveal2_top1_classification_error_rate(:,1),'b--
 xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
-set(gca, 'XTick',[0:20:100], 'YTick',[0:20:100], 'FontSize', fontsize);
+xlim([1 100])
+set(gca, 'XTick',[1 10:10:100], 'YTick',[0:20:100], 'FontSize', fontsize);
 legend(feedback_classification_legend(:),'Location', 'southwest');  % southeast
 %saveas(figure(4),'classification_error_foveal_feedback.png')
 export_fig classification_error_foveal_feedback -pdf

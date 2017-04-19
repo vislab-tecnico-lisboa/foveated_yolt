@@ -208,7 +208,7 @@ plot(foveal_sigmas,100*google_foveal_top1_classification_error_rate(:,1),'b--s')
 xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
-set(gca, 'XTick',[0:20:100], 'YTick',[0:20:100], 'FontSize', fontsize);
+set(gca, 'XTick',[0:10:100], 'YTick',[0:20:100], 'FontSize', fontsize);
 legend(classification_legend(:),'Location', 'southwest');  % southeast
 %saveas(figure(2),'classification_error_foveal.png')
 export_fig classification_error_foveal -pdf
@@ -256,8 +256,8 @@ xlim([0 0.95])
 ylim([0 100])
 set(gca, 'YTick',[0:20:100], 'FontSize', fontsize);
 legend('show', 'DislpayName', feedback_localization_legend(:) ,'Location', 'southwest');
-%saveas(figure(3), 'localization_error_foveal_feedback.png');
-export_fig localization_error_foveal_feedback -pdf 
+saveas(figure(3), 'localization_error_foveal_feedback.png');
+%export_fig localization_error_foveal_feedback -pdf 
 
 
 
@@ -285,7 +285,7 @@ plot(feedback_sigmas,100*google_foveal2_top1_classification_error_rate(:,1),'b--
 xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
 ylim([0 100])
-set(gca, 'XTick',[0:20:100], 'YTick',[0:20:100], 'FontSize', fontsize);
+set(gca, 'XTick',[0:10:100], 'YTick',[0:20:100], 'FontSize', fontsize);
 legend(feedback_classification_legend(:),'Location', 'southwest');  % southeast
 %saveas(figure(4),'classification_error_foveal_feedback.png')
 export_fig classification_error_foveal_feedback -pdf

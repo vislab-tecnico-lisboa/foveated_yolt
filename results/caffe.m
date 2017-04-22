@@ -75,7 +75,7 @@ top_k=5;
     cartesian2_detection);
 
 % get detections (YOLT) - HYBRID - CAFFE 
-[feedback_sigmas,feedback_threshs,feedback_classes,feedback_scores,rank_feedback_classes,feedback_detections]=feedback_parse_detections2(...
+[hybrid_feedback_sigmas,hybrid_feedback_threshs,hybrid_feedback_classes,hybrid_feedback_scores,hybrid_rank_feedback_classes,hybrid_feedback_detections]=feedback_parse_detections2(...
     images_number,...
     hybrid2_detection);
 
@@ -102,7 +102,7 @@ top_k=5;
 [hybrid_detection_error_rate] = detection_error_rates(hybrid_sigmas,hybrid_threshs,images_number,hybrid_detections,gt_detections,detections_resolution,top_k,overlap_correct);
 
 % get detection error rates (YOLT) - HYBRID - CAFFE
-[hybrid2_detection_error_rate] = detection_error_rates(feedback_sigmas,feedback_threshs,images_number,feedback_detections,gt_detections,detections_resolution,top_k,overlap_correct);
+[hybrid2_detection_error_rate] = detection_error_rates(hybrid_feedback_sigmas,hybrid_feedback_threshs,images_number,hybrid_feedback_detections,gt_detections,detections_resolution,top_k,overlap_correct);
 
 
 %% CLASSIFICATION
@@ -129,7 +129,7 @@ top_k=5;
 [hybrid_top1_classification_error_rate, hybrid_top5_classification_error_rate] = classification_error_rates(hybrid_sigmas,hybrid_threshs,images_number,hybrid_classes,gt_classes,top_k);
 
 % get classification error rates (YOLT) - CAFFE - HYBRID - CAFFE
-[hybrid2_top1_classification_error_rate, hybrid2_top5_classification_error_rate] = classification_error_rates(feedback_sigmas,feedback_threshs,images_number,feedback_classes,gt_classes,top_k);
+[hybrid2_top1_classification_error_rate, hybrid2_top5_classification_error_rate] = classification_error_rates(hybrid_feedback_sigmas,hybrid_feedback_threshs,images_number,hybrid_feedback_classes,gt_classes,top_k);
 
 
 
@@ -147,10 +147,10 @@ localization_legend = {...
 figure(1)
 fontsize=30;
 set(gcf, 'Color', [1,1,1]);  % 
-plot(foveal_threshs,100*foveal_detection_error_rate(11,:), 'r--o');   
+plot(foveal_threshs,100*foveal_detection_error_rate(11,:), 'r-o');   
 hold on
-plot(cartesian_threshs,100*cartesian_detection_error_rate(5,:), 'g--*');   
-plot(hybrid_threshs,100*hybrid_detection_error_rate(9,:), 'b--s');   
+plot(cartesian_threshs,100*cartesian_detection_error_rate(5,:), 'g-*');   
+plot(hybrid_threshs,100*hybrid_detection_error_rate(9,:), 'b-s');   
 
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
@@ -173,9 +173,9 @@ localization_legend = {...
 figure(2)
 fontsize=30;
 set(gcf, 'Color', [1,1,1]);  % 
-plot(foveal_threshs,100*foveal2_detection_error_rate(11,:), 'r--o');   
+plot(foveal_threshs,100*foveal2_detection_error_rate(11,:), 'r-o');   
 hold on
-plot(cartesian_threshs,100*cartesian_feedback_detection_error_rate(5,:), 'g--*');   
+plot(cartesian_threshs,100*cartesian_feedback_detection_error_rate(5,:), 'g-*');   
 plot(hybrid_threshs,100*hybrid2_detection_error_rate(9,:), 'b--s');   
 
 xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
@@ -197,12 +197,12 @@ saveas(figure(2), 'localization_error_caffe_feedback_all_models.png');
 %% CLASSIFICATION
 % FIRST PASS
 classification_legend = {...
-    char('Foveal top-1');...
-    char('Foveal top-5');...
-    char('Cartesian top-1');...
-    char('Cartesian top-5');...
-    char('Combined top-1');...
-    char('Combined top-5');...
+    char('Foveal ');...
+    %char('Foveal ');...
+    char('Cartesian ');...
+    %char('Cartesian ');...
+    char('Combined ');...
+    %char('Combined ');...
     };
 
 
@@ -211,11 +211,11 @@ fontsize=30;
 set(gcf, 'Color', [1,1,1]);
 plot(foveal_sigmas,100*foveal_top1_classification_error_rate(:,1),'r-o');
 hold on
+plot(cartesian_sigmas,100*cartesian_top1_classification_error_rate(:,1),'g-s');
+plot(hybrid_sigmas,100*hybrid_top1_classification_error_rate(:,1),'b-*');
 plot(foveal_sigmas,100*foveal_top5_classification_error_rate(:,1),'r--o');
-plot(cartesian_sigmas,100*cartesian_top1_classification_error_rate(:,1),'b-s');
-plot(cartesian_sigmas,100*cartesian_top5_classification_error_rate(:,1),'b--s'); 
-plot(hybrid_sigmas,100*hybrid_top1_classification_error_rate(:,1),'g-*'); 
-plot(hybrid_sigmas,100*hybrid_top5_classification_error_rate(:,1),'g--*');
+plot(cartesian_sigmas,100*cartesian_top5_classification_error_rate(:,1),'g--s'); 
+plot(hybrid_sigmas,100*hybrid_top5_classification_error_rate(:,1),'b--*');
 
 xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
@@ -225,15 +225,15 @@ legend(classification_legend(:),'Location', 'southwest');  % southeast
 saveas(figure(3),'classification_error_caffe_all_models.png')
 %export_fig classification_error_caffe_all_models -pdf
 
-
+ 
 % SECOND PASS
 classification_legend = {...
-    char('Foveal top-1 (2 pass)');...
-    char('Foveal top-5 (2 pass)');...
-    char('Cartesian top-1 (2 pass)');...
-    char('Cartesian top-5 (2 pass)');...
-    char('Combined top-1 (2 pass)');...
-    char('Combined top-5 (2 pass)');...
+    char('Foveal (2 pass)');...
+    %char('Foveal (2 pass)');...
+    char('Cartesian (2 pass)');...
+    %char('Cartesian (2 pass)');...
+    char('Combined (2 pass)');...
+    %char('Combined (2 pass)');...
     };
 
 
@@ -242,11 +242,11 @@ fontsize=30;
 set(gcf, 'Color', [1,1,1]);
 plot(foveal_sigmas,100*foveal2_top1_classification_error_rate(:,1),'r-o');
 hold on
+plot(cartesian_sigmas,100*cartesian_feedback_top1_classification_error_rate(:,1),'g-s');
+plot(hybrid_sigmas,100*hybrid2_top1_classification_error_rate(:,1),'b-*'); 
 plot(foveal_sigmas,100*foveal2_top5_classification_error_rate(:,1),'r--o');
-plot(cartesian_sigmas,100*cartesian_feedback_top1_classification_error_rate(:,1),'b-s');
-plot(cartesian_sigmas,100*cartesian_feedback_top5_classification_error_rate(:,1),'b--s'); 
-plot(hybrid_sigmas,100*hybrid2_top1_classification_error_rate(:,1),'g-*'); 
-plot(hybrid_sigmas,100*hybrid2_top5_classification_error_rate(:,1),'g--*');
+plot(cartesian_sigmas,100*cartesian_feedback_top5_classification_error_rate(:,1),'g--s'); 
+plot(hybrid_sigmas,100*hybrid2_top5_classification_error_rate(:,1),'b--*');
 
 xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
 ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);

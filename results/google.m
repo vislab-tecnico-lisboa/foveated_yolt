@@ -190,7 +190,33 @@ saveas(figure(2), 'localization_error_google_feedback_all_models.png');
 
 
 
+% First vs Second Pass
+localization_legend = {...
+    char('Foveal ');...
+    char('Cartesian ');...
+    char('Combined ');...
+    };
 
+figure(5)
+fontsize=30;
+set(gcf, 'Color', [1,1,1]);  % 
+plot(foveal_threshs,100*foveal_detection_error_rate(11,:), 'r-o');   
+hold on
+plot(cartesian_threshs,100*cartesian_detection_error_rate(5,:), 'g-*');   
+plot(hybrid_threshs,100*hybrid_detection_error_rate(9,:), 'b-s');   
+plot(foveal_threshs,100*foveal2_detection_error_rate(11,:), 'r--o');  
+plot(cartesian_threshs,100*cartesian_feedback_detection_error_rate(5,:), 'g--*');  
+plot(hybrid_threshs,100*hybrid2_detection_error_rate(9,:), 'b--s'); 
+
+xlabel('$th$','Interpreter','LaTex','FontSize',fontsize);
+ylabel('Localization Error (%)','Interpreter','LaTex','FontSize',fontsize);
+xlim([0 0.95])
+ylim([0 100])
+set(gca, 'FontSize', fontsize);
+set(gca,'YTick',[0:20:100], 'FontSize', fontsize);
+legend('show', 'DislpayName', localization_legend(:) ,'Location', 'southwest');
+saveas(figure(5), 'localization_error_google_all_models_1vs2.png');
+%export_fig localization_error_google_all_models_1vs2 -pdf
 
 
 
@@ -256,4 +282,62 @@ legend(classification_legend(:),'Location', 'southwest');  % southeast
 saveas(figure(4),'classification_error_google_feedback_all_models.png')
 %export_fig classification_error_google_feedback_all_models -pdf
 
+
+
+% First vs Second (Top 1)
+classification_legend = {...
+    char('Foveal ');...
+    char('Cartesian ');...
+    char('Combined ');...
+     };
+
+
+figure(6)
+fontsize=30;
+set(gcf, 'Color', [1,1,1]);
+plot(foveal_sigmas,100*foveal_top1_classification_error_rate(:,1),'r-o');
+hold on
+plot(cartesian_sigmas,100*cartesian_top1_classification_error_rate(:,1),'g-s');
+plot(hybrid_sigmas,100*hybrid_top1_classification_error_rate(:,1),'b-*'); 
+plot(foveal_sigmas,100*foveal2_top1_classification_error_rate(:,1),'r--o');
+plot(cartesian_sigmas,100*cartesian_feedback_top1_classification_error_rate(:,1),'g--s'); 
+plot(hybrid_sigmas,100*hybrid2_top1_classification_error_rate(:,1),'b--*');
+
+xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
+ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
+ylim([0 100])
+set(gca, 'XTick',[0:10:100], 'YTick',[0:20:100], 'FontSize', fontsize);
+legend(classification_legend(:),'Location', 'southwest');  % southeast
+saveas(figure(6),'classification_error_google_feedback_1vs2_top1.png')
+%export_fig classification_error_google_feedback_1vs2_top1 -pdf
+
+
+
+
+% First vs Second (Top 5)
+classification_legend = {...
+    char('Foveal ');...
+    char('Cartesian ');...
+    char('Combined ');...
+     };
+
+
+figure(7)
+fontsize=30;
+set(gcf, 'Color', [1,1,1]);
+plot(foveal_sigmas,100*foveal_top5_classification_error_rate(:,1),'r-o');
+hold on
+plot(cartesian_sigmas,100*cartesian_top5_classification_error_rate(:,1),'g-s');
+plot(hybrid_sigmas,100*hybrid_top5_classification_error_rate(:,1),'b-*'); 
+plot(foveal_sigmas,100*foveal2_top5_classification_error_rate(:,1),'r--o');
+plot(cartesian_sigmas,100*cartesian_feedback_top5_classification_error_rate(:,1),'g--s'); 
+plot(hybrid_sigmas,100*hybrid2_top5_classification_error_rate(:,1),'b--*');
+
+xlabel('$\sigma_f$','Interpreter','LaTex','FontSize',fontsize);
+ylabel('Classification Error (%)','Interpreter','LaTex','FontSize',fontsize);
+ylim([0 100])
+set(gca, 'XTick',[0:10:100], 'YTick',[0:20:100], 'FontSize', fontsize);
+legend(classification_legend(:),'Location', 'southwest');  % southeast
+saveas(figure(7),'classification_error_google_feedback_1vs2_top5.png')
+%export_fig classification_error_google_feedback_1vs2_top5 -pdf
 

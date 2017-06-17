@@ -27,8 +27,29 @@ function get_network_weights
 
 
 
+function get_data
+{
+	#sudo apt-get install unzip
+	mkdir temp
+        cd temp
+	# get images
+	wget "https://drive.google.com/uc?export=download&id=0Bw0rlRYIVGGLb2stQ0x6VzRfcTQ" -O images.zip
+	unzip images.zip -d images
+
+	# get results data
+	#wget "https://drive.google.com/uc?export=download&id=0Bw0rlRYIVGGLTXdIdW9zLW8yTjQ" -O results.zip
+	#unzip results.zip -d results
+
+	# get ground truth
+	#wget "https://drive.google.com/uc?export=download&id=0Bw0rlRYIVGGLSEFTb2F1bndUbUE" -O ground_truth.zip
+	#unzip ground_truth.zip -d ground_truth
+}
+
+
 # Get network weights
-get_network_weights
+#get_network_weights
+
+get_data
 
 
 

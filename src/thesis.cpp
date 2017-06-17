@@ -103,8 +103,35 @@ int main(int argc, char** argv) {
     /**********************************************************************/
     //              LOAD LIST OF IMAGES AND BBOX OF DIRECTORY             //
     /**********************************************************************/
+<<<<<<< HEAD
 
     std::string dir = string(argv[8]);              // directory with validation set
+=======
+    std::string dir = string(argv[8]);              // directory with validation set
+    std::string dir_no_blur = string(argv[15]);   // directory with images without blur
+
+
+    std::vector<cv::String> files ;
+    std::vector<cv::String> files_no_blur;
+
+    files = Network.GetDir (dir, files);
+    files_no_blur = Network.GetDir(dir_no_blur, files_no_blur);
+
+    glob(dir, files);
+    glob(dir_no_blur, files_no_blur);
+
+
+//    vector<string> bbox_files ;
+
+//    bbox_files = Network.GetDir (ground_bbox_dir, bbox_files);
+//    glob(ground_bbox_dir, bbox_files);
+
+
+    // File with ground truth labels
+//    ifstream ground_truth_file;
+//    ground_truth_file.open(ground_truth_labels.c_str());
+//    string ground_class;
+>>>>>>> 2691ca9006c163676270b4d60fba02841c2cf983
 
     std::vector<cv::String> image_image_files ;
 
@@ -114,29 +141,75 @@ int main(int argc, char** argv) {
 
     ofstream feedforward_detection;
     ofstream feedback_detection;
+    //cv::Mat crop;
+    cv::Mat foveated_image;
 
+    raw_bbox_file.open ("raw_bbox_parse_vale_high_blur_vggnet_100.txt",ios::app);                  // file with 5 classes + scores; 5 bounding boxes
+    feedback_detection.open ("feedback_detection_parse_vale_high_blur_vggnet_100.txt", ios::app);  // file with 25 predicted classes for each image
+
+<<<<<<< HEAD
     // store results
     feedforward_detection.open ("raw_bbox_parse.txt",ios::app);          // file with 5 classes + scores + 5 bounding boxes
     feedback_detection.open ("feedback_detection_parse.txt", ios::app);  // file with 25 predicted classes for each image
+=======
+>>>>>>> 2691ca9006c163676270b4d60fba02841c2cf983
 
     // FOR EACH IMAGE OF THE DATASET (TODO: OPTIMIZATION -> PROCESS BATCH OF IMAGES INSTEAD OF SINGLE IMAGES)
     for (unsigned int input = 0;input < image_image_files.size(); ++input){
 
+<<<<<<< HEAD
         string file = image_image_files[input];
+=======
+    // FOR EACH IMAGE OF THE DATASET
+    for (unsigned int input = 0;input < files.size(); ++input){
+
+        string file = files[input];
+        string file_no_blur = files_no_blur[input];
+
+        cout << file << endl;
+
+>>>>>>> 2691ca9006c163676270b4d60fba02841c2cf983
         std::vector<string> new_labels;
         std::vector<float> new_scores;
         std::vector<Rect> bboxes;
 
         cv::Mat img = cv::imread(file, 1);		 // Read image
 
+<<<<<<< HEAD
+=======
+      //  cv::Mat copy_img;
+      //  img.copyTo(copy_img);
+>>>>>>> 2691ca9006c163676270b4d60fba02841c2cf983
         ClassData mydata(N);
 
         // FEEDFORWAD - PREDICT CLASSES (TOP N)
         mydata = Network.Classify(img, N);
 
+<<<<<<< HEAD
         // store results
         feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";";
         feedback_detection <<  std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";";
+=======
+
+
+        // Check if predicted labels = ground truth labels - YOLO
+//        getline(ground_truth_file,ground_class);
+
+//        if (strstr(mydata.label[0].c_str(), ground_class.c_str())){
+//            counter_top1_yolo-=1; // acertou a primeira na class
+//        }
+//        for (int k=0; k<N; ++k){
+//            if (strstr(mydata.label[k].c_str(), ground_class.c_str()))
+//                counter_top5_yolo-=1; // class verdadeira esta no top
+//        }
+        std::vector<Rect> bboxes;
+//        std::vector<string> new_labels;
+//        std::vector<float> new_scores;
+
+        raw_bbox_file << std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";" ;
+
+        feedback_detection <<  std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";" ;
+>>>>>>> 2691ca9006c163676270b4d60fba02841c2cf983
 
         // For each predicted class label:
         for (int i = 0; i < N; ++i) {
@@ -145,7 +218,14 @@ int main(int argc, char** argv) {
             //  Weakly Supervised Object Localization  //
             // Saliency Map + Segmentation Mask + BBox //
             /*******************************************/
+<<<<<<< HEAD
             Rect Min_Rect = Network.CalcBBox(N, i,img, mydata, thresh);
+=======
+            cv::Mat img_no_blur = cv::imread(file_no_blur, 1);		 // Read image
+
+            Rect Min_Rect = Network.CalcBBox(N, i, mydata, thresh);
+
+>>>>>>> 2691ca9006c163676270b4d60fba02841c2cf983
             bboxes.push_back(Min_Rect); // save all bounding boxes
 
             // store results
@@ -160,6 +240,7 @@ int main(int argc, char** argv) {
             // Foveated Image + Forward + Predict new class labels //
             /*******************************************************/
 
+<<<<<<< HEAD
             if(mode==FOVEATION||mode==HYBRID)
             {
                 img=foveate(img,size_map);
@@ -172,20 +253,67 @@ int main(int argc, char** argv) {
 
             // Predict New top 5 of each predicted class
             ClassData feedback_data = Network.Classify(img, N);
+=======
+              /*****************************************/
+            // FOVEATE IMAGES:
+            resize(img_no_blur,img_no_blur, Size(size_map,size_map));
+            int m = floor(4*img_no_blur.size().height);
+            int n = floor(4*img_no_blur.size().width);
 
+            img_no_blur.convertTo(img_no_blur, CV_64F);
+
+            // Compute kernels
+            std::vector<Mat> kernels = createFilterPyr(m, n, levels, sigma);
+
+            // Construct Pyramid
+            LaplacianBlending pyramid(img_no_blur,levels, kernels);
+
+
+            cv::Mat center(2,1,CV_32S);
+            center.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
+            center.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
+
+
+            // Foveate
+            cv::Mat foveated_image = pyramid.foveate(center);
+
+            foveated_image.convertTo(foveated_image,CV_8UC3);
+            //cv::resize(foveated_image,foveated_image,Size(size_map,size_map));
+//            imshow("Foveada", foveated_image);
+//            waitKey(0);
+
+            /*****************************************/
+            // CROP IMAGE:
+
+//            cv::resize(img_no_blur, img_no_blur, Size(size_map,size_map));
+
+//            cv::Mat crop = img_no_blur(bboxes[i]);  // crop image by bbox
+
+>>>>>>> 2691ca9006c163676270b4d60fba02841c2cf983
+
+//            if (crop.size().width != 0 && crop.size().height != 0 )
+//                cv::resize(crop,crop,Size(size_map,size_map));
+//            else
+//                img_no_blur.copyTo(crop);
+
+
+            // Forward
+            // Predict New top 5 of each predicted class
+            ClassData feedback_data = Network.Classify(foveated_image, N);  // foveated_image  or crop
 
             // For each bounding box
             for(int m=0; m<N; ++m){
                 new_labels.push_back(feedback_data.label[m]);
                 new_scores.push_back(feedback_data.score[m]);
 
-                //feedback_detection <<  feedback_data.label[m] << " " << feedback_data.score[m] << " ";
+                //cout <<  feedback_data.label[m] << " " << feedback_data.score[m] << endl;
             }
         }
 
         feedforward_detection << endl;
 
         for (int aux=0; aux<N*N; ++aux){
+<<<<<<< HEAD
             if (aux==N*N-1)
                 feedback_detection <<  new_labels[aux] << ";" << new_scores[aux];
             else
@@ -194,6 +322,20 @@ int main(int argc, char** argv) {
 
      }
      feedback_detection << endl;
+=======
+//            if (aux==N*N-1)
+//                feedback_detection <<  new_labels[aux] << ";" << new_scores[aux] ;
+//            else
+            feedback_detection <<  new_labels[aux] << ";" << new_scores[aux] << ";";
+            //cout << new_labels[aux] << ";" << new_scores[aux] << endl;
+        }
+
+       // Network.VisualizeBBox(bboxes, N, copy_img, size_map, ct);
+//        feedback_detection << endl;
+
+     //}
+
+>>>>>>> 2691ca9006c163676270b4d60fba02841c2cf983
 
 
         /*********************************************************/
@@ -207,21 +349,47 @@ int main(int argc, char** argv) {
 //        std::vector<string> top_final_labels;
 //        std::vector<float> top_final_scores;
 
+        ClassData top_feedback_data(N);
+        std::vector<int> topN = Argmax(new_scores, N);
 
-//        std::vector<int> topN = Argmax(new_scores, N);
+        for (int i = 0; i < N; ++i) {
+            int idx = topN[i];
+
+            top_feedback_data.index[i] = idx;
+            top_feedback_data.label[i] = new_labels[idx];
+            top_feedback_data.score[i] = new_scores[idx];
+            //cout << "top label " << top_feedback_data.label[i] <<  " " <<  top_feedback_data.score[i] << endl;
+
+        }
+
 
 //        for (int top = 0; top <N; ++top){
 //            int idx = topN[top];
 
 //            top_final_labels.push_back(new_labels[idx]);
 //            top_final_scores.push_back(new_scores[idx]);
+
 //        }
 
-//        cout << "Final Solution:\n " << endl;
-//        for (int top = 0; top <N; ++top)
-//            cout << "Score: " << top_final_scores[top]  << "\t Label: " << top_final_labels[top] << endl;
+
+        // For each top final predicted label
+        for (int j = 0; j < N; ++j) {
+
+            Rect Min_Feedback_Rect = Network.CalcBBox(N, j, top_feedback_data, thresh);
+
+            rectangle(img, Min_Feedback_Rect, Scalar(0, 0, 255), 2, 8, 0 );
+//            img.convertTo(img,CV_8UC3);
+//            imshow("bbox after crop", img);
+//            waitKey(0);
 
 
+            if (j==N-1)
+                feedback_detection << Min_Feedback_Rect.x << ";" << Min_Feedback_Rect.y << ";" << Min_Feedback_Rect.width << ";" << Min_Feedback_Rect.height;
+            else
+                feedback_detection << Min_Feedback_Rect.x << ";" << Min_Feedback_Rect.y << ";" << Min_Feedback_Rect.width << ";" << Min_Feedback_Rect.height << ";";
+        }
+        feedback_detection << endl;
+}
         // Check if predicted labels = ground truth labels - YOLT
 //        if (strstr(top_final_labels[0].c_str(), ground_class.c_str())){
 //            counter_top1_yolt-=1; // acertou a primeira na class

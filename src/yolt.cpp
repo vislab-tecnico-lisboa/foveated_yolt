@@ -36,18 +36,19 @@ typedef std::pair<string, float> Prediction;
 
 cv::Mat foveate(const cv::Mat & img, const int & size_map, const int & levels, const int & sigma, const cv::Mat & fixation_point)
 {
+
     // Foveate images
     int m = floor(4*img.size().height);
     int n = floor(4*img.size().width);
-
+		std::cout << "Ola1" << std::endl;
     img.convertTo(img, CV_64F);
-
+		std::cout << "Ola2" << std::endl;
     // Compute kernels
     std::vector<Mat> kernels = createFilterPyr(m, n, levels, sigma);
-
+		std::cout << "Ola" << std::endl;
     // Construct Pyramid
     LaplacianBlending pyramid(img,levels, kernels);
-
+		std::cout << "Ola" << std::endl;
     // Foveate
     cv::Mat foveated_image = pyramid.foveate(fixation_point);
 
@@ -146,6 +147,7 @@ int main(int argc, char** argv) {
     // FOR EACH IMAGE OF THE DATASET (TODO: OPTIMIZATION -> PROCESS BATCH OF IMAGES INSTEAD OF SINGLE IMAGES)
     for (unsigned int input = 0;input < image_image_files.size(); ++input){
 	std::cout << "Procesing image " << input << " of " << image_image_files.size() << "("<< 100.0*input/image_image_files.size() << "%)"<< std::endl; 
+
         string file = image_image_files[input];
         std::vector<string> new_labels;
         std::vector<float> new_scores;
@@ -155,15 +157,22 @@ int main(int argc, char** argv) {
         resize(img,img, Size(size_map,size_map)); // Resize to network size
         cv::Mat img_orig=img.clone();
 
+  	namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
+    	imshow( "Display window", img );                   // Show our image inside it.
+    	waitKey(10);                                          // Wait for a keystroke in the window
+
         ClassData mydata(N);
 
 
         if(mode==FOVEATION)
         {
+
             cv::Mat fixation_point(2,1,CV_32S);
             fixation_point.at<int>(0,0) = img.size().width*0.5;
             fixation_point.at<int>(1,0) = img.size().height*0.5;
+
             img=foveate(img,size_map,levels,sigma,fixation_point);
+		std::cout << "adeus" << std::endl;
         }
 
         // FEEDFORWAD - PREDICT CLASSES (TOP N)
@@ -178,10 +187,10 @@ int main(int argc, char** argv) {
         // For each predicted class label:
         for (int i = 0; i < N; ++i) {
 
-            /*******************************************/
+            //////////////////////////////////////////////////
             //  Weakly Supervised Object Localization  //
             // Saliency Map + Segmentation Mask + BBox //
-            /*******************************************/
+            //////////////////////////////////////////////////
             Rect Min_Rect = Network.CalcBBox(N, i,img, mydata, thresh);
             bboxes.push_back(Min_Rect); // save all bounding boxes
 
@@ -192,10 +201,10 @@ int main(int argc, char** argv) {
                 feedforward_detection << mydata.label[i] << ";" << mydata.score[i] << ";" << Min_Rect.x << ";" << Min_Rect.y << ";" << Min_Rect.width << ";" << Min_Rect.height << ";";
 
 
-            /*******************************************************/
+            /////////////////////////////////////////////////
             //      Image Re-Classification with Attention         //
             // Foveated Image + Forward + Predict new class labels //
-            /*******************************************************/
+            /////////////////////////////////////////////////
 
             if(mode==FOVEATION||mode==HYBRID)
             {
@@ -206,9 +215,6 @@ int main(int argc, char** argv) {
             }
             else
             {
-                /*****************************************/
-                            // CROP IMAGE:
-
                 cv::Mat crop = img_orig(bboxes[i]);  // crop image by bbox
 
 

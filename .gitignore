@@ -1,5 +1,9 @@
 build/*
 files/bvlc_reference_caffenet.caffemodel
 *.pdf
+*.caffemodel*
+*.zip
+dataset/*.txt
 *~
-/dataset/images/*
+dataset/images/*
+temp/

@@ -43,12 +43,14 @@ message("CUDA_INCLUDE_DIRS is ${CUDA_INCLUDE_DIRS}")
 set(GLOG_LIB glog)
 
 #add_executable(main src/main.cpp)
-add_executable(yolt src/thesis.cpp)
+add_executable(yolt src/yolt.cpp)
+
 #add_executable(box src/volume_box.cpp)
 #add_executable(derived src/derived_classes.cpp)
 #add_executable(multiple src/multiple_derived_classes.cpp)
 #target_link_libraries(main  ${Boost_LIBRARIES} ${Caffe_LIBRARIES} ${GLOG_LIB}  ${OpenCV_LIBS}) 
 target_link_libraries(yolt ${Boost_LIBRARIES} ${Caffe_LIBRARIES} ${GLOG_LIB}  ${OpenCV_LIBS})
+
 #target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 #target_link_libraries (show_tracker_mot ${PROJECT_NAME})
 

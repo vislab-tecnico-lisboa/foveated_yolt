@@ -1,5 +1,6 @@
 build/*
-files/bvlc_reference_caffenet.caffemodel
+files/*.caffemodel
+files/*.txt
 *.pdf
 *.caffemodel*
 *.zip

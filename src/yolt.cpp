@@ -68,26 +68,53 @@ int main(int argc, char** argv) {
 
     /* network params */
     const string absolute_path_folder = string(argv[1]);
+    std::cout << "absolute_path_folder: " << absolute_path_folder<< std::endl;
+
     const string model_file = absolute_path_folder + string(argv[2]);
+    std::cout << "model_file: " << model_file<< std::endl;
+
     const string weight_file = absolute_path_folder + string(argv[3]);
+    std::cout << "weight_file: " << weight_file<< std::endl;
+
     const string mean_file = absolute_path_folder + string(argv[4]);
+    std::cout << "mean_file: " << mean_file<< std::endl;
+
     const string label_file = absolute_path_folder + string(argv[5]);
+    std::cout << "label_file: " << label_file<< std::endl;
+
+    const string dataset_folder = string(argv[6]);
+    std::cout << "dataset_folder: " << dataset_folder<< std::endl;
 
     /* method specific params */
-    static int N = atoi(argv[9]);          // define number of top predicted labels
-    static float thresh = atof(argv[10]);  // segmentation threshold for mask
-    static int size_map = atoi(argv[11]);  // Size of the network input images (227,227)
-    static int levels = atoi(argv[12]);    // Number of kernel levels
-    int sigma = atoi(argv[13]);            // Size of the fovea
-    static int mode = atoi(argv[14]);    // Number of kernel levels
+    static int N = atoi(argv[7]);          // define number of top predicted labels
+    std::cout << "top classes: " << N<< std::endl;
+
+    static float thresh = atof(argv[8]);  // segmentation threshold for mask
+    std::cout << "thresh: " << thresh<< std::endl;
+
+    static int size_map = atoi(argv[9]);  // Size of the network input images (227,227)
+    std::cout << "size_map: " << size_map<< std::endl;
+
+    static int levels = atoi(argv[10]);    // Number of kernel levels
+    std::cout << "levels: " << levels<< std::endl;
+
+    int sigma = atoi(argv[11]);            // Size of the fovea
+    std::cout << "sigma: " << sigma<< std::endl;
+
+    static string results_folder = string(argv[12]);    // Number of kernel levels
+    std::cout << "results_folder: " << results_folder<< std::endl;
+
+    static int mode = atoi(argv[13]);    // Number of kernel levels
+    std::cout << "mode: " << mode<< std::endl;
+
 
     // Set mode
-    if (strcmp(argv[6], "CPU") == 0){
+    if (strcmp(argv[14], "CPU") == 0){
         Caffe::set_mode(Caffe::CPU);
     }
     else{
         Caffe::set_mode(Caffe::GPU);
-        int device_id = atoi(argv[7]);
+        int device_id = atoi(argv[15]);
         Caffe::SetDevice(device_id);
     }
 
@@ -99,24 +126,26 @@ int main(int argc, char** argv) {
     //              LOAD LIST OF IMAGES AND BBOX OF DIRECTORY             //
     /**********************************************************************/
 
-    std::string dir = string(argv[8]);              // directory with validation set
 
     std::vector<cv::String> image_image_files ;
 
-    image_image_files = Network.GetDir (dir, image_image_files);
+    image_image_files = Network.GetDir (dataset_folder, image_image_files);
 
-    glob(dir, image_image_files);
+    glob(dataset_folder, image_image_files);
 
     ofstream feedforward_detection;
     ofstream feedback_detection;
 
     // store results
-    feedforward_detection.open ("feedforward_detection_parse.txt",ios::app);          // file with 5 classes + scores + 5 bounding boxes
-    feedback_detection.open ("feedback_detection_parse.txt", ios::app);  // file with 25 predicted classes for each image
+    std::string feedforward_detection_str=results_folder+string("feedforward_detection_parse.txt");
+    feedforward_detection.open (feedforward_detection_str.c_str(),ios::app);          // file with 5 classes + scores + 5 bounding boxes
+
+    std::string feedback_detection_str=results_folder+string("feedback_detection_parse.txt");
+    feedback_detection.open (feedback_detection_str.c_str(), ios::app);  // file with 25 predicted classes for each image
 
     // FOR EACH IMAGE OF THE DATASET (TODO: OPTIMIZATION -> PROCESS BATCH OF IMAGES INSTEAD OF SINGLE IMAGES)
     for (unsigned int input = 0;input < image_image_files.size(); ++input){
-
+	std::cout << "Procesing image " << input << " of " << image_image_files.size() << "("<< 100.0*input/image_image_files.size() << "%)"<< std::endl; 
         string file = image_image_files[input];
         std::vector<string> new_labels;
         std::vector<float> new_scores;

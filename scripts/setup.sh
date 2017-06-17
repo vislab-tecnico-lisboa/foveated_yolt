@@ -33,8 +33,8 @@ function get_data
 	mkdir temp
         cd temp
 	# get images
-	wget "https://drive.google.com/uc?export=download&id=0Bw0rlRYIVGGLb2stQ0x6VzRfcTQ" -O images.zip
-	unzip images.zip -d images
+	#wget "https://drive.google.com/uc?export=download&id=0Bw0rlRYIVGGLb2stQ0x6VzRfcTQ" -O images.zip
+	#unzip images.zip -d images
 
 	# get results data
 	#wget "https://drive.google.com/uc?export=download&id=0Bw0rlRYIVGGLTXdIdW9zLW8yTjQ" -O results.zip
@@ -47,9 +47,9 @@ function get_data
 
 
 # Get network weights
-#get_network_weights
+get_network_weights
 
-get_data
+#get_data
 
 
 

@@ -34,21 +34,21 @@ using std::string;
 typedef std::pair<string, float> Prediction;
 
 
-cv::Mat foveate(const cv::Mat & img, const int & size_map, const int & levels, const int & sigma, const cv::Mat & fixation_point)
+cv::Mat foveate(cv::Mat & img, const int & size_map, const int & levels, const int & sigma, const cv::Mat & fixation_point)
 {
-
     // Foveate images
     int m = floor(4*img.size().height);
     int n = floor(4*img.size().width);
-		std::cout << "Ola1" << std::endl;
-    img.convertTo(img, CV_64F);
-		std::cout << "Ola2" << std::endl;
+
+    cv::Mat image;
+    img.convertTo(image, CV_64F);
+
     // Compute kernels
     std::vector<Mat> kernels = createFilterPyr(m, n, levels, sigma);
-		std::cout << "Ola" << std::endl;
+
     // Construct Pyramid
-    LaplacianBlending pyramid(img,levels, kernels);
-		std::cout << "Ola" << std::endl;
+    LaplacianBlending pyramid(image,levels, kernels);
+
     // Foveate
     cv::Mat foveated_image = pyramid.foveate(fixation_point);
 
@@ -58,9 +58,9 @@ cv::Mat foveate(const cv::Mat & img, const int & size_map, const int & levels, c
     return foveated_image;
 }
 
-/*****************************************/
+/******************/
 //		MAIN
-/*****************************************/
+/******************/
 
 int main(int argc, char** argv) {
 
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     std::cout << "dataset_folder: " << dataset_folder<< std::endl;
 
     /* method specific params */
-    static int N = atoi(argv[7]);          // define number of top predicted labels
+    static int N = atoi(argv[7]);         // define number of top predicted labels
     std::cout << "top classes: " << N<< std::endl;
 
     static float thresh = atof(argv[8]);  // segmentation threshold for mask
@@ -96,10 +96,10 @@ int main(int argc, char** argv) {
     static int size_map = atoi(argv[9]);  // Size of the network input images (227,227)
     std::cout << "size_map: " << size_map<< std::endl;
 
-    static int levels = atoi(argv[10]);    // Number of kernel levels
+    static int levels = atoi(argv[10]);   // Number of kernel levels
     std::cout << "levels: " << levels<< std::endl;
 
-    int sigma = atoi(argv[11]);            // Size of the fovea
+    int sigma = atoi(argv[11]);           // Size of the fovea
     std::cout << "sigma: " << sigma<< std::endl;
 
     static string results_folder = string(argv[12]);    // Number of kernel levels
@@ -108,14 +108,18 @@ int main(int argc, char** argv) {
     static int mode = atoi(argv[13]);    // Number of kernel levels
     std::cout << "mode: " << mode<< std::endl;
 
+    static bool debug = atoi(argv[14]);    // Number of kernel levels
+    std::cout << "debug: " << debug<< std::endl;
 
     // Set mode
-    if (strcmp(argv[14], "CPU") == 0){
+    if (strcmp(argv[15], "CPU") == 0)
+    {
         Caffe::set_mode(Caffe::CPU);
     }
-    else{
+    else
+    {
         Caffe::set_mode(Caffe::GPU);
-        int device_id = atoi(argv[15]);
+        int device_id = atoi(argv[16]);
         Caffe::SetDevice(device_id);
     }
 
@@ -126,7 +130,6 @@ int main(int argc, char** argv) {
     /**********************************************************************/
     //              LOAD LIST OF IMAGES AND BBOX OF DIRECTORY             //
     /**********************************************************************/
-
 
     std::vector<cv::String> image_image_files ;
 
@@ -146,39 +149,48 @@ int main(int argc, char** argv) {
 
     // FOR EACH IMAGE OF THE DATASET (TODO: OPTIMIZATION -> PROCESS BATCH OF IMAGES INSTEAD OF SINGLE IMAGES)
     for (unsigned int input = 0;input < image_image_files.size(); ++input){
-	std::cout << "Procesing image " << input << " of " << image_image_files.size() << "("<< 100.0*input/image_image_files.size() << "%)"<< std::endl; 
+        std::cout << "Procesing image " << input << " of " << image_image_files.size() << "("<< 100.0*input/image_image_files.size() << "%)"<< std::endl;
 
         string file = image_image_files[input];
         std::vector<string> new_labels;
         std::vector<float> new_scores;
         std::vector<Rect> bboxes;
 
-        cv::Mat img = cv::imread(file, 1);		 // Read image
+        cv::Mat img = cv::imread(file, 1);		  // Read image
         resize(img,img, Size(size_map,size_map)); // Resize to network size
         cv::Mat img_orig=img.clone();
 
-  	namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
-    	imshow( "Display window", img );                   // Show our image inside it.
-    	waitKey(10);                                          // Wait for a keystroke in the window
+        if(debug)
+        {
+            namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
+            imshow( "Display window", img );                 // Show our image inside it.
+            waitKey(10);                                     // Wait for a keystroke in the window
+        }
 
         ClassData mydata(N);
 
-
         if(mode==FOVEATION)
         {
-
             cv::Mat fixation_point(2,1,CV_32S);
             fixation_point.at<int>(0,0) = img.size().width*0.5;
             fixation_point.at<int>(1,0) = img.size().height*0.5;
 
             img=foveate(img,size_map,levels,sigma,fixation_point);
-		std::cout << "adeus" << std::endl;
+        }
+        else
+        {
+            GaussianBlur(img,img, Size(5,5), sigma, sigma);
+        }
+
+        if(debug)
+        {
+            namedWindow( "First passage", WINDOW_AUTOSIZE ); // Create a window for display.
+            imshow( "First passage", img );                  // Show our image inside it.
+            waitKey(10);
         }
 
         // FEEDFORWAD - PREDICT CLASSES (TOP N)
         mydata = Network.Classify(img, N);
-
-
 
         // store results
         feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";";
@@ -212,16 +224,33 @@ int main(int argc, char** argv) {
                 fixation_point.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
                 fixation_point.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
                 img=foveate(img_orig,size_map,levels,sigma,fixation_point);
+
+                if(debug)
+                {
+                    namedWindow( "Foveated second-passage", WINDOW_AUTOSIZE ); // Create a window for display.
+                    imshow( "Foveated second-passage", img );                  // Show our image inside it.
+                    waitKey(10);
+                }
             }
             else
             {
-                cv::Mat crop = img_orig(bboxes[i]);  // crop image by bbox
-
-
-                if (crop.size().width != 0 && crop.size().height != 0 )
-                    cv::resize(crop,crop,Size(size_map,size_map));
+                cv::Mat img = img_orig(bboxes[i]);  // crop image by bbox
+                std::cout << "i:"<< i << " bboxes[i]:" << bboxes[i] << std::endl;
+                if (img.size().width != 0 && img.size().height != 0 )
+                {
+                    cv::resize(img,img,Size(size_map,size_map));
+                }
                 else
-                    img_orig.copyTo(crop);
+                {
+                    img_orig.copyTo(img);
+                }
+
+                if(debug)
+                {
+                    namedWindow( "Crop second-passage", WINDOW_AUTOSIZE ); // Create a window for display.
+                    imshow( "Crop second-passage", img );                  // Show our image inside it.
+                    waitKey(10);
+                }
             }
             // Forward
 

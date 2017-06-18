@@ -8,3 +8,4 @@ dataset/*.txt
 *~
 dataset/images/*
 temp/
+resuts/*.txt

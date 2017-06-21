@@ -34,7 +34,7 @@ using std::string;
 typedef std::pair<string, float> Prediction;
 
 
-cv::Mat foveate(cv::Mat & img, const int & size_map, const int & levels, const int & sigma, const cv::Mat & fixation_point)
+cv::Mat foveate(const cv::Mat & img, const int & size_map, const int & levels, const int & sigma, const cv::Mat & fixation_point)
 {
     // Foveate images
     int m = floor(4*img.size().height);
@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
 
             // FOR EACH IMAGE OF THE DATASET (TODO: OPTIMIZATION -> PROCESS BATCH OF IMAGES INSTEAD OF SINGLE IMAGES)
             for (unsigned int input = 0;input < total_images; ++input){
-                std::cout << "Procesing image " << input+1 << " of " << total_images << ": iteration "<<input+1 + sigma_index*total_images+thresh_index*total_images*sigmas.size() << " of a total of "  << total_images*threshs.size()*sigmas.size() << " iterations" <<"("<< 100.0*(input+1 + sigma_index*total_images+thresh_index*total_images*sigmas.size())/ (total_images*threshs.size()*sigmas.size()) << "%)"<< std::endl;
+                std::cout << "thresh:" << thresh << " sigma:" << sigma <<" Procesing image " << input+1 << " of " << total_images << ": iteration "<<input+1 + sigma_index*total_images+thresh_index*total_images*sigmas.size() << " of a total of "  << total_images*threshs.size()*sigmas.size() << " iterations" <<"("<< 100.0*(input+1 + sigma_index*total_images+thresh_index*total_images*sigmas.size())/ (total_images*threshs.size()*sigmas.size()) << "%)"<< std::endl;
 
                 string file = image_image_files[input];
                 std::vector<string> new_labels;
@@ -207,13 +207,6 @@ int main(int argc, char** argv) {
                 resize(img,img, Size(size_map,size_map)); // Resize to network size
                 cv::Mat img_orig=img.clone();
 
-                /*if(debug)
-            {
-                namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
-                imshow( "Display window", img );                 // Show our image inside it.
-                waitKey(10);                                     // Wait for a keystroke in the window
-            }*/
-
                 ClassData mydata(N);
 
                 if(mode==FOVEATION)
@@ -221,6 +214,10 @@ int main(int argc, char** argv) {
                     cv::Mat fixation_point(2,1,CV_32S);
                     fixation_point.at<int>(0,0) = img.size().width*0.5;
                     fixation_point.at<int>(1,0) = img.size().height*0.5;
+
+                    fixation_point.at<int>(0,0) = img.size().width * (rand() / (RAND_MAX + 1.0));
+                    fixation_point.at<int>(1,0) = img.size().height * (rand() / (RAND_MAX + 1.0));
+
 
                     img=foveate(img,size_map,levels,sigma,fixation_point);
                 }
@@ -270,7 +267,7 @@ int main(int argc, char** argv) {
                     }
                     else
                     {
-                        img_second = img_orig(bboxes[i]);  // crop image by bbox
+                        img_second = img_orig(Min_Rect);  // crop image by bbox
 
                         if (img_second.size().width != 0 && img_second.size().height != 0 )
                         {
@@ -278,7 +275,7 @@ int main(int argc, char** argv) {
                         }
                         else
                         {
-                            img_orig.copyTo(img_second);
+                            img_first_pass_viz.copyTo(img_second);
                         }
                     }
 
@@ -291,7 +288,7 @@ int main(int argc, char** argv) {
                         cv::hconcat(dst, img_second, dst); // horizontal
                         //cv::vconcat(a, b, dst); // vertical
                         namedWindow( "original image,    first pass,   second pass     class", WINDOW_AUTOSIZE ); // Create a window for display.
-                        imshow( "images", dst );                  // Show our image inside it.
+                        imshow( "original image,    first pass,   second pass     class", dst );                  // Show our image inside it.
                         waitKey(1);
                     }
 
@@ -322,6 +319,7 @@ int main(int argc, char** argv) {
 
         }
     }
+    feedback_detection.close();
 
 
     /*********************************************************/

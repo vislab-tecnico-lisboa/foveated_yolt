@@ -32,21 +32,20 @@ public:
     void buildPyramids()
     {
 
-        imageLapPyr.clear();
+        //imageLapPyr.clear();
 
         Mat currentImg = image;
 
         for (int l=0; l<levels; l++)
         {
-            Mat image;
             pyrDown(currentImg, down);
 
             pyrUp(down, up, currentImg.size());
 
             Mat lap = currentImg - up;
-            
-            imageLapPyr[l]=lap;
+            imageLapPyr[l]=lap.clone();
 
+            //lap.copyTo( imageLapPyr[l]);
             currentImg = down;
         }
         
@@ -56,6 +55,12 @@ public:
 
 
 public:
+    ~LaplacianBlending()
+    {
+        std::vector<cv::Mat>().swap(imageLapPyr);
+
+    };
+
     LaplacianBlending(const cv::Mat& _image,const int _levels, std::vector<Mat> _kernels):
         image(_image),levels(_levels), kernels(_kernels)
         {
@@ -71,13 +76,13 @@ public:
             for(int i=levels-1; i>=0;--i){
 
                 cv::Mat image_size(2,1,CV_32S);
-                
+
                 image_size.at<int>(0,0)=imageLapPyr[i].cols;
                 image_size.at<int>(1,0)=imageLapPyr[i].rows;
                 image_sizes[i]=image_size;
-                
+
                 cv::Mat kernel_size(2,1,CV_32S);
-                
+
                 kernel_size.at<int>(0,0)=kernels[i].cols;
                 kernel_size.at<int>(1,0)=kernels[i].rows;
                 kernel_sizes[i]=kernel_size;

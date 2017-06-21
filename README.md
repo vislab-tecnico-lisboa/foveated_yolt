@@ -25,7 +25,7 @@ make
 
 
 
-To run thesis.cpp from root:
+To run yolt.cpp from root:
 
 bash scripts/run_detector.sh
  

@@ -6,8 +6,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modu
 
 find_package(Caffe REQUIRED)
 find_package(CUDA REQUIRED)
-find_package(Boost COMPONENTS system filesystem regex REQUIRED)
+find_package(Boost COMPONENTS system filesystem regex python REQUIRED)
 find_package( OpenCV REQUIRED )
+  find_package(PythonInterp REQUIRED)
+  find_package(PythonLibs REQUIRED)
 include_directories(${Caffe_INCLUDE_DIRS})
 add_definitions(${Caffe_DEFINITIONS})    # ex. -DCPU_ONLY
 message("Caffe_INCLUDE_DIRS is ${Caffe_INCLUDE_DIRS}")	
@@ -23,8 +25,8 @@ option(-std "std" c++11)
 include_directories(${Caffe_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 message("CUDA_INCLUDE_DIRS is ${CUDA_INCLUDE_DIRS}")
-#include(${DETECTOR_DIR}/CMakeLists.txt)
-#include(${TRACKER_DIR}/CMakeLists.txt)
+link_directories(${Boost_LIBRARY_DIR})
+
 
 # ADD HEADERS DIRECTORIES SO OUR SOURCE FILES CAN FIND THEM
 #include_directories(${TRACKER_DIR}/src)
@@ -50,6 +52,10 @@ add_executable(yolt src/yolt.cpp)
 #add_executable(multiple src/multiple_derived_classes.cpp)
 #target_link_libraries(main  ${Boost_LIBRARIES} ${Caffe_LIBRARIES} ${GLOG_LIB}  ${OpenCV_LIBS}) 
 target_link_libraries(yolt ${Boost_LIBRARIES} ${Caffe_LIBRARIES} ${GLOG_LIB}  ${OpenCV_LIBS})
+
+add_executable(yolt_python src/yolt_python.cpp)
+target_link_libraries(yolt_python -lboost_python -lboost_system ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
+
 
 #target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 #target_link_libraries (show_tracker_mot ${PROJECT_NAME})

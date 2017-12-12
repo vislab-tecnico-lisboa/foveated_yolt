@@ -61,9 +61,15 @@ public:
 
     };
 
-    LaplacianBlending(const cv::Mat& _image,const int _levels, std::vector<Mat> _kernels):
-        image(_image),levels(_levels), kernels(_kernels)
+    LaplacianBlending(const cv::Mat& _image,const int _levels, const int sigma):
+        image(_image),levels(_levels)
         {
+
+		// Foveate images
+		int m = floor(4*_image.size().height);
+		int n = floor(4*_image.size().width);
+
+	    kernels=createFilterPyr(m, n, levels, sigma);
 
             imageLapPyr.resize(levels);
             foveatedPyr.resize(levels);
@@ -108,8 +114,10 @@ public:
             }
 
 
-        
-        // FOVEATE
+
+
+
+
         cv::Mat foveate(const cv::Mat & center)
         {
             imageSmallestLevel.copyTo(foveated_image);
@@ -155,14 +163,10 @@ public:
                 }
             }
             return foveated_image;
-        }             
-        
-};
+        }    
 
-/*****************************************/
-//                  FUNCTIONS
-/*****************************************/
 
+         
 
 Mat createFilter(int m, int n, int sigma){
 
@@ -207,7 +211,6 @@ Mat createFilter(int m, int n, int sigma){
     return gkernel;
 }
 
-
 std::vector<Mat> createFilterPyr(int m, int n, int levels, int sigma){
 
     std::vector<Mat> kernels;
@@ -223,5 +226,17 @@ std::vector<Mat> createFilterPyr(int m, int n, int levels, int sigma){
     }
     return kernels;
 }
+ 
+/*****************************************/
+//                  FUNCTIONS
+/*****************************************/
+
+
+
+       
+};
+
+
+
 
 

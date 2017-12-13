@@ -7,6 +7,7 @@
  * inside modules/python/src2 folder.
  */
 
+
 static void init()
 {
     import_array();
@@ -63,7 +64,7 @@ static PyObject* failmsgp(const char *fmt, ...)
   return 0;
 }
 
-#define OPENCV_3 0
+#define OPENCV_3 1
 #if OPENCV_3
 
 class NumpyAllocator : public MatAllocator

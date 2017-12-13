@@ -9,12 +9,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modu
 find_package(PkgConfig REQUIRED)
 include(cmake/boost-python.cmake)
 
-
+#add_definitions(-DOPENCV_3)
 
 #find_package(Caffe REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(Boost COMPONENTS system filesystem regex python REQUIRED)
-find_package( OpenCV 2.4.9 REQUIRED )
+find_package( OpenCV REQUIRED )
   find_package(PythonInterp REQUIRED)
   find_package(NumPy REQUIRED)
   find_package(PythonLibs REQUIRED)
@@ -72,7 +72,7 @@ target_link_libraries(np_opencv_converter boost_system boost_python ${Boost_LIBR
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 boost_python_module(np_opencv_module src/np_opencv_module.cpp)
-target_link_libraries(np_opencv_module boost_system boost_python np_opencv_converter ${OpenCV_LDFLAGS})
+target_link_libraries(np_opencv_module boost_system boost_python np_opencv_converter ${OpenCV_LIBS})
 
 #add_library(np_opencv_converter SHARED src/np_opencv_converter.cpp src/utils/conversion.cpp)
 #target_link_libraries(np_opencv_converter -lboost_python -lboost_system ${OpenCV_LIBS} ${PYTHON_LIBRARIES})

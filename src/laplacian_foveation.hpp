@@ -64,7 +64,6 @@ public:
     LaplacianBlending(const cv::Mat& _image,const int _levels, const int sigma):
         image(_image),levels(_levels)
         {
-
 		// Foveate images
 		int m = floor(4*_image.size().height);
 		int n = floor(4*_image.size().width);
@@ -78,7 +77,6 @@ public:
 
             image_sizes.resize(levels);
             kernel_sizes.resize(levels);
-
             for(int i=levels-1; i>=0;--i){
 
                 cv::Mat image_size(2,1,CV_32S);
@@ -122,8 +120,6 @@ public:
         {
             imageSmallestLevel.copyTo(foveated_image);
             cv::Rect kernel_roi_rect;
-            
-
             for(int i=levels-1; i>=0; --i){
 
                 cv::Rect image_roi_rect;
@@ -136,23 +132,17 @@ public:
                 else{
                     aux=center;
                 }
-
                 computeRois(aux,kernel_roi_rect,kernel_sizes[i],image_sizes[i]);
-
                 // Multiplicar
                 cv::Mat aux_pyr;
                 imageLapPyr[i].copyTo(aux_pyr);
                 cv::Mat result_roi;
-
-
-                cv::multiply(aux_pyr,kernels[i](kernel_roi_rect),result_roi,1.0);
-
+                cv::multiply(aux_pyr,kernels[i](kernel_roi_rect),result_roi,1.0,CV_8U);
                 result_roi.copyTo(aux_pyr);
-
 
                 if(i==(levels-1)) {
 
-                    add(foveated_image,aux_pyr,foveated_image);
+                    cv::add(foveated_image,aux_pyr,foveated_image);
                 }
 
                 else {

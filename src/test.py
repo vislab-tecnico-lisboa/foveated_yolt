@@ -10,6 +10,7 @@ center=[230, 150];
 img = cv2.imread('watch.jpg')
 img=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
+img=plt.imread('watch.jpg')
 
 try:
     while True:
@@ -24,13 +25,22 @@ try:
         foveated_img = my_lap_obj.foveate(npcv.test_np_mat(np.array(center)))
         # Display the foveated image
         plt.imshow(foveated_img)
+        #img.set_data(im)
+
         circle=plt.Circle((center[0],center[1]),1.0,color='blue')
         ax = plt.gca()
         ax.add_artist(circle)
+
+
+        plt.draw()
+        plt.pause(.1)
+        plt.cla()
+
+        print('test')
         #plt.xticks([]), plt.yticks([])  # to hide tick values on X and Y axis
 
 
-        plt.show()
+        #plt.show()
 
 except KeyboardInterrupt:
     print('interrupted!')

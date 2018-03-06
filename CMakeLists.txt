@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 2.8)
 project(yolt)
 #find_package(CUDA 8.0 REQUIRED)

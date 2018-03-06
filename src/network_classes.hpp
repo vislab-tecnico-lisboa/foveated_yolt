@@ -45,17 +45,18 @@ typedef std::pair<string, float> Prediction;
 
 class ClassData{
 public:
-    ClassData(int N_): N(N_)    {  // construtor
+    ClassData(int N_): N(N_){  // construtor
       label.resize(N);
       score.resize(N);
       index.resize(N);
     }
+
     int N;
     std::vector<string> label;
     std::vector<float> score;
     std::vector<int> index;
 
-    friend ostream &operator<<( ostream &output,const ClassData &D ) {
+    friend ostream &operator<<( ostream &output,const ClassData &D ){
         for(int i=0; i<D.N;++i) {
             output << " Index: " << D.index[i] << "\n"
                    << " Label: " << D.label[i] << "\n"
@@ -77,6 +78,8 @@ public:
     ClassData Classify(const cv::Mat& img, int N);
     Rect CalcBBox(int N, int i, const cv::Mat &img, ClassData mydata, float thresh); // NEW
     void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map, int ct);
+    Mat SaliencyMap(const cv::Mat& img_orig, ClassData mydata, int class_index); // Added :)
+    void VisualizeSaliencyMap(cv::Mat saliency, cv::Mat img_orig);
     std::vector<String> GetDir(string dir, vector<String> &files);
 
     float* Limit_values(float* bottom_data); // NEW
@@ -323,7 +326,6 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
 }
 
 
-
 /************************************************************************/
 // Function CalcRGBmax
 // Get the highest value of R,G,B for each pixel
@@ -341,11 +343,106 @@ Mat CalcRGBmax(Mat i_RGB) {
 }
 
 
+/************************************************************************/
+// Function Saliency Map - Added by me :)
+/************************************************************************/
+
+cv::Mat Network::SaliencyMap(const cv::Mat& img_orig, ClassData mydata, int class_index){
+
+    int label_index = mydata.index[class_index];
+
+    // 1st foward pass data
+    Blob<float>* forward_output_layer = net->output_blobs()[0];
+
+    // Data from the last fully connected layer
+    float* fc8Data = forward_output_layer->mutable_cpu_data();
+    float* fc8Diff = forward_output_layer->mutable_cpu_diff();
+
+    // Dimension of output layer
+    long unsigned int dim_output_layer= forward_output_layer->num() *
+            forward_output_layer->channels() *
+            forward_output_layer->height() *
+            forward_output_layer->width();
+
+    // Backward of a specific class
+    for (int i = 0;  i < dim_output_layer; ++i)
+        fc8Diff[i] = 0.0f;
+    fc8Diff[label_index] = 1.0f; // Specific class
+
+    // Backward pass
+    net->Backward();
+
+    // Get data from fc8 data layer
+    boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");
+
+    const float* begin_diff = out_data_layer->mutable_cpu_diff();
+
+    // map to put the gradients of each pixel
+    cv::Mat M2 = Mat(out_data_layer->height(), out_data_layer->width(), CV_32FC3);
+
+    for (int i = 0; i<out_data_layer->height(); ++i){
+        for(int j = 0; j< out_data_layer->width(); ++j){
+            for (int c = 0; c<3; ++c){
+                int index =  j + i*out_data_layer->width() + c*out_data_layer->width()*out_data_layer->height();
+                M2.at<Vec3f>(i,j)[c] = begin_diff[index];
+            }
+        }
+    }
+
+    cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
+    cv::Mat saliency_map = CalcRGBmax(M2);
+
+    return saliency_map;
+}
+
+/************************************************************************/
+// Function to visualize Saliency Map - Added by me :)
+/************************************************************************/
+
+void Network::VisualizeSaliencyMap(cv::Mat m, cv::Mat img_orig){
+
+    cv::Mat saliency_map = m.clone();
+
+    vector<Mat> spl;
+
+    split(img_orig,spl);
+    imshow("spl1",spl[0]);//b
+    imshow("spl2",spl[1]);//g
+    imshow("spl3",spl[2]);//r
+
+
+//    saliency_map = saliency_map*255;
+    saliency_map.convertTo(saliency_map, CV_32F);
+     spl[0].convertTo(spl[0], CV_32F);
+     spl[1].convertTo(spl[1], CV_32F);
+     spl[2].convertTo(spl[2], CV_32F);
+
+
+//    cv::Mat copy;
+//    img_orig.copyTo(copy);
+//    cv::cvtColor(copy, copy, CV_BGR2GRAY);
+//    threshold(copy, copy, 0, 255,3 );
+
+
+    cout << saliency_map.type() << "\n"<< endl;
+    cout << spl[0].type() << "\n"<< endl;
+
+    addWeighted(saliency_map, 2.0f, spl[0], 0.33f, 0.0, saliency_map);
+    addWeighted(saliency_map, 2.0f, spl[1], 0.33f, 0.0, saliency_map);
+    addWeighted(saliency_map, 2.0f, spl[2], 0.33f, 0.0, saliency_map);
+
+
+    //cv::cvtColor ( saliency_map, saliency_map, CV_GRAY2BGR );
+
+    imshow("Saliency Map", saliency_map);
+}
+
+
 
 /************************************************************************/
 // Function CalcBBox
 /************************************************************************/
-Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float thresh ){
+Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float thresh){
 
     //std::vector<Rect> bboxes;
 
@@ -359,32 +456,35 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
 
     int label_index = mydata.index[i];  // tem o indice da classe
 
-    // Dados do 1 forward
+    // 1st foward pass data from last fully connected layer
     Blob<float>* forward_output_layer = net->output_blobs()[0];
     float* fc8Data = forward_output_layer->mutable_cpu_data();
     float* fc8Diff = forward_output_layer->mutable_cpu_diff();
 
-    // Backward of a specific class
-    for (int i = 0;  i< forward_output_layer->num() * forward_output_layer->channels() * forward_output_layer->height() * forward_output_layer->width(); ++i)
-        fc8Diff[i] = 0.0f;
+    long unsigned int dim_output_layer= forward_output_layer->num() *
+            forward_output_layer->channels() *
+            forward_output_layer->height() *
+            forward_output_layer->width();
 
+    // Backward of a specific class
+    for (int i = 0;  i < dim_output_layer; ++i)
+        fc8Diff[i] = 0.0f;
     fc8Diff[label_index] = 1.0f; // Specific class
 
     // Backward
     net->Backward();
 
-    // Get Data
+    // Get Data - ??????
     boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");  // get data from Data layer
     int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
     const float* begin_diff = out_data_layer->mutable_cpu_diff();
 
-    Mat M2 = Mat(out_data_layer->height(),out_data_layer->width(),CV_32FC3);
+    Mat M2 = Mat(out_data_layer->height(), out_data_layer->width(), CV_32FC3);
 
-    for (int i=0; i<out_data_layer->height(); ++i){
-        for(int j=0; j< out_data_layer->width(); ++j){
-            for (int c=0; c<3; ++c){
-
+    for (int i = 0; i<out_data_layer->height(); ++i){
+        for(int j = 0; j< out_data_layer->width(); ++j){
+            for (int c = 0; c<3; ++c){
                 int index =  j + i*out_data_layer->width() + c*out_data_layer->width()*out_data_layer->height();
                 M2.at<Vec3f>(i,j)[c] = begin_diff[index];
             }
@@ -393,33 +493,42 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
 
     cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
 
-    // Find max across RGB channels
+    // auxiliar way to see the saliency map
+    Mat saliency_map1 = CalcRGBmax(M2);
+    saliency_map1 = saliency_map1*255;
+    saliency_map1.convertTo(saliency_map1, CV_8U);
+    //imshow("saliency", saliency_map1);
+
+    // find max across RGB channels
+    // real saliency map to be applied
     Mat saliency_map = CalcRGBmax(M2);
-
-//    imshow("saliency", saliency_map);
-//    waitKey(0);
-
 
     /*********************************************************/
     //                  Segmentation Mask                    //
     //       Set pixels > threshold to 1 and define box      //
     /*********************************************************/
 
+
+    // auxiliar way to see the mask
+    Mat foreground_mask1;
+    threshold(saliency_map, foreground_mask1, thresh, 1, THRESH_BINARY);
+    foreground_mask1=foreground_mask1*255;
+    foreground_mask1.convertTo(foreground_mask1, CV_8U);
+    //imshow("Mask1", foreground_mask1);
+
+    // real maks to be applied
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
-
-//    imshow("Mask", foreground_mask);
-//    waitKey(0);
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
 
     Mat Points;
     findNonZero(foreground_mask,Points);
     Rect Min_Rect = boundingRect(Points);
 
+    waitKey(0);
+
     //bboxes.push_back(Min_Rect);
-
     //}
-
     return Min_Rect;
 
 }
@@ -447,8 +556,6 @@ std::vector<String> Network::GetDir(string dir, vector<String> &files) {
 
 
 
-
-
 /************************************************************************/
 // Function VisualiseBbox
 /************************************************************************/
@@ -456,16 +563,14 @@ std::vector<String> Network::GetDir(string dir, vector<String> &files) {
 void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int size_map, int ct){
 
     // Transformation from (227*227) to (height*width) of input image
-    for (int k =0; k< N; ++k){
-
+    for (int k = 0; k < N; ++k){
         bboxes[k].x =  bboxes[k].x*img.size().width / size_map;
         bboxes[k].y =  bboxes[k].y*img.size().height / size_map;
         bboxes[k].width = bboxes[k].width*img.size().width / size_map;
         bboxes[k].height = bboxes[k].height*img.size().height / size_map;
     }
 
-    for (int k =0; k< N; ++k)
-
+    for (int k = 0; k < N; ++k)
         rectangle(img, bboxes[k], Scalar(0, 0, 255), 1, 8, 0 );
 
     stringstream ss;
@@ -482,10 +587,6 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
     imshow("box", img );
     waitKey(0);
 }
-
-
-
-
 
 
 /************************************************************************/

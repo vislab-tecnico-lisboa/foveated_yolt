@@ -1,3 +1,4 @@
+#define CPU_ONLY 1
 #include <caffe/caffe.hpp>
 #include <caffe/util/io.hpp>
 #include <caffe/blob.hpp>
@@ -237,7 +238,7 @@ int main(int argc, char** argv) {
 
 
                     Mat saliency = Network.SaliencyMap(img, mydata, i);
-                    Network.VisualizeSaliencyMap(saliency,img_orig);
+                    //Network.VisualizeSaliencyMap(saliency,img_orig);
 
                     bboxes.push_back(Min_Rect); // save all bounding boxes
 

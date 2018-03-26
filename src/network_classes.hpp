@@ -79,7 +79,7 @@ public:
     Rect CalcBBox(int N, int i, const cv::Mat &img, ClassData mydata, float thresh); // NEW
     void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map, int ct);
     Mat SaliencyMap(const cv::Mat& img_orig, ClassData mydata, int class_index); // Added :)
-    void VisualizeSaliencyMap(cv::Mat saliency, cv::Mat img_orig);
+    //void VisualizeSaliencyMap(cv::Mat saliency, cv::Mat img_orig);
     std::vector<String> GetDir(string dir, vector<String> &files);
 
     float* Limit_values(float* bottom_data); // NEW
@@ -399,43 +399,43 @@ cv::Mat Network::SaliencyMap(const cv::Mat& img_orig, ClassData mydata, int clas
 // Function to visualize Saliency Map - Added by me :)
 /************************************************************************/
 
-void Network::VisualizeSaliencyMap(cv::Mat m, cv::Mat img_orig){
+//void Network::VisualizeSaliencyMap(cv::Mat m, cv::Mat img_orig){
 
-    cv::Mat saliency_map = m.clone();
+//    cv::Mat saliency_map = m.clone();
 
-    vector<Mat> spl;
+//    vector<Mat> spl;
 
-    split(img_orig,spl);
-    imshow("spl1",spl[0]);//b
-    imshow("spl2",spl[1]);//g
-    imshow("spl3",spl[2]);//r
-
-
-//    saliency_map = saliency_map*255;
-    saliency_map.convertTo(saliency_map, CV_32F);
-     spl[0].convertTo(spl[0], CV_32F);
-     spl[1].convertTo(spl[1], CV_32F);
-     spl[2].convertTo(spl[2], CV_32F);
+//    split(img_orig,spl);
+//    imshow("spl1",spl[0]);//b
+//    imshow("spl2",spl[1]);//g
+//    imshow("spl3",spl[2]);//r
 
 
-//    cv::Mat copy;
-//    img_orig.copyTo(copy);
-//    cv::cvtColor(copy, copy, CV_BGR2GRAY);
-//    threshold(copy, copy, 0, 255,3 );
+////    saliency_map = saliency_map*255;
+//    saliency_map.convertTo(saliency_map, CV_32F);
+//     spl[0].convertTo(spl[0], CV_32F);
+//     spl[1].convertTo(spl[1], CV_32F);
+//     spl[2].convertTo(spl[2], CV_32F);
 
 
-    cout << saliency_map.type() << "\n"<< endl;
-    cout << spl[0].type() << "\n"<< endl;
-
-    addWeighted(saliency_map, 2.0f, spl[0], 0.33f, 0.0, saliency_map);
-    addWeighted(saliency_map, 2.0f, spl[1], 0.33f, 0.0, saliency_map);
-    addWeighted(saliency_map, 2.0f, spl[2], 0.33f, 0.0, saliency_map);
+////    cv::Mat copy;
+////    img_orig.copyTo(copy);
+////    cv::cvtColor(copy, copy, CV_BGR2GRAY);
+////    threshold(copy, copy, 0, 255,3 );
 
 
-    //cv::cvtColor ( saliency_map, saliency_map, CV_GRAY2BGR );
+//    cout << saliency_map.type() << "\n"<< endl;
+//    cout << spl[0].type() << "\n"<< endl;
 
-    imshow("Saliency Map", saliency_map);
-}
+//    addWeighted(saliency_map, 2.0f, spl[0], 0.33f, 0.0, saliency_map);
+//    addWeighted(saliency_map, 2.0f, spl[1], 0.33f, 0.0, saliency_map);
+//    addWeighted(saliency_map, 2.0f, spl[2], 0.33f, 0.0, saliency_map);
+
+
+//    //cv::cvtColor ( saliency_map, saliency_map, CV_GRAY2BGR );
+
+//    imshow("Saliency Map", saliency_map);
+//}
 
 
 
@@ -493,42 +493,33 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
 
     cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
 
-    // auxiliar way to see the saliency map
-    Mat saliency_map1 = CalcRGBmax(M2);
-    saliency_map1 = saliency_map1*255;
-    saliency_map1.convertTo(saliency_map1, CV_8U);
-    //imshow("saliency", saliency_map1);
-
-    // find max across RGB channels
-    // real saliency map to be applied
+    // Find max across RGB channels
     Mat saliency_map = CalcRGBmax(M2);
+
+//    imshow("saliency", saliency_map);
+//    waitKey(0);
+
 
     /*********************************************************/
     //                  Segmentation Mask                    //
     //       Set pixels > threshold to 1 and define box      //
     /*********************************************************/
 
-
-    // auxiliar way to see the mask
-    Mat foreground_mask1;
-    threshold(saliency_map, foreground_mask1, thresh, 1, THRESH_BINARY);
-    foreground_mask1=foreground_mask1*255;
-    foreground_mask1.convertTo(foreground_mask1, CV_8U);
-    //imshow("Mask1", foreground_mask1);
-
-    // real maks to be applied
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
+
+//    imshow("Mask", foreground_mask);
+//    waitKey(0);
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
 
     Mat Points;
     findNonZero(foreground_mask,Points);
     Rect Min_Rect = boundingRect(Points);
 
-    waitKey(0);
-
     //bboxes.push_back(Min_Rect);
+
     //}
+
     return Min_Rect;
 
 }

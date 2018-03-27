@@ -5,7 +5,6 @@ gt_folder='../dataset/gt/';
 detections_file='../dataset/detections/raw_bbox_parse_caffenet_100.txt';   % raw_bbox_parse_caffenet_100.txt
 %detections_crop_file='../dataset/detections/raw_bbox_parse_crop_caffenet_100.txt';
 
-
 feedback_detections_crop_file='../dataset/detections/feedback_detection_parse_crop_caffenet_100.txt';
 feedback_detections_file = '../dataset/detections/feedback_detection_parse_fovea_caffenet_100.txt';
 classifications_file='../files/ground_truth_labels_ilsvrc12.txt';

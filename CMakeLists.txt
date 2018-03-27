@@ -44,7 +44,7 @@ message("Caffe_INCLUDE_DIRS is ${Caffe_INCLUDE_DIRS}")
 set(GLOG_LIB glog)
 
 #add_executable(main src/main.cpp)
-add_executable(yolt src/yolt.cpp)
+add_executable(yolt src/yolt_exp.cpp)
 
 target_link_libraries(yolt ${Boost_LIBRARIES} ${Caffe_LIBRARIES} ${GLOG_LIB}  ${OpenCV_LIBS})
 

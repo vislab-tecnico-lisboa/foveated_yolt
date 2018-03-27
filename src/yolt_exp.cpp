@@ -17,6 +17,7 @@
 #include <math.h>
 #include <limits>
 #include <boost/algorithm/string.hpp>
+#include <time.h>
 
 #include "network_classes.hpp"
 #include "laplacian_foveation.hpp"
@@ -27,12 +28,10 @@ const int HYBRID=3;
 
 using namespace caffe;
 using namespace std;
-
 using std::string;
 
 /* Pair (label, confidence) representing a prediction. */
 typedef std::pair<string, float> Prediction;
-
 
 cv::Mat foveate(const cv::Mat & img, const int & size_map, const int & levels, const int & sigma, const cv::Mat & fixation_point)
 {
@@ -58,8 +57,43 @@ cv::Mat foveate(const cv::Mat & img, const int & size_map, const int & levels, c
     return foveated_image;
 }
 
+std::vector<cv::Mat> FixationPoints (int img_size, int n_height, int n_width, int random)
+{
+    std::vector<cv::Mat> fixation_points;
+//    int levels = 5;
+//    int sigma = 10;
+//    cv::Mat dst;
+//    cv::Mat img_fov;
+
+    for (int i = 0; i < n_height; i++){
+        for (int j = 0; j < n_width; j++){
+            cv::Mat fixation_point(2,1,CV_32S);
+
+            if (random = 1){
+                fixation_point.at<int>(0,0) = img_size / n_width * j + (rand() % (img_size / n_width));
+                fixation_point.at<int>(1,0) = img_size / n_height * i +(rand() % (img_size / n_height));
+            }else{
+                fixation_point.at<int>(0,0) = img_size / n_width * j + (img_size / n_width /2);
+                fixation_point.at<int>(1,0) = img_size / n_height * i + (img_size/ n_width / 2);
+            }
+
+            // img_fov = foveate(img,img_size,levels,sigma,fixation_point);
+            // img_fov = img_fov.clone();
+            // cv::namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
+            // imshow( "Display window", img_fov );
+
+            // waitKey(0);
+            // std::cout <<fixation_point.at<int>(0,0)<< " " << fixation_point.at<int>(1,0) << std::endl;
+            fixation_points.push_back(fixation_point);
+        }          
+    }
+
+    return fixation_points;
+}
+
+
 /******************/
-//      MAIN
+//		MAIN
 /******************/
 
 int main(int argc, char** argv) {
@@ -72,10 +106,10 @@ int main(int argc, char** argv) {
     std::cout << "absolute_path_folder: " << absolute_path_folder<< std::endl;
 
     const string model_file = absolute_path_folder + string(argv[2]);
-    std::cout << "model_file: " << model_file<< std::endl;
+    std::cout << "model_file: " << model_file << std::endl;
 
     const string weight_file = absolute_path_folder + string(argv[3]);
-    std::cout << "weight_file: " << weight_file<< std::endl;
+    std::cout << "weight_file: " << weight_file << std::endl;
 
     const string mean_file = absolute_path_folder + string(argv[4]);
     std::cout << "mean_file: " << mean_file<< std::endl;
@@ -88,13 +122,14 @@ int main(int argc, char** argv) {
 
     /* method specific params */
     static int N = atoi(argv[7]);         // define number of top predicted labels
-    std::cout << "top classes: " << N<< std::endl;
+    std::cout << "top classes: " << N << std::endl;
 
     static string threshs_ = string(argv[8]);  // segmentation threshold for mask
     std::cout << "threshs: " << threshs_<< std::endl;
 
     std::vector<float> threshs;
     std::stringstream ss_(threshs_);
+
     float j;
     while (ss_ >> j){
         threshs.push_back(j);
@@ -103,13 +138,13 @@ int main(int argc, char** argv) {
     }
 
     static int size_map = atoi(argv[9]);  // Size of the network input images (227,227)
-    std::cout << "size_map: " << size_map<< std::endl;
+    std::cout << "size_map: " << size_map << std::endl;
 
     static int levels = atoi(argv[10]);   // Number of kernel levels
-    std::cout << "levels: " << levels<< std::endl;
+    std::cout << "levels: " << levels << std::endl;
 
     static string sigmas_ = string(argv[11]);           // Size of the fovea
-    std::cout << "sigmas: " << sigmas_<< std::endl;
+    std::cout << "sigmas: " << sigmas_ << std::endl;
 
     std::vector<int> sigmas;
 
@@ -124,15 +159,14 @@ int main(int argc, char** argv) {
             ss.ignore();
     }
 
-    static string results_folder = string(argv[12]);    // Number of kernel levels
+    static string results_folder = string(argv[12]);    // folder to store results
     std::cout << "results_folder: " << results_folder << std::endl;
 
-    static int mode = atoi(argv[13]);    // Number of kernel levels
+    static int mode = atoi(argv[13]);    // mode
     std::cout << "mode: " << mode << std::endl;
 
-    static bool debug = atoi(argv[14]);    // Number of kernel levels
+    static bool debug = atoi(argv[14]);    // set debug=1 to see figures
     std::cout << "debug: " << debug << std::endl;
-
 
     static int total_images = atoi(argv[15]);    // Number of images
     std::cout << "total_images: " << total_images << std::endl;
@@ -170,142 +204,125 @@ int main(int argc, char** argv) {
     std::string feedback_detection_str=results_folder + string("feedback_detection_parse.txt");
     feedback_detection.open (feedback_detection_str.c_str(), ios::out);  // file with 25 predicted classes for each image
 
-    feedforward_detection << "sigma;thres;class1;score1;x1;y1;w1;h1;class2;score2;x2;y2;w2;h2;class3;score3;x3;y3;w3;h3;class4;score4;x4;y4;w4;h4;class5;score5;x5;y5;w5;h5" << std::endl;
-    feedback_detection << "sigma;thres;class1;score1;class2;score2;class3;score3;class4;score4;class5;score5;class6;score6;class7;score7;class8;score8;class9;score9;class10;score10;class11;score11;class12;score12;class13;score13;class14;score14;class15;score15;class16;score16;class17;score17;class18;score18;class19;score19;class20;score20;class21;score21;class22;score22;class23;score23;class24;score24;class25;score25" << std::endl;
+    feedforward_detection << "sigma;thres;pt_w;pt_h;class1;score1;x1;y1;w1;h1;class2;score2;x2;y2;w2;h2;class3;score3;x3;y3;w3;h3;class4;score4;x4;y4;w4;h4;class5;score5;x5;y5;w5;h5" << std::endl;
+    feedback_detection << "sigma;thres;pt_w;pt_h;class1;score1;class2;score2;class3;score3;class4;score4;class5;score5;class6;score6;class7;score7;class8;score8;class9;score9;class10;score10;class11;score11;class12;score12;class13;score13;class14;score14;class15;score15;class16;score16;class17;score17;class18;score18;class19;score19;class20;score20;class21;score21;class22;score22;class23;score23;class24;score24;class25;score25" << std::endl;
+ 
+    // Vector of random fixation points
+    srand (time(NULL));
+    std::vector<cv::Mat> fixedpts = FixationPoints(size_map,3,3,1);
 
     float thresh;
     int sigma;
+    cv::Mat fixedpt;
+
     for (unsigned int thresh_index = 0; thresh_index < threshs.size(); ++thresh_index){
         thresh = threshs[thresh_index];
         for (unsigned int sigma_index = 0; sigma_index < sigmas.size(); ++sigma_index){
             sigma = sigmas[sigma_index];
+            for (unsigned int fixedpt_index = 0; fixedpt_index < fixedpts.size(); ++fixedpt_index){
+                fixedpt = fixedpts[fixedpt_index];
 
-            // FOR EACH IMAGE OF THE DATASET (TODO: OPTIMIZATION -> PROCESS BATCH OF IMAGES INSTEAD OF SINGLE IMAGES)
-            for (unsigned int input = 0; input < total_images; ++input){
-                std::cout << "thresh:" << thresh << " sigma:" << sigma <<" Procesing image " << input+1 << " of " <<
-                             total_images << ": iteration "<<
-                             input+1 + sigma_index*total_images + thresh_index*total_images*sigmas.size()
-                          << " of a total of "  <<
-                             total_images*threshs.size()*sigmas.size()
-                          << " iterations(" <<
-                             100.0*(input+1 + sigma_index*total_images+thresh_index*total_images*sigmas.size())/
-                             (total_images*threshs.size()*sigmas.size())
-                          << "%)"<< std::endl;
+                // FOR EACH IMAGE OF THE DATASET (TODO: OPTIMIZATION -> PROCESS BATCH OF IMAGES INSTEAD OF SINGLE IMAGES)
+                for (unsigned int input = 0; input < total_images; ++input){
+                    
+                    std::cout << "thresh:" << thresh << " sigma:" << sigma << " fixedpt:" << fixedpt.at<int>(0,0)<<","<<fixedpt.at<int>(1,0)<< " Procesing image " << input+1 << " of " <<
+                                 total_images << ": iteration "<<
+                                 input+1 + fixedpt_index*total_images+sigma_index*total_images*fixedpts.size()+thresh_index*total_images*fixedpts.size()
+                              << " of a total of "  <<
+                                 total_images*threshs.size()*sigmas.size()*fixedpts.size()
+                              << " iterations(" <<
+                                 100.0*(input+1 + fixedpt_index*total_images+sigma_index*total_images*fixedpts.size()+thresh_index*total_images*fixedpts.size())/
+                                 (total_images*threshs.size()*sigmas.size()*fixedpts.size())
+                              << "%)"<< std::endl;
 
-                string file = image_image_files[input];
-                std::vector<string> new_labels;
-                std::vector<float> new_scores;
-                std::vector<Rect> bboxes;
+                    string file = image_image_files[input];
+                    std::vector<string> new_labels;
+                    std::vector<float> new_scores;
+                    std::vector<Rect> bboxes;
 
-                cv::Mat img = cv::imread(file, 1);        // Read image
-                resize(img,img, Size(size_map,size_map)); // Resize to network size
-                cv::Mat img_orig = img.clone();
+                    cv::Mat img = cv::imread(file, 1);		  // Read image
+                    resize(img,img, Size(size_map,size_map)); // Resize to network size
+                    cv::Mat img_orig = img.clone();
 
-                ClassData mydata(N);
+                    ClassData mydata(N);
 
+                    img = foveate(img,size_map,levels,sigma,fixedpt);
+ 
+                    cv::Mat img_first_pass_viz = img.clone();
 
-                // PROCCESS IMAGE - FOVEATE OR APPLY UNIFORM BLUR
-                if(mode == FOVEATION){
-                    cv::Mat fixation_point(2,1,CV_32S);
-
-                    fixation_point.at<int>(0,0) = img.size().width * (rand() / (RAND_MAX + 1.0));
-                    fixation_point.at<int>(1,0) = img.size().height * (rand() / (RAND_MAX + 1.0));
-
-                    img = foveate(img,size_map,levels,sigma,fixation_point);
-                }
-                else
-                    GaussianBlur(img,img, Size(5,5), sigma, sigma);
-
-                cv::Mat img_first_pass_viz = img.clone();
-
-                // FEEDFORWAD - PREDICT CLASSES (TOP N)
-                mydata = Network.Classify(img, N);
-
-                // store results
-                feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";";
-                feedback_detection <<  std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";";
-
-                cv::Mat img_second;
-                // For each predicted class label:
-                for (int i = 0; i < N; ++i){
-
-                    //////////////////////////////////////////////////
-                    //  Weakly Supervised Object Localization  //
-                    // Saliency Map + Segmentation Mask + BBox //
-                    //////////////////////////////////////////////////
-                    Rect Min_Rect = Network.CalcBBox(N, i, img, mydata, thresh);
-
-
-
-                    Mat saliency = Network.SaliencyMap(img, mydata, i);
-                    //Network.VisualizeSaliencyMap(saliency,img_orig);
-
-                    bboxes.push_back(Min_Rect); // save all bounding boxes
+                    // FEEDFORWAD - PREDICT CLASSES (TOP N)
+                    mydata = Network.Classify(img, N);
 
                     // store results
-                    if (i==N-1)
-                        feedforward_detection << mydata.label[i] << ";" << mydata.score[i] << ";" << Min_Rect.x << ";" << Min_Rect.y << ";" << Min_Rect.width << ";" << Min_Rect.height;
-                    else
-                        feedforward_detection << mydata.label[i] << ";" << mydata.score[i] << ";" << Min_Rect.x << ";" << Min_Rect.y << ";" << Min_Rect.width << ";" << Min_Rect.height << ";";
+                    feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
+                    feedback_detection    << std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
 
-                    /////////////////////////////////////////////////////////
-                    //      Image Re-Classification with Attention         //
-                    // Foveated Image + Forward + Predict new class labels //
-                    /////////////////////////////////////////////////////////
 
-                    if(mode == FOVEATION || mode == HYBRID){
+                    cv::Mat img_second;
+                    
+                    // For each predicted class label:
+                    for (int i = 0; i < N; ++i){
+
+                        //////////////////////////////////////////////////
+                        //  Weakly Supervised Object Localization       //
+                        // Saliency Map + Segmentation Mask + BBox      //
+                        //////////////////////////////////////////////////
+                        Rect Min_Rect = Network.CalcBBox(N, i, img, mydata, thresh);
+
+                        //std::cout << "bound " << Min_Rect << std::endl;
+
+                        Mat saliency = Network.SaliencyMap(img, mydata, i);
+
+                        bboxes.push_back(Min_Rect); // save all bounding boxes
+
+                        // store results
+                        if (i==N-1)
+                            feedforward_detection << mydata.label[i] << ";" << mydata.score[i] << ";" << Min_Rect.x << ";" << Min_Rect.y << ";" << Min_Rect.width << ";" << Min_Rect.height;
+                        else
+                            feedforward_detection << mydata.label[i] << ";" << mydata.score[i] << ";" << Min_Rect.x << ";" << Min_Rect.y << ";" << Min_Rect.width << ";" << Min_Rect.height << ";";
+
+                        /////////////////////////////////////////////////////////
+                        //      Image Re-Classification with Attention         //
+                        // Foveated Image + Forward + Predict new class labels //
+                        /////////////////////////////////////////////////////////
+
                         cv::Mat fixation_point(2,1,CV_32S);
                         fixation_point.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
                         fixation_point.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
-                        img_second = foveate(img_orig, size_map, levels, sigma, fixation_point);
-                    }
-                    else{
-                        img_second = img_orig(Min_Rect);  //crop image by bbox
-
-                        if (img_second.size().width != 0 && img_second.size().height != 0){
-                            cv::resize(img_second,img_second,Size(size_map,size_map));
+                        img_second = foveate(img_orig, size_map, levels, sigma, fixation_point);  
+                        
+                        if(debug){
+                            cv::Mat dst; 
+                            cv::hconcat(img_orig,img_first_pass_viz, dst); // horizontal
+                            cv::hconcat(dst, img_second,dst); // horizontal
+                            //namedWindow( "original image,    first pass,   second pass    class", WINDOW_AUTOSIZE ); // Create a window for display.
+                            imshow("original image,    first pass,   second pass     class", dst );                  // Show our image inside it.
+                            waitKey(0);
                         }
-                        else{
-                            img_first_pass_viz.copyTo(img_second);
+
+                        // Forward
+                        // Predict New top 5 of each predicted class
+                        ClassData feedback_data = Network.Classify(img_second, N);
+
+                        // For each bounding box
+                        for(int m = 0; m < N; ++m){
+                            new_labels.push_back(feedback_data.label[m]);
+                            new_scores.push_back(feedback_data.score[m]);
+                        }
+
+                        feedforward_detection << endl;
+
+                        // Feedback results
+                        for (int aux = 0; aux < N*N; ++aux){
+                            if (aux == N*N-1)
+                                feedback_detection <<  new_labels[aux] << ";" << new_scores[aux];
+                            else
+                                feedback_detection <<  new_labels[aux] << ";" << new_scores[aux] << ";";
                         }
                     }
-
-
-                    if(debug)
-                    {
-                        Mat dst;
-                        cv::hconcat(img_orig,img_first_pass_viz, dst); // horizontal
-                        cv::hconcat(dst, img_second, dst); // horizontal
-                        //cv::vconcat(a, b, dst); // vertical
-                        namedWindow( "original image,    first pass,   second pass     class", WINDOW_AUTOSIZE ); // Create a window for display.
-                        imshow( "original image,    first pass,   second pass     class", dst );                  // Show our image inside it.
-                        waitKey(1);
-                    }
-
-                    // Forward
-                    // Predict New top 5 of each predicted class
-                    ClassData feedback_data = Network.Classify(img_second, N);
-
-                    // For each bounding box
-                    for(int m = 0; m < N; ++m){
-                        new_labels.push_back(feedback_data.label[m]);
-                        new_scores.push_back(feedback_data.score[m]);
-                    }
+                    feedback_detection << endl;
                 }
-
-                feedforward_detection << endl;
-
-                // Feedback results
-                for (int aux = 0; aux < N*N; ++aux){
-                    if (aux == N*N-1)
-                        feedback_detection <<  new_labels[aux] << ";" << new_scores[aux];
-                    else
-                        feedback_detection <<  new_labels[aux] << ";" << new_scores[aux] << ";";
-                }
-                feedback_detection << endl;
-
             }
-
         }
     }
     feedback_detection.close();
@@ -394,4 +411,5 @@ int main(int argc, char** argv) {
     //    feedforward_detection.close();
 
 }
+
 

@@ -508,8 +508,8 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
 
-//    imshow("Mask", foreground_mask);
-//    waitKey(0);
+    imshow("Mask", foreground_mask);
+    waitKey(0);
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
 
     Mat Points;

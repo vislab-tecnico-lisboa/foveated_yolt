@@ -211,6 +211,9 @@ int main(int argc, char** argv) {
                     fixation_point.at<int>(0,0) = img.size().width * (rand() / (RAND_MAX + 1.0));
                     fixation_point.at<int>(1,0) = img.size().height * (rand() / (RAND_MAX + 1.0));
 
+                    std::cout << "fixed_point: " << fixation_point.at<int>(0,0) << std::endl;
+                    std::cout << "fixed_point: " << fixation_point.at<int>(1,0) << std::endl;
+
                     img = foveate(img,size_map,levels,sigma,fixation_point);
                 }
                 else
@@ -235,7 +238,7 @@ int main(int argc, char** argv) {
                     //////////////////////////////////////////////////
                     Rect Min_Rect = Network.CalcBBox(N, i, img, mydata, thresh);
 
-
+                    std::cout << "bound: " << Min_Rect << std::endl;
 
                     Mat saliency = Network.SaliencyMap(img, mydata, i);
                     //Network.VisualizeSaliencyMap(saliency,img_orig);

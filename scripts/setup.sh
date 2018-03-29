@@ -47,9 +47,9 @@ function get_data
 
 
 # Get network weights
-#get_network_weights
+get_network_weights
 
-get_data
+#get_data
 
 
 

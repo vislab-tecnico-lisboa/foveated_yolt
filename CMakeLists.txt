@@ -7,11 +7,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modu
 ### Set libraries' locations
 # Set Caffe
 set(Caffe_DIR "/home/cristina/caffe/build")
-set(Caffe_INCLUDE_DIRS "/home/cristina/caffe/distribute/include")
-set(Caffe_LIBRARIES "/home/cristina/caffe/build/lib/libcaffe.so")
+set(Caffe_INCLUDE_DIRS "/home/cristina/caffe/build/install/include")
+set(Caffe_LIBRARIES "/home/cristina/caffe/build/install/lib/libcaffe.so")
 
 find_package(Caffe REQUIRED)
-#find_package(CUDA REQUIRED)
+find_package(CUDA REQUIRED)
 find_package(Boost COMPONENTS system filesystem regex REQUIRED)
 find_package(OpenCV REQUIRED)
 
@@ -28,8 +28,8 @@ add_definitions(${Caffe_DEFINITIONS})    # ex. -DCPU_ONLY
 message("Caffe_INCLUDE_DIRS is ${Caffe_INCLUDE_DIRS}")	
 
 
-#include_directories(${CUDA_INCLUDE_DIRS})
-#message("CUDA_INCLUDE_DIRS is ${CUDA_INCLUDE_DIRS}")
+include_directories(${CUDA_INCLUDE_DIRS})
+message("CUDA_INCLUDE_DIRS is ${CUDA_INCLUDE_DIRS}")
 #include(${DETECTOR_DIR}/CMakeLists.txt)
 #include(${TRACKER_DIR}/CMakeLists.txt)
 

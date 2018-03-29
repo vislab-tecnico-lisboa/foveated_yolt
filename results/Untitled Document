@@ -1,0 +1,10 @@
+top classes: 5
+threshs: 0.6
+size_map: 227
+levels: 5
+sigmas: 0,30,50,70,90
+results_folder: /home/cristina/Foveated-YOLT/results/
+mode: 2
+debug: 0
+total_images: 10
+

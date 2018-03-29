@@ -22,15 +22,14 @@ TOP=5
 SIZE_MAP=227
 
 # Define number of kernel levels
-LEVELS=10
-
-# Define size of the fovea
-SIGMAS="10,20,30,40,50,60,70,80,90,100"
-#SIGMAS="10,20"
+LEVELS=5
 
 # Choose segmentation threshold
 #THRESHOLDS="0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.80,0.85,0.90,0.95,1.0"
-THRESHOLDS="0.5,0.6,0.7,0.8,0.9,1.0"
+THRESHOLDS="0.6"
+
+# Define size of the fovea
+SIGMAS="70"
 
 # Choose method (1-CARTESIAN 2-FOVEATION 3-HYBRID)
 MODE=2
@@ -41,7 +40,7 @@ MODEL_FILE="deploy_caffenet.prototxt"
 WEIGHTS_FILE="bvlc_reference_caffenet.caffemodel"
 MEAN_FILE="imagenet_mean.binaryproto"
 LABELS_FILE="synset_words_change.txt"
-DATASET="/home/cristina/Foveated-YOLT/images"
+DATASET="/home/cristina/Foveated-YOLT/data/images"
 RESULTS_FOLDER_ABSOLUTE_PATH="/home/cristina/Foveated-YOLT/results/"
 DEBUG=0
 TOTAL_IMAGES=2

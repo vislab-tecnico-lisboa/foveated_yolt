@@ -17,7 +17,7 @@
 #include <memory>
 #include <math.h>
 #include <limits>
-#include<sstream>
+#include <sstream>
 //#include </usr/include/numpy/ndarrayobject.h>
 //#include </usr/include/numpy/ndarraytypes.h>
 
@@ -50,6 +50,14 @@ public:
       score.resize(N);
       index.resize(N);
     }
+
+    ClassData(std::vector<string> label_, std::vector<float> score_, std::vector<int> index_){  // construtor
+      label = label_;
+      score = score_;
+      index = index_;
+      N = label.size();
+    }
+
 
     int N;
     std::vector<string> label;
@@ -213,7 +221,9 @@ ClassData Network::Classify(const cv::Mat& img, int N) {
 
     ClassData mydata(N); // objecto
 
+
     N = std::min<int>(labels.size(), N);       // tem 5 top labels
+
     std::vector<int> maxN = Argmax(output, N); // tem o top
 
     for (int i = 0; i < N; ++i) {
@@ -223,7 +233,7 @@ ClassData Network::Classify(const cv::Mat& img, int N) {
         mydata.label[i] = labels[idx];
         mydata.score[i] = output[idx];
     }
-//    cout << mydata << endl;  // imprime os dados do top 5
+    //cout << mydata << endl;  // imprime os dados do top 5
 
     return mydata;
 }
@@ -496,8 +506,8 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
     // Find max across RGB channels
     Mat saliency_map = CalcRGBmax(M2);
 
-//    imshow("saliency", saliency_map);
-//    waitKey(0);
+    //imshow("saliency", saliency_map);
+    //waitKey(0);
 
 
     /*********************************************************/
@@ -508,13 +518,17 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
 
-//  imshow("Mask", foreground_mask);
-//  waitKey(0);
+    //imshow("Mask", foreground_mask);
+    //waitKey(0);
+
+    //cout<< "convertion" << endl;
   
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
 
     Mat Points;
     findNonZero(foreground_mask,Points);
+
+    //cout << "non zero" << endl;
     Rect Min_Rect = boundingRect(Points);
 
     //bboxes.push_back(Min_Rect);

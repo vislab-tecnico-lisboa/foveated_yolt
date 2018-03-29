@@ -211,7 +211,7 @@ int main(int argc, char** argv){
  
     // Vector of random fixation points
     srand (time(NULL));
-    std::vector<cv::Mat> fixedpts = FixationPoints(size_map,3,3,0);
+    std::vector<cv::Mat> fixedpts = FixationPoints(size_map,1,1,0);
 
     float thresh;
     int sigma;
@@ -284,23 +284,14 @@ int main(int argc, char** argv){
                                                 
                         // FEEDFORWAD - PREDICT CLASSES (TOP N)
                         cv::Mat img_second_pass = foveate(img, size_map, levels, sigma, fixation_point); 
-                        ClassData feedback_data = Network.Classify(img_second_pass, N);
-
-                        
+                        ClassData feedback_data = Network.Classify(img_second_pass, N);                     
 
                         // For each bounding box store re-classification
                         for(int m = 0; m < N; ++m){
                             new_labels.push_back(feedback_data.label[m]);
                             new_scores.push_back(feedback_data.score[m]);
                             new_index.push_back(feedback_data.index[m]);
-                            cout << "TOP 25\t" << "Score: " << feedback_data.score[m] << "\t Label: " << feedback_data.label[m] << endl;
-                            // Write N*N classes    
-                            //if ((class_index+1)*(m+1) == N*N){
-                            //    feedback_detection <<  feedback_data.label[m] << ";" << feedback_data.score[m];
-                            //    feedback_detection << endl;
-                            //}
-                            //else
-                            //    feedback_detection <<  feedback_data.label[m] << ";" << feedback_data.score[m] << ";";
+                            //cout << "TOP 25\t" << "Score: " << feedback_data.score[m] << "\t Label: " << feedback_data.label[m] << endl;
                         }
 
                         if(debug){
@@ -315,9 +306,6 @@ int main(int argc, char** argv){
                         }
                     }
                     
-                    //for (int top = 0; top <N*N; ++top)
-                    //    cout << "Score: " << new_scores[top]  << "\t Label: " << new_labels[top] << endl;                     
-
                     std::vector<string> top_final_labels;
                     std::vector<float> top_final_scores;
                     std::vector<int> top_final_index;
@@ -326,16 +314,10 @@ int main(int argc, char** argv){
                     std::vector<int> topN = Argmax(new_scores, N*N);
 
                     // SORT - PREDICT CLASSES (TOP N) + Localization
-                    // FALTA A LOCALIZATION
-                    //cout << "Sorted Classes:\n " << endl;
                     int top = 0;
                     while(top_final_labels.size() < 5){
                         int idx = topN[top];
-                        //cout << "Label[" << top << "]" << new_labels[idx] << endl;
-                        //cout << "Score: " << new_scores[idx]  << "\t Label: " << new_labels[idx] << endl;
-
                         if((std::find(top_final_labels.begin(), top_final_labels.end(), new_labels[idx])) == (top_final_labels.end())) {
-                            //cout << "not cointained - top" << top << endl;
                             top_final_labels.push_back(new_labels[idx]);
                             top_final_scores.push_back(new_scores[idx]);
                             top_final_index.push_back(new_index[idx]);             
@@ -344,12 +326,10 @@ int main(int argc, char** argv){
                     }
                     
                     ClassData feedback_top_final_data = ClassData(top_final_labels,top_final_scores,top_final_index);
-                    
-                    //cout << "Top 5 Ranked Classes:\n " << endl;
-                    // For each predicted class label:
+
                     for (int class_index = 0; class_index < N; ++class_index){
-                        cout << "TOP 1 \t" << "Score: " << data_first_pass.score[class_index] << "\t Label: " << data_first_pass.label[class_index] << endl;
-                        cout << "TOP 2 \t" << "Score: " << top_final_scores[class_index]  << "\t Label: " << top_final_labels[class_index] << endl;
+                        //cout << "TOP 1 \t" << "Score: " << data_first_pass.score[class_index] << "\t Label: " << data_first_pass.label[class_index] << endl;
+                        //cout << "TOP 2 \t" << "Score: " << top_final_scores[class_index]  << "\t Label: " << top_final_labels[class_index] << endl;
                         
                         Rect Min_Rect = Network.CalcBBox(N, class_index, img, feedback_top_final_data, thresh);
 

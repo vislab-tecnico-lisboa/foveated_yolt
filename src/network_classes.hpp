@@ -528,9 +528,14 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
     Mat Points;
     findNonZero(foreground_mask,Points);
 
-    //cout << "non zero" << endl;
-    Rect Min_Rect = boundingRect(Points);
+    //cout << "points" << Points << endl;
 
+    cv::Rect Min_Rect;
+    if(Points.empty())
+        Min_Rect=cv::Rect();
+    else
+        Min_Rect = boundingRect(Points);
+        
     //bboxes.push_back(Min_Rect);
 
     //}

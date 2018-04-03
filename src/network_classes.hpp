@@ -21,7 +21,7 @@ class ClassData {
         ClassData(int N_);
         ~ClassData();
 
-        std::vector<int> Argmax(const std::vector<float>& v, int n);
+        std::vector<int> ArgMax(const std::vector<float>& v, int n);
         ostream & operator<<(std::ostream &output);
 
         int N;
@@ -31,7 +31,7 @@ class ClassData {
 };
 
 
-// Callback for function std::partial_sort used in Argmax
+// Callback for function std::partial_sort used in ArgMax
 static bool PairCompare(const std::pair<float, int>& lhs, 
                         const std::pair<float, int>& rhs);
 
@@ -44,12 +44,12 @@ class Network {
 
         // Return Top 5 prediction of image in mydata
         ClassData Classify(const cv::Mat& img, int N);
-        Rect CalcBBox(int N, int i, const cv::Mat &img, ClassData mydata, float thresh); // NEW
+        Rect CalcBBox(int i, const cv::Mat &img, ClassData mydata, float thresh); // NEW
         void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map, int ct);
         std::vector<String> GetDir(string dir, vector<String> &files);
 
-        float* Limit_values(float* bottom_data); // NEW
-        float find_max(Mat gradient_values);
+        float* LimitValues(float* bottom_data); // NEW
+        //float find_max(Mat gradient_values);
         cv::Mat CalcRGBmax(cv::Mat i_RGB);
 
     private:

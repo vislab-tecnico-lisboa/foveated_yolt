@@ -38,11 +38,11 @@ std::ostream & ClassData::operator<< (ostream &output) {
 
 
 ////////////////////////////////////////////////////////
-// Function Argmax                                    // 
+// Function ArgMax                                    // 
 // Return the indices of the top N values of vector v //
 ////////////////////////////////////////////////////////
 
-std::vector<int> ClassData::Argmax(const std::vector<float>& v, int n) {
+std::vector<int> ClassData::ArgMax(const std::vector<float>& v, int n) {
     
     std::vector<std::pair<float, int> > pairs;
     for (size_t i=0; i<v.size(); ++i)
@@ -57,10 +57,9 @@ std::vector<int> ClassData::Argmax(const std::vector<float>& v, int n) {
     return result;
 }
 
-/************************************************************************/
 // Function PairCompare
 // Compare 2 pairs
-/************************************************************************/
+
 static bool PairCompare(const std::pair<float, int>& lhs,
                         const std::pair<float, int>& rhs) {
     return lhs.first > rhs.first;
@@ -114,6 +113,7 @@ Network::Network(const string& model_file, const string& weight_file,
 //////////////////////////
 
 void Network::SetMean(const string& mean_file) {
+    
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
     // Convert from BlobProto to Blob<float>
@@ -159,7 +159,7 @@ ClassData Network::Classify(const cv::Mat& img, int N) {
     ClassData mydata(N); // objecto
 
     N = std::min<int>(labels.size(), N);       // tem 5 top labels
-    std::vector<int> maxN = mydata.Argmax(output, N); // tem o top
+    std::vector<int> maxN = mydata.ArgMax(output, N); // tem o top
 
     for (int i = 0; i < N; ++i) {
         int idx = maxN[i];
@@ -203,12 +203,12 @@ std::vector<float> Network::Predict(const cv::Mat& img) {
     return std::vector<float>(begin, end);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Function WrapInputLayer                                                                       //
+// Wrap the input layer of the network in separate cv::Mat objects (one per channel)             //
+// The last preprocessing operation will write the separate channels directly to the input layer //
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
-/************************************************************************/
-// Function WrapInputLayer
-// Wrap the input layer of the network in separate cv::Mat objects (one per channel)
-// The last preprocessing operation will write the separate channels directly to the input layer.
-/************************************************************************/
 void Network::WrapInputLayer(std::vector<cv::Mat>* input_channels) {
     
     Blob<float>* input_layer = net->input_blobs()[0];
@@ -225,10 +225,11 @@ void Network::WrapInputLayer(std::vector<cv::Mat>* input_channels) {
 }
 
 
-/************************************************************************/
-// Function Preprocess
-// Subtract mean, swap channels, resize input
-/************************************************************************/
+////////////////////////////////////////////////
+// Function Preprocess                        //
+// Subtract mean, swap channels, resize input //
+////////////////////////////////////////////////
+
 void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channels) {
 
     // Convert the input image to the input image format of the network
@@ -262,9 +263,10 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
     cv::Mat sample_normalized;
     cv::subtract(sample_float, mean_, sample_normalized);
 
-    /* This operation will write the separate BGR planes directly to the
-       input layer of the network because it is wrapped by the cv::Mat
-       objects in input_channels. */
+    // This operation will write the separate BGR planes directly to the
+    //   input layer of the network because it is wrapped by the cv::Mat
+    //   objects in input_channels 
+
     cv::split(sample_normalized, *input_channels);
 
     CHECK(reinterpret_cast<float*>(input_channels->at(0).data)
@@ -272,17 +274,11 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
             << "Input channels are not wrapping the input layer of the network.";
 }
 
+///////////////////////
+// Function CalcBBox //
+///////////////////////
 
-
-/************************************************************************/
-// Function CalcBBox
-/************************************************************************/
-Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float thresh ) {
-
-    //std::vector<Rect> bboxes;
-
-    // For each predicted class (top 5)
-    //for (int i = 0; i < N; ++i) {
+Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh) {
 
     /*********************************************************/
     //                  Get Saliency Map                     //
@@ -353,20 +349,19 @@ Rect Network::CalcBBox(int N, int i, const cv::Mat& img, ClassData mydata, float
     else
         Min_Rect = boundingRect(Points);
         
-    //bboxes.push_back(Min_Rect);
-
-    //}
 
     return Min_Rect;
 
 }
 
-/************************************************************************/
-// Function GetDir                                                      //
-// Get list of image files on given directory                           //
-/************************************************************************/
+
+////////////////////////////////////////////////
+// Function GetDir                            //
+// Get list of image files on given directory //
+////////////////////////////////////////////////
 
 std::vector<String> Network::GetDir(string dir, vector<String> &files) {
+    
     DIR *dp;
     struct dirent *dirp;
     if((dp  = opendir(dir.c_str())) == NULL) {
@@ -383,11 +378,11 @@ std::vector<String> Network::GetDir(string dir, vector<String> &files) {
 }
 
 
-/************************************************************************/
-// Function VisualiseBbox
-/************************************************************************/
+////////////////////////////
+// Function VisualiseBbox //
+////////////////////////////
 
-void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int size_map, int ct){
+void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int size_map, int ct) {
 
     // Transformation from (227*227) to (height*width) of input image
     for (int k =0; k< N; ++k){
@@ -418,13 +413,14 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
 }
 
 
+///////////////////////////////////////
+// Function Limit Values             //
+// Find min and max value of vector  //
+// Return bottom_data normalized     //
+///////////////////////////////////////
 
-/************************************************************************/
-// Function Limit Values
-// Find min and max value of vector
-// Return bottom_data normalized
-/************************************************************************/
-float* Network::Limit_values(float* bottom_data){
+float* Network::LimitValues(float* bottom_data) {
+    
     float smallest = bottom_data[0];
     float largest = bottom_data[0];
     for (int i=1; i<sizeof(bottom_data); i++) {
@@ -449,11 +445,10 @@ float* Network::Limit_values(float* bottom_data){
 }
 
 
-
-/************************************************************************/
-// Function CalcRGBmax
-// Get the highest value of R,G,B for each pixel
-/************************************************************************/
+///////////////////////////////////////////////////
+// Function CalcRGBmax                           //
+// Get the highest value of R,G,B for each pixel //
+///////////////////////////////////////////////////
 
 cv::Mat Network::CalcRGBmax(cv::Mat i_RGB) {
 

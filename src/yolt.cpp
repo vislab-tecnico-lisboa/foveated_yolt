@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
                     //  Weakly Supervised Object Localization  //
                     // Saliency Map + Segmentation Mask + BBox //
                     //////////////////////////////////////////////////
-                    Rect Min_Rect = Network.CalcBBox(N, i,img, mydata, thresh);
+                    Rect Min_Rect = Network.CalcBBox(i,img, mydata, thresh);
                     bboxes.push_back(Min_Rect); // save all bounding boxes
 
                     // store results

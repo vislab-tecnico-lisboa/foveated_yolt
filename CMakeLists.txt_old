@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 2.8)
 project(yolt)
 
@@ -17,6 +16,7 @@ find_package(OpenCV REQUIRED)
 find_package(PythonInterp REQUIRED)
 find_package(NumPy REQUIRED)
 find_package(PythonLibs REQUIRED)
+
 
 option(-std "std" c++11)
 

@@ -1,4 +1,4 @@
-function [feedback_sigmas,feedback_thres,feedback_classes,feedback_scores] = feedback_parse_detections(images_number,detections_file)
+function [feedback_sigmas,feedback_thres,rank_feedback_classes,feedback_classes,feedback_scores] = feedback_parse_detections(images_number,detections_file)
 detections_ = tdfread(detections_file,';');
 
 feedback_sigmas=unique(detections_.sigma);
@@ -96,20 +96,22 @@ for s=1:length(feedback_sigmas)
 end
 % 
 % 
-% rank_feedback_classes = cell(length(feedback_sigmas),length(feedback_thres),images_number,5);
-% 
-% for s=1:length(feedback_sigmas)
-%     for t=1:length(feedback_thres)
-%         for im=1:images_number
-% 
-%             % Rank 25 predicted class labels to top5 final solution
-%             [rank_feedback_scores, rank_score_index] = sort(feedback_scores(im,:), 'descend');
-%             
-%             rank_feedback_classes{s,t,im,1}=char(feedback_classes{s,t,im,rank_score_index(1)});
-%             rank_feedback_classes{s,t,im,2}=char(feedback_classes{s,t,im,rank_score_index(2)});
-%             rank_feedback_classes{s,t,im,3}=char(feedback_classes{s,t,im,rank_score_index(3)});
-%             rank_feedback_classes{s,t,im,4}=char(feedback_classes{s,t,im,rank_score_index(4)});
-%             rank_feedback_classes{s,t,im,5}=char(feedback_classes{s,t,im,rank_score_index(5)});
+rank_feedback_classes = cell(length(feedback_sigmas),length(feedback_thres),images_number,5);
+
+for s=1:length(feedback_sigmas)
+    for t=1:length(feedback_thres)
+        for im=1:images_number
+
+            % Rank 25 predicted class labels to top5 final solution
+            [rank_feedback_scores, rank_score_index] = sort(feedback_scores(im,:), 'descend');
+            
+            aux = unique(char(feedback_classes{s,t,im,rank_score_index(:)}),'rows','stable');
+            rank_feedback_classes{s,t,im,1}=aux(1,:);
+            rank_feedback_classes{s,t,im,2}=aux(2,:);
+            rank_feedback_classes{s,t,im,3}=aux(3,:);
+            rank_feedback_classes{s,t,im,4}=aux(4,:);
+            rank_feedback_classes{s,t,im,5}=aux(5,:);
+
 %             
 %             feedback_detections(s,t,im,1,1)=detections_.x1(i);
 %             feedback_detections(s,t,im,1,2)=detections_.y1(i);
@@ -138,6 +140,6 @@ end
 %             
 %             
 %             
-%         end
-%     end
-% end
+         end
+     end
+end

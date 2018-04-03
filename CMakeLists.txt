@@ -54,8 +54,8 @@ set(GLOG_LIB glog)
 #  set_target_properties(yolt_python PROPERTIES PREFIX "")
 
 add_executable(
-	yolt 
-	src/yolt.cpp
+	yolt
+	src/yolt_exp2.cpp
 	src/laplacian_foveation.cpp
 	src/network_classes.cpp
 )

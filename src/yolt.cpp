@@ -142,7 +142,6 @@ int main(int argc, char** argv){
     /**********************************************************************/
 
     std::vector<cv::String> image_image_files ;
-
     image_image_files = Network.GetDir (dataset_folder, image_image_files);
 
     if(total_images>image_image_files.size())
@@ -164,19 +163,26 @@ int main(int argc, char** argv){
 
     srand (time(NULL));
 
-    for (unsigned int thresh_index = 0;thresh_index < threshs.size(); ++thresh_index){
+    int total_iterations=total_images*threshs.size()*sigmas.size();
 
+    for (unsigned int thresh_index = 0;thresh_index < threshs.size(); ++thresh_index){
         float thresh=threshs[thresh_index];
 
         for (unsigned int sigma_index = 0;sigma_index < sigmas.size(); ++sigma_index){
-
             int sigma=sigmas[sigma_index];
 
             // FOR EACH IMAGE OF THE DATASET (TODO: OPTIMIZATION -> PROCESS BATCH OF IMAGES INSTEAD OF SINGLE IMAGES)
             for (unsigned int input = 0;input < total_images; ++input){
-                std::cout << "thresh:" << thresh << " sigma:" << sigma <<" Procesing image " << input+1 << " of " << total_images << ": iteration "<<input+1 + sigma_index*total_images+thresh_index*total_images*sigmas.size() << " of a total of "  << total_images*threshs.size()*sigmas.size() << " iterations" <<"("<< 100.0*(input+1 + sigma_index*total_images+thresh_index*total_images*sigmas.size())/ (total_images*threshs.size()*sigmas.size()) << "%)"<< std::endl;
+                std::cout << "thresh:" << thresh 
+                          << " sigma:" << sigma 
+                          <<" Procesing image " << input+1 
+                          << " of " << total_images 
+                          << ": iteration "<< input+1 + sigma_index*total_images+thresh_index*total_images*sigmas.size() 
+                          << " of a total of "  << total_iterations 
+                          << " iterations ("<< 100.0*(input+1 + sigma_index*total_images+thresh_index*total_images*sigmas.size())/(total_iterations) << "%)"<< std::endl;
 
                 string file = image_image_files[input];
+                
                 std::vector<string> new_labels;
                 std::vector<float> new_scores;
                 std::vector<Rect> bboxes;
@@ -270,7 +276,6 @@ int main(int argc, char** argv){
                     }
 
                     // Forward
-
                     // Predict New top 5 of each predicted class
                     ClassData feedback_data = Network.Classify(img_second, N);
 

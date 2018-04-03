@@ -1,4 +1,3 @@
-#define CPU_ONLY 1
 #include <caffe/caffe.hpp>
 #include <caffe/util/io.hpp>
 #include <caffe/blob.hpp>
@@ -211,7 +210,7 @@ int main(int argc, char** argv){
  
     // Vector of random fixation points
     srand (time(NULL));
-    std::vector<cv::Mat> fixedpts = FixationPoints(size_map,1,1,0);
+    std::vector<cv::Mat> fixedpts = FixationPoints(size_map,3,3,0);
 
     float thresh;
     int sigma;

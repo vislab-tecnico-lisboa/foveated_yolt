@@ -111,12 +111,12 @@ int main(int argc, char** argv){
     // File with 5 classes + scores + 5 bounding boxes
     std::string feedforward_detection_str=results_folder+string("feedforward_detection_parse.txt");
     feedforward_detection.open (feedforward_detection_str.c_str(),ios::out);
-    feedforward_detection<<"sigma;thres;class1;score1;x1;y1;w1;h1;class2;score2;x2;y2;w2;h2;class3;score3;x3;y3;w3;h3;class4;score4;x4;y4;w4;h4;class5;score5;x5;y5;w5;h5"<<std::endl;
+    feedforward_detection<<"sigma;thres;pt_w;pt_h;class1;score1;x1;y1;w1;h1;class2;score2;x2;y2;w2;h2;class3;score3;x3;y3;w3;h3;class4;score4;x4;y4;w4;h4;class5;score5;x5;y5;w5;h5"<<std::endl;
 
 	// File with 25 predicted classes + scores for each image
     std::string feedback_detection_str=results_folder+string("feedback_detection_parse.txt");
     feedback_detection.open (feedback_detection_str.c_str(), ios::out);  
-    feedback_detection<<"sigma;thres;class1;score1;class2;score2;class3;score3;class4;score4;class5;score5;class6;score6;class7;score7;class8;score8;class9;score9;class10;score10;class11;score11;class12;score12;class13;score13;class14;score14;class15;score15;class16;score16;class17;score17;class18;score18;class19;score19;class20;score20;class21;score21;class22;score22;class23;score23;class24;score24;class25;score25"<<std::endl;
+    feedback_detection<<"sigma;thres;pt_w;pt_h;class1;score1;class2;score2;class3;score3;class4;score4;class5;score5;class6;score6;class7;score7;class8;score8;class9;score9;class10;score10;class11;score11;class12;score12;class13;score13;class14;score14;class15;score15;class16;score16;class17;score17;class18;score18;class19;score19;class20;score20;class21;score21;class22;score22;class23;score23;class24;score24;class25;score25"<<std::endl;
 
     // Seed for random fixation points
     srand (time(NULL));
@@ -179,8 +179,8 @@ int main(int argc, char** argv){
 		            ClassData first_pass_data = Network.Classify(img, N);
 
 		            // Store results
-		            feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";";
-		            feedback_detection <<  std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";";
+                    feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
+                    feedback_detection    << std::fixed << std::setprecision(4) << sigma << ";" << thresh << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
 
 
 		            // For each predicted class
@@ -256,6 +256,11 @@ int main(int argc, char** argv){
 
 
 
+
+//////////////////////
+// FOVEATE FUNTION  //
+//////////////////////
+
 cv::Mat foveate(const cv::Mat &img, const int &size_map, 
 				const int &levels, const int &sigma, 
 				const cv::Mat &fixation_point) {
@@ -274,6 +279,12 @@ cv::Mat foveate(const cv::Mat &img, const int &size_map,
 
     return foveated_image;
 }
+
+
+
+//////////////////////////////
+// FIXATION POINTS FUNTION  //
+//////////////////////////////
 
 std::vector<cv::Mat> FixationPoints (int img_size, int n_height, int n_width, int random) {
     

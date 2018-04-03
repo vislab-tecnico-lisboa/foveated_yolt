@@ -10,7 +10,7 @@
 DIR=$PWD; # Foveated_YOLT
 
 # Choose set mode for caffe  [CPU | GPU]
-SET_MODE=GPU
+SET_MODE=CPU
 
 # Choose which GPU the detector runs on
 GPU_ID=0
@@ -25,11 +25,11 @@ SIZE_MAP=227
 LEVELS=5
 
 # Define size of the fovea
-#SIGMAs={10,20,30,40,50,60,70,80,90,100,110,120,130,140}
-SIGMAS="1,10,20,30,40,50,60,70,80,90,100"
-
+#SIGMAS="1,10,20,30,40,50,60,70,80,90,100"
+SIGMAS="20"
 # Choose segmentation threshold
-THRESHOLDS="0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.80,0.85,0.90,0.95,1.0"
+#THRESHOLDS="0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.80,0.85,0.90,0.95,1.0"
+THRESHOLDS="0.6"
 
 # Choose method (1-CARTESIAN 2-FOVEATION 3-HYBRID)
 MODE=2
@@ -40,12 +40,13 @@ MODEL_FILE="deploy_caffenet.prototxt"
 WEIGHTS_FILE="bvlc_reference_caffenet.caffemodel"
 MEAN_FILE="imagenet_mean.binaryproto"
 LABELS_FILE="synset_words_change.txt"
-DATASET="/media/Data/filipa/ILSVRC2012_img_test"
+DATASET="/home/cristina/Foveated-YOLT/data/images"
+#DATASET="/media/Data/filipa/ILSVRC2012_img_test"
 #DATASET="/home/rui/ILSVR2007"
 #GROUND_TRUTH_LABELS=$FILES_FOLDER_ABSOLUTE_PATH"ground_truth_labels_ilsvrc12.txt"
 RESULTS_FOLDER_ABSOLUTE_PATH=$PWD"/results/"
 DEBUG=1
-TOTAL_IMAGES=100
+TOTAL_IMAGES=10
 
 build/yolt $FILES_FOLDER_ABSOLUTE_PATH $MODEL_FILE $WEIGHTS_FILE $MEAN_FILE $LABELS_FILE  $DATASET $TOP $THRESHOLDS $SIZE_MAP $LEVELS $SIGMAS $RESULTS_FOLDER_ABSOLUTE_PATH $MODE $DEBUG $TOTAL_IMAGES $SET_MODE $GPU_ID
 

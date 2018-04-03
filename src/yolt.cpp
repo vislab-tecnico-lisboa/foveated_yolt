@@ -1,11 +1,5 @@
-#include <caffe/caffe.hpp>
-#include <caffe/util/io.hpp>
-#include <caffe/blob.hpp>
-#include <caffe/layer.hpp>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
 #include <string>
 #include <sstream>
@@ -15,7 +9,7 @@
 #include <memory>
 #include <math.h>
 #include <limits>
-#include <boost/algorithm/string.hpp>
+#include <time.h>
 
 #include "network_classes.hpp"
 #include "laplacian_foveation.hpp"
@@ -34,23 +28,19 @@ using std::string;
 typedef std::pair<string, float> Prediction;
 
 
-cv::Mat foveate(const cv::Mat & img, const int & size_map, const int & levels, const int & sigma, const cv::Mat & fixation_point)
+cv::Mat foveate(const cv::Mat &img, const int &size_map, const int &levels, const int &sigma, const cv::Mat &fixation_point)
 {
     // Foveate images
-    int m = floor(4*img.size().height);
-    int n = floor(4*img.size().width);
+    //    int m = floor(4*img.size().height);
+    //    int n = floor(4*img.size().width);
 
     cv::Mat image;
     img.convertTo(image, CV_64F);
-
-    // Compute kernels
-    std::vector<Mat> kernels = createFilterPyr(m, n, levels, sigma);
-
     // Construct Pyramid
-    LaplacianBlending pyramid(image,levels, kernels);
+    LaplacianBlending pyramid(image,levels, sigma);
 
     // Foveate
-    cv::Mat foveated_image = pyramid.foveate(fixation_point);
+    cv::Mat foveated_image = pyramid.Foveate(fixation_point);
 
     foveated_image.convertTo(foveated_image,CV_8UC3);
     cv::resize(foveated_image,foveated_image,Size(size_map,size_map));
@@ -186,6 +176,8 @@ int main(int argc, char** argv) {
     feedforward_detection<<"sigma;thres;class1;score1;x1;y1;w1;h1;class2;score2;x2;y2;w2;h2;class3;score3;x3;y3;w3;h3;class4;score4;x4;y4;w4;h4;class5;score5;x5;y5;w5;h5"<<std::endl;
     feedback_detection<<"sigma;thres;class1;score1;class2;score2;class3;score3;class4;score4;class5;score5;class6;score6;class7;score7;class8;score8;class9;score9;class10;score10;class11;score11;class12;score12;class13;score13;class14;score14;class15;score15;class16;score16;class17;score17;class18;score18;class19;score19;class20;score20;class21;score21;class22;score22;class23;score23;class24;score24;class25;score25"<<std::endl;
 
+    srand (time(NULL));
+
     for (unsigned int thresh_index = 0;thresh_index < threshs.size(); ++thresh_index){
 
         float thresh=threshs[thresh_index];
@@ -215,15 +207,14 @@ int main(int argc, char** argv) {
                     fixation_point.at<int>(0,0) = img.size().width*0.5;
                     fixation_point.at<int>(1,0) = img.size().height*0.5;
 
-                    fixation_point.at<int>(0,0) = img.size().width * (rand() / (RAND_MAX + 1.0));
-                    fixation_point.at<int>(1,0) = img.size().height * (rand() / (RAND_MAX + 1.0));
-
+                    //fixation_point.at<int>(0,0) = img.size().width * (rand() / (RAND_MAX + 1.0));
+                    //fixation_point.at<int>(1,0) = img.size().height * (rand() / (RAND_MAX + 1.0));
 
                     img=foveate(img,size_map,levels,sigma,fixation_point);
                 }
                 else
                 {
-                    GaussianBlur(img,img, Size(5,5), sigma, sigma);
+                    cv::GaussianBlur(img,img, Size(5,5), sigma, sigma);
                 }
 
                 cv::Mat img_first_pass_viz=img.clone();

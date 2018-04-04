@@ -14,7 +14,6 @@
 
 using namespace caffe;
 using namespace std;
-using std::string;
 
 
 cv::Mat foveate(const cv::Mat &img, const int &size_map, 
@@ -25,6 +24,14 @@ std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random);
 
 void VisualizeFixationPoints(int img_size, std::vector<cv::Mat> fixation_points);
 
+template<typename T> 
+string ToString(T t) {
+ 
+    stringstream ss;
+    ss << t;
+ 
+    return ss.str();
+}
 
 ////////////////////
 //      MAIN      //
@@ -60,6 +67,7 @@ int main(int argc, char** argv){
         Caffe::SetDevice(device_id);
     }
     static int npoints                 = atoi(argv[18]);         // Number of fixation points
+    static bool random                  = atoi(argv[19]);        // Set random = 1 to random fixation points
 
     std::cout << "Absolute Path Folder: " 	<< absolute_path_folder<< std::endl;    
     std::cout << "Model File: " 			<< model_file << std::endl;
@@ -74,7 +82,8 @@ int main(int argc, char** argv){
     std::cout << "Threshs: "				<< threshs_<< std::endl;
     std::cout << "Size Map: " 				<< size_map << std::endl;
     std::cout << "Mode: " 					<< mode << std::endl;
-    std::cout << "Fixation Pts: "           << npoints << std::endl;
+    std::cout << "N Pts: "                  << npoints << std::endl;
+    std::cout << "Random : "                << random << std::endl;   
     std::cout << "Total_images: " 			<< total_images << std::endl;
     std::cout << "Debug: "                  << debug << std::endl;
 
@@ -111,19 +120,33 @@ int main(int argc, char** argv){
     ofstream feedforward_detection;
     ofstream feedback_detection;
 
+
     // File with 5 classes + scores + 5 bounding boxes
-    std::string feedforward_detection_str=results_folder+string("feedforward_detection_parse.txt");
+  
+    std::string feedforward_detection_str=results_folder+"feedfoward_detection_"+
+                                                         "t"    + ToString(threshs.size()) +
+                                                         "s"   + ToString(sigmas.size())  +
+                                                         "p"   + ToString(npoints)+
+                                                         "r"   + ToString(random)         +
+                                                         "i" + ToString(total_images)   + ".txt";
+
     feedforward_detection.open (feedforward_detection_str.c_str(),ios::out);
     feedforward_detection<<"sigma;thres;pt_w;pt_h;class1;score1;x1;y1;w1;h1;class2;score2;x2;y2;w2;h2;class3;score3;x3;y3;w3;h3;class4;score4;x4;y4;w4;h4;class5;score5;x5;y5;w5;h5"<<std::endl;
 
 	// File with 25 predicted classes + scores for each image
-    std::string feedback_detection_str=results_folder+string("feedback_detection_parse.txt");
+    std::string feedback_detection_str=results_folder+"feedback_detection_"+
+                                                         "t"    + ToString(threshs.size()) +
+                                                         "s"   + ToString(sigmas.size())  +
+                                                         "p"   + ToString(npoints)+
+                                                         "r"   + ToString(random)         +
+                                                         "i" + ToString(total_images)   + ".txt";
+
     feedback_detection.open (feedback_detection_str.c_str(), ios::out);  
     feedback_detection<<"sigma;thres;pt_w;pt_h;class1;score1;class2;score2;class3;score3;class4;score4;class5;score5;class6;score6;class7;score7;class8;score8;class9;score9;class10;score10;class11;score11;class12;score12;class13;score13;class14;score14;class15;score15;class16;score16;class17;score17;class18;score18;class19;score19;class20;score20;class21;score21;class22;score22;class23;score23;class24;score24;class25;score25"<<std::endl;
 
     // Seed for random fixation points
     srand (time(NULL));
-	std::vector<cv::Mat> fixedpts = FixationPoints(size_map,npoints,1);
+	std::vector<cv::Mat> fixedpts = FixationPoints(size_map,npoints,random);
     //VisualizeFixationPoints(size_map,fixedpts) ;
     
     // Total number of iterations
@@ -303,8 +326,8 @@ std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random) {
             fixation_point.at<int>(1,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
         } 
         else {
-            //fixation_point.at<int>(0,0) = img_size / sqrt(n_points) * sqrt(i) + (img_size / sqrt(n_points) /2);
-            //fixation_point.at<int>(1,0) = img_size / sqrt(n_points) * sqrt(i) + (img_size/ sqrt(n_points) / 2);
+            fixation_point.at<int>(0,0) = img_size / sqrt(n_points) * sqrt(i) + (img_size / sqrt(n_points) /2);
+            fixation_point.at<int>(1,0) = img_size / sqrt(n_points) * sqrt(i) + (img_size/ sqrt(n_points) / 2);
         }
           
             //img_fov = foveate(img,img_size,levels,sigma,fixation_point);
@@ -323,3 +346,5 @@ std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random) {
 void VisualizeFixationPoints(int img_size, std::vector<cv::Mat> fixation_points) {
 
 }
+
+

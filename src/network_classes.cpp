@@ -2,7 +2,7 @@
 
 
 //////////////////////////////////////////////////////////
-/////////////////// CLASS CLASSDATA ////////////////////// 
+/////////////////// CLASS CLASSDATA //////////////////////
 //////////////////////////////////////////////////////////
 
 
@@ -20,14 +20,14 @@ ClassData::ClassData(int N_) {
 }
 
 ClassData::~ClassData() {
-    
+
     std::vector<string>().swap(label);
     std::vector<float>().swap(score);
     std::vector<int>().swap(index);
 }
 
 std::ostream & ClassData::operator<< (ostream &output) {
-    
+
     for(int i=0; i<N;++i) {
         output << " Index: " << index[i] << "\n"
                << " Label: " << label[i] << "\n"
@@ -38,12 +38,12 @@ std::ostream & ClassData::operator<< (ostream &output) {
 
 
 ////////////////////////////////////////////////////////
-// Function ArgMax                                    // 
+// Function ArgMax                                    //
 // Return the indices of the top N values of vector v //
 ////////////////////////////////////////////////////////
 
 std::vector<int> ClassData::ArgMax(const std::vector<float>& v, int n) {
-    
+
     std::vector<std::pair<float, int> > pairs;
     for (size_t i=0; i<v.size(); ++i)
         pairs.push_back(std::make_pair(v[i], i));
@@ -67,7 +67,7 @@ static bool PairCompare(const std::pair<float, int>& lhs,
 
 
 //////////////////////////////////////////////////////////
-///////////////////// CLASS NETWORK ////////////////////// 
+///////////////////// CLASS NETWORK //////////////////////
 //////////////////////////////////////////////////////////
 
 ////////////////////////////////////////
@@ -76,7 +76,7 @@ static bool PairCompare(const std::pair<float, int>& lhs,
 ////////////////////////////////////////
 Network::Network(const string& model_file, const string& weight_file,
                  const string& mean_file, const string& label_file) {
- 
+
     // Load Network and set phase (TRAIN / TEST)
     net.reset(new Net<float>(model_file, TEST));
 
@@ -85,6 +85,7 @@ Network::Network(const string& model_file, const string& weight_file,
 
     // Set input layer and check number of channels
     Blob<float>* input_layer = net->input_blobs()[0];
+
     num_channels = input_layer->channels();
     CHECK(num_channels == 3 || num_channels == 1)
             << "Input layer should have 1 or 3 channels";
@@ -108,12 +109,12 @@ Network::Network(const string& model_file, const string& weight_file,
 }
 
 //////////////////////////
-// Function SetMean     //   
+// Function SetMean     //
 // Create a mean image  //
 //////////////////////////
 
 void Network::SetMean(const string& mean_file) {
-    
+
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
     // Convert from BlobProto to Blob<float>
@@ -173,15 +174,16 @@ ClassData Network::Classify(const cv::Mat& img, int N) {
 }
 
 ///////////////////////////////////////////////
-// Function Predict                          // 
+// Function Predict                          //
 // wrap input layers and make preprocessing  //
 ///////////////////////////////////////////////
 
 std::vector<float> Network::Predict(const cv::Mat& img) {
-    
+
     Blob<float>* input_layer = net->input_blobs()[0];
 
     input_layer->Reshape(1, num_channels, input_geometry.height, input_geometry.width);
+
 
     // Forward dimension change to all layers
     net->Reshape();
@@ -210,7 +212,7 @@ std::vector<float> Network::Predict(const cv::Mat& img) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Network::WrapInputLayer(std::vector<cv::Mat>* input_channels) {
-    
+
     Blob<float>* input_layer = net->input_blobs()[0];
 
     int width = input_layer->width();
@@ -265,7 +267,7 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
 
     // This operation will write the separate BGR planes directly to the
     //   input layer of the network because it is wrapped by the cv::Mat
-    //   objects in input_channels 
+    //   objects in input_channels
 
     cv::split(sample_normalized, *input_channels);
 
@@ -289,13 +291,13 @@ Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh
 
     // Dados do 1 forward
     Blob<float>* forward_output_layer = net->output_blobs()[0];
+
     float* fc8Data = forward_output_layer->mutable_cpu_data();
     float* fc8Diff = forward_output_layer->mutable_cpu_diff();
 
     // Backward of a specific class
     for (int i = 0;  i< forward_output_layer->num() * forward_output_layer->channels() * forward_output_layer->height() * forward_output_layer->width(); ++i)
         fc8Diff[i] = 0.0f;
-
     fc8Diff[label_index] = 1.0f; // Specific class
 
     // Backward
@@ -303,7 +305,7 @@ Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh
 
     // Get Data
     boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");  // get data from Data layer
-    int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
+    //int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
     const float* begin_diff = out_data_layer->mutable_cpu_diff();
 
@@ -342,13 +344,13 @@ Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh
 
     Mat Points;
     findNonZero(foreground_mask,Points);
- 
+
     cv::Rect Min_Rect;
     if(Points.empty())
         Min_Rect=cv::Rect();
     else
         Min_Rect = boundingRect(Points);
-        
+
 
     return Min_Rect;
 
@@ -361,7 +363,7 @@ Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh
 ////////////////////////////////////////////////
 
 std::vector<String> Network::GetDir(string dir, vector<String> &files) {
-    
+
     DIR *dp;
     struct dirent *dirp;
     if((dp  = opendir(dir.c_str())) == NULL) {
@@ -420,7 +422,7 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
 ///////////////////////////////////////
 
 float* Network::LimitValues(float* bottom_data) {
-    
+
     float smallest = bottom_data[0];
     float largest = bottom_data[0];
     for (int i=1; i<sizeof(bottom_data); i++) {
@@ -458,5 +460,3 @@ cv::Mat Network::CalcRGBmax(cv::Mat i_RGB) {
 
     return maxRGB;
 }
-
-

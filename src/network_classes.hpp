@@ -15,7 +15,7 @@ using namespace cv;
 
 
 class ClassData {
-    
+
     public:
         ClassData(int N_);
         ~ClassData();
@@ -31,7 +31,7 @@ class ClassData {
 
 
 // Callback for function std::partial_sort used in ArgMax
-static bool PairCompare(const std::pair<float, int>& lhs, 
+static bool PairCompare(const std::pair<float, int>& lhs,
                         const std::pair<float, int>& rhs);
 
 

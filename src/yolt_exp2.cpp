@@ -16,20 +16,20 @@ using namespace caffe;
 using namespace std;
 
 
-cv::Mat foveate(const cv::Mat &img, const int &size_map, 
-				const int &levels, const int &sigma, 
+cv::Mat foveate(const cv::Mat &img, const int &size_map,
+				const int &levels, const int &sigma,
 				const cv::Mat &fixation_point);
 
 std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random);
 
 void VisualizeFixationPoints(int img_size, std::vector<cv::Mat> fixation_points);
 
-template<typename T> 
+template<typename T>
 string ToString(T t) {
- 
+
     stringstream ss;
     ss << t;
- 
+
     return ss.str();
 }
 
@@ -60,24 +60,21 @@ int main(int argc, char** argv){
     static bool debug                 = atoi(argv[14]);         // Set debug = 1 to see figures
     static int total_images           = atoi(argv[15]);         // Number of images
     if (strcmp(argv[16], "CPU") == 0)                           // Set Mode
-    {
         Caffe::set_mode(Caffe::CPU);
-    }
     else {
         Caffe::set_mode(Caffe::GPU);
         int device_id = atoi(argv[17]);
         Caffe::SetDevice(device_id);
-	std::cout << "GPU MODE" << std::endl;
-	
+				std::cout << "GPU MODE" << std::endl;
     }
-    static int npoints                 = atoi(argv[18]);         // Number of fixation points
+    static int npoints                  = atoi(argv[18]);         // Number of fixation points
     static bool random                  = atoi(argv[19]);        // Set random = 1 to random fixation points
 
-    std::cout << "Absolute Path Folder: " 	<< absolute_path_folder<< std::endl;    
+    std::cout << "Absolute Path Folder: " 	<< absolute_path_folder<< std::endl;
     std::cout << "Model File: " 			<< model_file << std::endl;
     std::cout << "Weights File: " 			<< weight_file << std::endl;
-    std::cout << "Mean File: " 				<< mean_file<< std::endl; 
-    std::cout << "Labels File: " 			<< label_file<< std::endl; 
+    std::cout << "Mean File: " 				<< mean_file<< std::endl;
+    std::cout << "Labels File: " 			<< label_file<< std::endl;
     std::cout << "Dataset Folder: " 		<< dataset_folder<< std::endl;
     std::cout << "Results Folder: "			<< results_folder << std::endl;
     std::cout << "Top Classes: " 			<< N << std::endl;
@@ -87,13 +84,13 @@ int main(int argc, char** argv){
     std::cout << "Size Map: " 				<< size_map << std::endl;
     std::cout << "Mode: " 					<< mode << std::endl;
     std::cout << "N Pts: "                  << npoints << std::endl;
-    std::cout << "Random : "                << random << std::endl;   
+    std::cout << "Random : "                << random << std::endl;
     std::cout << "Total_images: " 			<< total_images << std::endl;
     std::cout << "Debug: "                  << debug << std::endl;
 
     std::vector<float> threshs;
     std::stringstream ss_(threshs_);
-    float iter_th; 
+    float iter_th;
     while (ss_ >> iter_th) {
         threshs.push_back(iter_th);
         if (ss_.peek() == ',')
@@ -126,7 +123,7 @@ int main(int argc, char** argv){
 
 
     // File with 5 classes + scores + 5 bounding boxes
-  
+
     std::string feedforward_detection_str=results_folder+"feedfoward_detection_"+
                                                          "t"    + ToString(threshs.size()) +
                                                          "s"   + ToString(sigmas.size())  +
@@ -145,14 +142,14 @@ int main(int argc, char** argv){
                                                          "r"   + ToString(random)         +
                                                          "i" + ToString(total_images)   + ".txt";
 
-    feedback_detection.open (feedback_detection_str.c_str(), ios::out);  
+    feedback_detection.open (feedback_detection_str.c_str(), ios::out);
     feedback_detection<<"sigma;thres;pt_w;pt_h;class1;score1;class2;score2;class3;score3;class4;score4;class5;score5;class6;score6;class7;score7;class8;score8;class9;score9;class10;score10;class11;score11;class12;score12;class13;score13;class14;score14;class15;score15;class16;score16;class17;score17;class18;score18;class19;score19;class20;score20;class21;score21;class22;score22;class23;score23;class24;score24;class25;score25"<<std::endl;
 
     // Seed for random fixation points
     srand (time(NULL));
 	std::vector<cv::Mat> fixedpts = FixationPoints(size_map,npoints,random);
     //VisualizeFixationPoints(size_map,fixedpts) ;
-    
+
     // Total number of iterations
     int total_iterations=total_images*threshs.size()*sigmas.size()*fixedpts.size();
 
@@ -163,18 +160,18 @@ int main(int argc, char** argv){
     // For each threshold
     for (unsigned int thresh_index=0; thresh_index<threshs.size(); ++thresh_index){
       	thresh=threshs[thresh_index];
-        	
+
       	// For each sigma
        	for (unsigned int sigma_index = 0;sigma_index < sigmas.size(); ++sigma_index){
 	        sigma=sigmas[sigma_index];
 
 	        // For each fixation point
 		    for (unsigned int fixedpt_index = 0; fixedpt_index < fixedpts.size(); ++fixedpt_index){
-	            fixedpt = fixedpts[fixedpt_index];    
-	    		
+	            fixedpt = fixedpts[fixedpt_index];
+
 	    		// For each image
 	    		for (unsigned int input=0; input<total_images; ++input){
-	        
+
 			        // Preprocess each image
 			        string file = image_image_files[input];
 			        cv::Mat img = cv::imread(file, 1);        // Read image
@@ -189,15 +186,15 @@ int main(int argc, char** argv){
 		         	// Atual iteration
 		            int iteration=input+1+fixedpt_index*total_images+sigma_index*total_images*fixedpts.size()+thresh_index*total_images*sigmas.size()*fixedpts.size();
 		            std::cout << "Th:" << thresh
-		                      << "\tSig:" << sigma 
-		                      << "\tPt: (" << fixedpt.at<int>(0,0)<<","<<fixedpt.at<int>(1,0)<<')' 
-		                      << "\tImg:" << input+1 
-		                      << " of " << total_images 
+		                      << "\tSig:" << sigma
+		                      << "\tPt: (" << fixedpt.at<int>(0,0)<<","<<fixedpt.at<int>(1,0)<<')'
+		                      << "\tImg:" << input+1
+		                      << " of " << total_images
 		                      << "\tIter: " << iteration
-		                      << " of "  << total_iterations 
+		                      << " of "  << total_iterations
 		                      << " ("<< 100.0*(iteration)/(total_iterations) << "%)"<< std::endl;
 
-		            // Fixation Point - Center 
+		            // Fixation Point - Center
 		            //cv::Mat fixation_point(2,1,CV_32S);
 		            //fixation_point.at<int>(0,0) = img.size().width*0.5;
 		            //fixation_point.at<int>(1,0) = img.size().height*0.5;
@@ -224,20 +221,20 @@ int main(int argc, char** argv){
 		                /////////////////////////////////////////////
 
 		                Rect Min_Rect = Network.CalcBBox(class_index,img, first_pass_data, thresh);
-		               
+
 		              	// Save all bounding boxes
-		                bboxes.push_back(Min_Rect); 
+		                bboxes.push_back(Min_Rect);
 
 		                // Store results
 		                if (class_index==N-1) {
-		                    feedforward_detection << first_pass_data.label[class_index] << ";" << first_pass_data.score[class_index] << ";" 
-		                						  << Min_Rect.x << ";" << Min_Rect.y << ";" 
+		                    feedforward_detection << first_pass_data.label[class_index] << ";" << first_pass_data.score[class_index] << ";"
+		                						  << Min_Rect.x << ";" << Min_Rect.y << ";"
 		                						  << Min_Rect.width << ";" << Min_Rect.height;
                             feedforward_detection << endl;
-		                } 
+		                }
                         else {
 		                    feedforward_detection << first_pass_data.label[class_index] << ";" << first_pass_data.score[class_index] << ";"
-		                    					  << Min_Rect.x << ";" << Min_Rect.y << ";" 
+		                    					  << Min_Rect.x << ";" << Min_Rect.y << ";"
 		                    					  << Min_Rect.width << ";" << Min_Rect.height << ";";
 		                }
 
@@ -258,7 +255,7 @@ int main(int argc, char** argv){
 		                // For each bounding box
 		                for(int m=0; m<N; ++m) {
 		                    //new_labels.push_back(feedback_data.label[m]);
-		                    //new_scores.push_back(feedback_data.score[m]);	            
+		                    //new_scores.push_back(feedback_data.score[m]);
 
 		                    // Store Feedback results
 		                	if ((class_index+1)*(m+1) == N*N) {
@@ -266,7 +263,7 @@ int main(int argc, char** argv){
                                 feedback_detection << endl;
                             }
 		                	else
-		                    	feedback_detection <<  feedback_data.label[m] << ";" << feedback_data.score[m] << ";";    
+		                    	feedback_detection <<  feedback_data.label[m] << ";" << feedback_data.score[m] << ";";
 		                }
 
 		                if(debug) {
@@ -293,13 +290,13 @@ int main(int argc, char** argv){
 // FOVEATE FUNTION  //
 //////////////////////
 
-cv::Mat foveate(const cv::Mat &img, const int &size_map, 
-				const int &levels, const int &sigma, 
+cv::Mat foveate(const cv::Mat &img, const int &size_map,
+				const int &levels, const int &sigma,
 				const cv::Mat &fixation_point) {
 
     cv::Mat image;
     img.convertTo(image, CV_64F);
-    
+
     // Construct Pyramid
     LaplacianBlending pyramid(image,levels, sigma);
 
@@ -319,36 +316,36 @@ cv::Mat foveate(const cv::Mat &img, const int &size_map,
 //////////////////////////////
 
 std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random) {
-    
+
     std::vector<cv::Mat> fixation_points;
 
     std::cout<<"Fixation Points: " << std::endl;
-    for (int i = 0; i < n_points; i++) {
-        cv::Mat fixation_point(2,1,CV_32S);
-        if (random == 1){
-            fixation_point.at<int>(0,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
-            fixation_point.at<int>(1,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
-        } 
-        else {
-            fixation_point.at<int>(0,0) = img_size / sqrt(n_points) * sqrt(i) + (img_size / sqrt(n_points) /2);
-            fixation_point.at<int>(1,0) = img_size / sqrt(n_points) * sqrt(i) + (img_size/ sqrt(n_points) / 2);
-        }
-          
-            //img_fov = foveate(img,img_size,levels,sigma,fixation_point);
-            //img_fov = img_fov.clone();
-            //cv::namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
-            //imshow( "Display window", img_fov );
-            std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
 
-            //waitKey(0);
+		int bins = sqrt(n_points);
 
-            fixation_points.push_back(fixation_point);
-    }        
+		if (random == 1) {
+	    for (int i = 0; i < n_points; i++) {
+	        cv::Mat fixation_point(2,1,CV_32S);
+	        fixation_point.at<int>(0,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
+	        fixation_point.at<int>(1,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
+					std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
+				  fixation_points.push_back(fixation_point);
+	    }
+	  }
+		else {
+			for (int i = 0; i < bins; i++) {
+	        for (int j = 0; j < bins; j++) {
+	            cv::Mat fixation_point(2,1,CV_32S);
+	            fixation_point.at<int>(0,0) = img_size / bins * j + (img_size / bins /2);
+	            fixation_point.at<int>(1,0) = img_size / bins * i + (img_size / bins / 2);
+							std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
+							fixation_points.push_back(fixation_point);
+	    		}
+			}
+		}		
     return fixation_points;
 }
 
 void VisualizeFixationPoints(int img_size, std::vector<cv::Mat> fixation_points) {
 
 }
-
-

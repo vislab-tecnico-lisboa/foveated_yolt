@@ -7,9 +7,6 @@ files/*.txt
 dataset/*.txt
 *~
 dataset/images/*
-temp/
-resuts/*.txt
-results/
 data/
 CMakeFiles/
 CMakeLists.txt.user

@@ -1,5 +1,4 @@
 #include <opencv2/opencv.hpp>
-
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -22,7 +21,9 @@ cv::Mat foveate(const cv::Mat &img, const int &size_map,
 				const int &levels, const int &sigma, 
 				const cv::Mat &fixation_point);
 
-std::vector<cv::Mat> FixationPoints (int img_size, int n_height, int n_width, int random);
+std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random);
+
+void VisualizeFixationPoints(int img_size, std::vector<cv::Mat> fixation_points);
 
 
 ////////////////////
@@ -58,6 +59,7 @@ int main(int argc, char** argv){
         int device_id = atoi(argv[17]);
         Caffe::SetDevice(device_id);
     }
+    static int npoints                 = atoi(argv[18]);         // Number of fixation points
 
     std::cout << "Absolute Path Folder: " 	<< absolute_path_folder<< std::endl;    
     std::cout << "Model File: " 			<< model_file << std::endl;
@@ -72,8 +74,9 @@ int main(int argc, char** argv){
     std::cout << "Threshs: "				<< threshs_<< std::endl;
     std::cout << "Size Map: " 				<< size_map << std::endl;
     std::cout << "Mode: " 					<< mode << std::endl;
-    std::cout << "Debug: "					<< debug << std::endl;
+    std::cout << "Fixation Pts: "           << npoints << std::endl;
     std::cout << "Total_images: " 			<< total_images << std::endl;
+    std::cout << "Debug: "                  << debug << std::endl;
 
     std::vector<float> threshs;
     std::stringstream ss_(threshs_);
@@ -120,8 +123,9 @@ int main(int argc, char** argv){
 
     // Seed for random fixation points
     srand (time(NULL));
-	std::vector<cv::Mat> fixedpts = FixationPoints(size_map,2,2,1);
-
+	std::vector<cv::Mat> fixedpts = FixationPoints(size_map,npoints,1);
+    //VisualizeFixationPoints(size_map,fixedpts) ;
+    
     // Total number of iterations
     int total_iterations=total_images*threshs.size()*sigmas.size()*fixedpts.size();
 
@@ -202,7 +206,9 @@ int main(int argc, char** argv){
 		                    feedforward_detection << first_pass_data.label[class_index] << ";" << first_pass_data.score[class_index] << ";" 
 		                						  << Min_Rect.x << ";" << Min_Rect.y << ";" 
 		                						  << Min_Rect.width << ";" << Min_Rect.height;
-		                } else {
+                            feedforward_detection << endl;
+		                } 
+                        else {
 		                    feedforward_detection << first_pass_data.label[class_index] << ";" << first_pass_data.score[class_index] << ";"
 		                    					  << Min_Rect.x << ";" << Min_Rect.y << ";" 
 		                    					  << Min_Rect.width << ";" << Min_Rect.height << ";";
@@ -228,8 +234,10 @@ int main(int argc, char** argv){
 		                    //new_scores.push_back(feedback_data.score[m]);	            
 
 		                    // Store Feedback results
-		                	if (m*class_index==N*N-2)
+		                	if ((class_index+1)*(m+1) == N*N) {
 		                    	feedback_detection <<  feedback_data.label[m] << ";" << feedback_data.score[m];
+                                feedback_detection << endl;
+                            }
 		                	else
 		                    	feedback_detection <<  feedback_data.label[m] << ";" << feedback_data.score[m] << ";";    
 		                }
@@ -244,8 +252,6 @@ int main(int argc, char** argv){
 		                    waitKey(1);
 		                }
 					}
-		            feedforward_detection << endl;
-		            feedback_detection << endl;
 		        }
       		}
       	}
@@ -253,7 +259,6 @@ int main(int argc, char** argv){
 	feedforward_detection.close();
     feedback_detection.close();
 }
-
 
 
 
@@ -286,32 +291,35 @@ cv::Mat foveate(const cv::Mat &img, const int &size_map,
 // FIXATION POINTS FUNTION  //
 //////////////////////////////
 
-std::vector<cv::Mat> FixationPoints (int img_size, int n_height, int n_width, int random) {
+std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random) {
     
     std::vector<cv::Mat> fixation_points;
 
     std::cout<<"Fixation Points: " << std::endl;
-    for (int i = 0; i < n_height; i++) {
-        for (int j = 0; j < n_width; j++) {
-            cv::Mat fixation_point(2,1,CV_32S);
-
-            if (random == 1){
-                fixation_point.at<int>(0,0) = img_size / n_width * j + (rand() % (img_size / n_width));
-                fixation_point.at<int>(1,0) = img_size / n_height * i +(rand() % (img_size / n_height));
-            } else {
-                fixation_point.at<int>(0,0) = img_size / n_width * j + (img_size / n_width /2);
-                fixation_point.at<int>(1,0) = img_size / n_height * i + (img_size/ n_height / 2);
-            }
+    for (int i = 0; i < n_points; i++) {
+        cv::Mat fixation_point(2,1,CV_32S);
+        if (random == 1){
+            fixation_point.at<int>(0,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
+            fixation_point.at<int>(1,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
+        } 
+        else {
+            //fixation_point.at<int>(0,0) = img_size / sqrt(n_points) * sqrt(i) + (img_size / sqrt(n_points) /2);
+            //fixation_point.at<int>(1,0) = img_size / sqrt(n_points) * sqrt(i) + (img_size/ sqrt(n_points) / 2);
+        }
           
-            // img_fov = foveate(img,img_size,levels,sigma,fixation_point);
-            // img_fov = img_fov.clone();
-            // cv::namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
-            // imshow( "Display window", img_fov );
-
-            // waitKey(0);
+            //img_fov = foveate(img,img_size,levels,sigma,fixation_point);
+            //img_fov = img_fov.clone();
+            //cv::namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
+            //imshow( "Display window", img_fov );
             std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
+
+            //waitKey(0);
+
             fixation_points.push_back(fixation_point);
-        }          
-    }
+    }        
     return fixation_points;
+}
+
+void VisualizeFixationPoints(int img_size, std::vector<cv::Mat> fixation_points) {
+
 }

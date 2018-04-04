@@ -1,7 +1,6 @@
 clear all
 close all
 
-
 % parameters
 detections_resolution=227;
 images_number=10; 

@@ -32,16 +32,16 @@ feedback_scores(:,23)=detections_.score23;
 feedback_scores(:,24)=detections_.score24;
 feedback_scores(:,25)=detections_.score25;
 
-total_images=length(detections_.sigma)/(length(feedback_sigmas)*length(feedback_thres)*length(feedback_fix_pts));
-feedback_classes=cell(length(feedback_sigmas),length(feedback_thres),length(feedback_fix_pts),total_images,25); % top 25 classes
+total_images=length(detections_.sigma)/(length(feedback_sigmas)*length(feedback_thres)*size(feedback_fix_pts,1));
+feedback_classes=cell(length(feedback_sigmas),length(feedback_thres),size(feedback_fix_pts,1),total_images,25); % top 25 classes
 
 for s=1:length(feedback_sigmas)
     for t=1:length(feedback_thres)
-        for p=1:length(feedback_fix_pts)
+        for p=1:size(feedback_fix_pts,1)
             for im=1:total_images
                 
-                i=im+(p-1)*total_images+(t-1)*total_images*length(feedback_fix_pts)+...
-                         (s-1)*total_images*length(feedback_thres)*length(feedback_fix_pts);
+                i=im+(p-1)*total_images+(t-1)*total_images*size(feedback_fix_pts,1)+...
+                         (s-1)*total_images*length(feedback_thres)*size(feedback_fix_pts,1);
                      
                 feedback_classes{s,t,p,im,1}=char(detections_.class1(i,:));
                 feedback_classes{s,t,p,im,2}=char(detections_.class2(i,:));
@@ -73,21 +73,28 @@ for s=1:length(feedback_sigmas)
     end
 end
 
-rank_feedback_classes = cell(length(feedback_sigmas),length(feedback_thres),length(feedback_fix_pts),total_images,5);
+rank_feedback_classes = cell(length(feedback_sigmas),length(feedback_thres),size(feedback_fix_pts,1),total_images,5);
 
 for s=1:length(feedback_sigmas)
     for t=1:length(feedback_thres)
-        for p=1:length(feedback_fix_pts)
+        for p=1:size(feedback_fix_pts,1)
             for im=1:total_images
 
                 % Rank 25 predicted class labels to top5 final solution
                 [rank_feedback_scores, rank_score_index] = sort(feedback_scores(im,:), 'descend');
+                aux = unique(char(feedback_classes{s,t,p,im,rank_score_index(:)}),'rows','stable');
 
-                rank_feedback_classes{s,t,p,im,1}=char(feedback_classes{s,t,p,im,rank_score_index(1)});
-                rank_feedback_classes{s,t,p,im,2}=char(feedback_classes{s,t,p,im,rank_score_index(2)});
-                rank_feedback_classes{s,t,p,im,3}=char(feedback_classes{s,t,p,im,rank_score_index(3)});
-                rank_feedback_classes{s,t,p,im,4}=char(feedback_classes{s,t,p,im,rank_score_index(4)});
-                rank_feedback_classes{s,t,p,im,5}=char(feedback_classes{s,t,p,im,rank_score_index(5)});
+                rank_feedback_classes{s,t,p,im,1}=aux(1,:);
+                rank_feedback_classes{s,t,p,im,2}=aux(2,:);
+                rank_feedback_classes{s,t,p,im,3}=aux(3,:);
+                rank_feedback_classes{s,t,p,im,4}=aux(4,:);
+                rank_feedback_classes{s,t,p,im,5}=aux(5,:);
+
+%                 rank_feedback_classes{s,t,p,im,1}=char(feedback_classes{s,t,p,im,rank_score_index(1)});
+%                 rank_feedback_classes{s,t,p,im,2}=char(feedback_classes{s,t,p,im,rank_score_index(2)});
+%                 rank_feedback_classes{s,t,p,im,3}=char(feedback_classes{s,t,p,im,rank_score_index(3)});
+%                 rank_feedback_classes{s,t,p,im,4}=char(feedback_classes{s,t,p,im,rank_score_index(4)});
+%                 rank_feedback_classes{s,t,p,im,5}=char(feedback_classes{s,t,p,im,rank_score_index(5)});
             end   
         end
     end

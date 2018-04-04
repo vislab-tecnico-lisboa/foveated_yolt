@@ -52,11 +52,15 @@ int main(int argc, char** argv){
     static bool debug                 = atoi(argv[14]);         // Set debug = 1 to see figures
     static int total_images           = atoi(argv[15]);         // Number of images
     if (strcmp(argv[16], "CPU") == 0)                           // Set Mode
+    {
         Caffe::set_mode(Caffe::CPU);
+    }
     else {
         Caffe::set_mode(Caffe::GPU);
         int device_id = atoi(argv[17]);
         Caffe::SetDevice(device_id);
+	std::cout << "GPU MODE" << std::endl;
+	
     }
 
     std::cout << "Absolute Path Folder: " 	<< absolute_path_folder<< std::endl;    

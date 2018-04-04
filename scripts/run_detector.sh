@@ -10,7 +10,7 @@
 DIR="/home/cristina/Foveated-YOLT/" ; # Foveated_YOLT
 
 # Choose set mode for caffe  [CPU | GPU]
-SET_MODE=CPU
+SET_MODE=GPU
 
 # Choose which GPU the detector runs on
 GPU_ID=0

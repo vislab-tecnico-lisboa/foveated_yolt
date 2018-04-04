@@ -1,10 +1,10 @@
-function [error_rate] = detection_error_rates(sigmas,threshs,fix_pts,images_number,detections,gt_detections,detections_resolution,top_k,overlap_correct)
+function [error_av,error_std] = detection_error_rates(sigmas,threshs,fix_pts,images_number,detections,gt_detections,detections_resolution,top_k,overlap_correct)
 
 % check overlaps
 overlaps=[];
 for s=1:length(sigmas)
     for t=1:length(threshs)
-        for p=1:length(fix_pts)
+        for p=1:size(fix_pts,1)
             for i=1:images_number
                 gt_size=gt_detections(i).size;
                 aspect_ratio_x=gt_size(1)/detections_resolution;
@@ -28,7 +28,7 @@ for s=1:length(sigmas)
                         % gt bbox
                         gt_bbox=gt_detections(i).bboxes(g,:);
 
-                        overlaps(s,t,i,j).overlap(g)=bboxOverlapRatio(gt_bbox,detection);
+                        overlaps(s,t,p,i,j).overlap(g)=bboxOverlapRatio(gt_bbox,detection);
 
                     end
                 end
@@ -38,24 +38,29 @@ for s=1:length(sigmas)
 end
 
 % consider only the maximum overlap over ground truths
-max_overlap=zeros(length(sigmas),length(threshs), images_number,top_k);
+max_overlap=zeros(length(sigmas),length(threshs),size(fix_pts,1), images_number,top_k);
 for s=1:length(sigmas)
     for t=1:length(threshs)
-        for i=1:images_number
-            for j=1:top_k
-                max_overlap(s,t,i,j)=max(overlaps(s,t,i,j).overlap);
+        for p=1:size(fix_pts,1)
+            for i=1:images_number
+                for j=1:top_k
+                    max_overlap(s,t,p,i,j)=max(overlaps(s,t,p,i,j).overlap);
+                end
             end
         end
     end
 end
 
 % consider only the maximum overlap over all 5 detections
-max_overlap=max(max_overlap,[],4);
+max_overlap=max(max_overlap,[],5);
 
 % evaluate if the detections were good
 max_overlap(max_overlap>=overlap_correct)=1;
 max_overlap(max_overlap<overlap_correct)=0;
 
 % compute detection rate
-error_rate=(size(max_overlap,3)-sum(max_overlap,3))/size(max_overlap,3);
+error_rate=(size(max_overlap,4)-sum(max_overlap,4))/size(max_overlap,4);
+error_av=mean(error_rate,3);
+error_std=std(error_rate,1,3);
+
 

@@ -148,8 +148,7 @@ int main(int argc, char** argv){
     // Seed for random fixation points
     srand (time(NULL));
 	std::vector<cv::Mat> fixedpts = FixationPoints(size_map,npoints,random);
-    //VisualizeFixationPoints(size_map,fixedpts) ;
-
+ 
     // Total number of iterations
     int total_iterations=total_images*threshs.size()*sigmas.size()*fixedpts.size();
 
@@ -264,6 +263,7 @@ int main(int argc, char** argv){
                             }
 		                	else
 		                    	feedback_detection <<  feedback_data.label[m] << ";" << feedback_data.score[m] << ";";
+                            //std::cout << m*class_index << std::endl;
 		                }
 
 		                if(debug) {
@@ -323,23 +323,23 @@ std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random) {
 
 		int bins = sqrt(n_points);
 
-		if (random == 1) {
-	    for (int i = 0; i < n_points; i++) {
-	        cv::Mat fixation_point(2,1,CV_32S);
-	        fixation_point.at<int>(0,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
-	        fixation_point.at<int>(1,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
-					std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
-				  fixation_points.push_back(fixation_point);
-	    }
-	  }
+		if (random) {
+    	    for (int i = 0; i < n_points; i++) {
+    	        cv::Mat fixation_point(2,1,CV_32S);
+    	        fixation_point.at<int>(0,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
+    	        fixation_point.at<int>(1,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
+    					std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
+    				  fixation_points.push_back(fixation_point);
+    	    }
+        }
 		else {
 			for (int i = 0; i < bins; i++) {
-	        for (int j = 0; j < bins; j++) {
-	            cv::Mat fixation_point(2,1,CV_32S);
-	            fixation_point.at<int>(0,0) = img_size / bins * j + (img_size / bins /2);
-	            fixation_point.at<int>(1,0) = img_size / bins * i + (img_size / bins / 2);
-							std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
-							fixation_points.push_back(fixation_point);
+	            for (int j = 0; j < bins; j++) {
+                    cv::Mat fixation_point(2,1,CV_32S);
+                    fixation_point.at<int>(0,0) = img_size / bins * j + (img_size / bins /2);
+	                fixation_point.at<int>(1,0) = img_size / bins * i + (img_size / bins / 2);
+					std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
+					fixation_points.push_back(fixation_point);
 	    		}
 			}
 		}		

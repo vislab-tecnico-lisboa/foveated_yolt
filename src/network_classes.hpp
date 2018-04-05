@@ -20,7 +20,6 @@ class ClassData {
         ClassData(int N_);
         ~ClassData();
 
-        std::vector<int> ArgMax(const std::vector<float>& v, int n);
         ostream & operator<<(std::ostream &output);
 
         int N;
@@ -33,6 +32,7 @@ class ClassData {
 // Callback for function std::partial_sort used in ArgMax
 static bool PairCompare(const std::pair<float, int>& lhs,
                         const std::pair<float, int>& rhs);
+std::vector<int> ArgMax(const std::vector<float>& v, int n);
 
 
 class Network {

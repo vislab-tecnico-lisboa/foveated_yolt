@@ -42,7 +42,7 @@ std::ostream & ClassData::operator<< (ostream &output) {
 // Return the indices of the top N values of vector v //
 ////////////////////////////////////////////////////////
 
-std::vector<int> ClassData::ArgMax(const std::vector<float>& v, int n) {
+std::vector<int> ArgMax(const std::vector<float>& v, int n) {
 
     std::vector<std::pair<float, int> > pairs;
     for (size_t i=0; i<v.size(); ++i)
@@ -160,7 +160,7 @@ ClassData Network::Classify(const cv::Mat& img, int N) {
     ClassData mydata(N); // objecto
 
     N = std::min<int>(labels.size(), N);       // tem 5 top labels
-    std::vector<int> maxN = mydata.ArgMax(output, N); // tem o top
+    std::vector<int> maxN = ArgMax(output, N); // tem o top
 
     for (int i = 0; i < N; ++i) {
         int idx = maxN[i];

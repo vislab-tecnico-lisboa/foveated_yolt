@@ -10,7 +10,7 @@
 DIR="/home/cristina/Foveated-YOLT/" ; # Foveated_YOLT
 
 # Choose set mode for caffe  [CPU | GPU]
-SET_MODE=GPU
+SET_MODE=CPU
 
 # Choose which GPU the detector runs on
 GPU_ID=0
@@ -28,11 +28,11 @@ LEVELS=5
 #SIGMAS="0,1,10,20,30,40,50,60,70,80,90,100,110,120,130,140"
 SIGMAS="70"
 
-THRESHOLDS="0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.80,0.85,0.90,0.95,1.0"
-#THRESHOLDS="0.65"
+#THRESHOLDS="0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.80,0.85,0.90,0.95,1.0"
+THRESHOLDS="0.65"
 
 #Number of fixation points
-POINTS=16
+POINTS=4
 
 #Random fixation points
 RAND=0
@@ -49,6 +49,6 @@ LABELS_FILE="synset_words_change.txt"
 DATASET="/home/cristina/Foveated-YOLT/data/images"
 RESULTS_FOLDER_ABSOLUTE_PATH="/home/cristina/Foveated-YOLT/results/"
 DEBUG=0
-TOTAL_IMAGES=100
+TOTAL_IMAGES=2
 
 /home/cristina/Foveated-YOLT/build/yolt $FILES_FOLDER_ABSOLUTE_PATH $MODEL_FILE $WEIGHTS_FILE $MEAN_FILE $LABELS_FILE $DATASET $TOP $THRESHOLDS $SIZE_MAP $LEVELS $SIGMAS $RESULTS_FOLDER_ABSOLUTE_PATH $MODE $DEBUG $TOTAL_IMAGES $SET_MODE $GPU_ID $POINTS $RAND

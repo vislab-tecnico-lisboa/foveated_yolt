@@ -26,13 +26,13 @@ LEVELS=5
 
 # Define size of the fovea
 #SIGMAS="0,1,10,20,30,40,50,60,70,80,90,100,110,120,130,140"
-SIGMAS="70"
+SIGMAS="20"
 
 #THRESHOLDS="0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.80,0.85,0.90,0.95,1.0"
 THRESHOLDS="0.65"
 
 #Number of fixation points
-POINTS=4
+POINTS=1
 
 #Random fixation points
 RAND=0
@@ -47,7 +47,7 @@ WEIGHTS_FILE="bvlc_reference_caffenet.caffemodel"
 MEAN_FILE="imagenet_mean.binaryproto"
 LABELS_FILE="synset_words_change.txt"
 DATASET="/home/cristina/Foveated-YOLT/data/images"
-RESULTS_FOLDER_ABSOLUTE_PATH="/home/cristina/Foveated-YOLT/results/"
+RESULTS_FOLDER_ABSOLUTE_PATH="/home/cristina/Foveated-YOLT/"
 DEBUG=0
 TOTAL_IMAGES=2
 

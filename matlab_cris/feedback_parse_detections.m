@@ -1,4 +1,4 @@
-function [feedback_sigmas,feedback_thres,feedback_fix_pts,rank_feedback_classes,feedback_scores] = feedback_parse_detections(detections_file)
+function [feedback_sigmas,feedback_thres,feedback_fix_pts,rank_feedback_classes,feedback_classes,feedback_scores] = feedback_parse_detections(detections_file)
 detections_ = tdfread(detections_file,';');
 
 feedback_sigmas=unique(detections_.sigma);

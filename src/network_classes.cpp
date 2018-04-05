@@ -19,6 +19,13 @@ ClassData::ClassData(int N_) {
     index.resize(N);
 }
 
+ClassData::ClassData(std::vector<string> label_, std::vector<float> score_, std::vector<int> index_) { 
+      label = label_;
+      score = score_;
+      index = index_;
+      N = label.size();
+}
+
 ClassData::~ClassData() {
 
     std::vector<string>().swap(label);

@@ -17,15 +17,13 @@ for s=1:length(sigmas)
         end
     end
 end
-top1_classification_error_rate = (size(top1_classification,4)-sum(top1_classification,4))/(size(top1_classification,4));
+
+top1_classification_error_rate=((size(top1_classification,4))-...
+    sum(top1_classification,4))/(size(top1_classification,4));
 tp1_class_error_av = mean(top1_classification_error_rate,3);
 tp1_class_error_std = std(top1_classification_error_rate,1,3);
 
-top5_classification_error_rate = (size(top5_classification,4)-sum(top5_classification,4))/(size(top5_classification,4));
+top5_classification_error_rate=((size(top5_classification,4))-...
+    sum(top5_classification,4))/(size(top5_classification,4));
 tp5_class_error_av = mean(top5_classification_error_rate,3);
 tp5_class_error_std = std(top5_classification_error_rate,1,3);
-
-% compute classification error rate
-%top1_classification_error_rate=(size(top1_classification,3)*size(top1_classification,4)-sum(sum(top1_classification,4),3))/(size(top1_classification,4)*size(top1_classification,3));
-%top5_classification_error_rate=(size(top5_classification,3)*size(top5_classification,4)-sum(sum(top5_classification,4),3))/(size(top5_classification,4)*size(top5_classification,3));
-

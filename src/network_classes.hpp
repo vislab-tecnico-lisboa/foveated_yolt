@@ -18,6 +18,7 @@ class ClassData {
 
     public:
         ClassData(int N_);
+        ClassData(std::vector<string> label_, std::vector<float> score_, std::vector<int> index_);
         ~ClassData();
 
         ostream & operator<<(std::ostream &output);

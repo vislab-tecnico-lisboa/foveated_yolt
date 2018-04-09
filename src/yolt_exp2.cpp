@@ -292,10 +292,10 @@ int main(int argc, char** argv){
 		                }
 					}
 
-                        /////////////////////////////////////////////////////////
-                        //      Image Re-Localization with Attention           //
-                        // Saliency Map + Segmentation Mask + BBox             //
-                        /////////////////////////////////////////////////////////
+                    /////////////////////////////////////////////////////////
+                    //      Image Re-Localization with Attention           //
+                    // Saliency Map + Segmentation Mask + BBox             //
+                    /////////////////////////////////////////////////////////
 
                     // Variables for top 5 ranked classes
                     std::vector<string> top_final_labels;

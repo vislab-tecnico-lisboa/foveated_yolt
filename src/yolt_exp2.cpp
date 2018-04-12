@@ -217,6 +217,8 @@ int main(int argc, char** argv){
 		            // Store results
                     feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
                                           << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
+                    feedforward_detection2<< std::fixed << std::setprecision(4) << sigma << ";" << thresh 
+                                          << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
                     feedback_detection    << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
                                           << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
 
@@ -343,6 +345,7 @@ int main(int argc, char** argv){
       	}
     }
 	feedforward_detection.close();
+    feedforward_detection2.close();
     feedback_detection.close();
 }
 

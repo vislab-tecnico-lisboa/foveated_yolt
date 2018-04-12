@@ -1,8 +1,8 @@
 clear all
 
 % parameters
-detections_resolution=227;
-images_number=100; 
+detections_resolution=224;
+images_number=200; 
 overlap_correct=0.5;
 top_k=5;
 
@@ -17,27 +17,32 @@ gt_class_file='../data/ground_truth_labels_ilsvrc12.txt';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%% CENTRAL FIXATION POINT - (113,113) %%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-run centralpoint.m
+load('central_point.mat')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%% CENTRAL VS 16 SPREAD FIXATION POINTS %%%%%%%%%%%%
+%%%%%%%%%%%% CENTRAL VS 64 SPREAD FIXATION POINTS %%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Files for Classification Errors
 % Detections from the first feedfoward pass - fix_pts random
-C_detections_file='../results/feedfoward_detection_t1s16p16r0i100.txt';
+C_detections_file='../results/feedfoward_detection_t1s20p64r0i200.txt';
 [C_sigmas, C_threshs, C_fix_pts, C_classes, C_scores, C_detections]=parse_detections(...
     C_detections_file);
+%%
 % Detections from the second feedfoward pass - fix_pts random
-C_fbdetections_file='../results/feedback_detection_t1s16p16r0i100.txt';
-[~,~,~,C_fb_rankclasses,C_fb_classes,C_fb_scores]=feedback_parse_detections(...
-    C_fbdetections_file);
+C_fbdetections_file='../results/feedback_detection_t1s20p64r0i200.txt';
+[~,~,~,C_fb_rankclasses, C_fb_classes, C_fb_scores]=parse_detections(...
+    C_fbdetections_file);    
 
 %% Files for Localization Errors
-Detections from the 1st pass - thresh
-L_detections_file='../results/feedfoward_detection_t21s1p16r0i100.txt';
+% Detections from the 1st pass - thresh
+L_detections_file='../results/feedfoward_detection_t21s1p64r0i200.txt';
 [L_sigmas, L_threshs, L_fix_pts, L_classes, L_scores, L_detections]=parse_detections(...
     L_detections_file);
+% Detections from the 2st pass - thresh
+L_fbdetections_file='../results/feedback_detection_t1s20p64r0i200.txt';
+[~,~,~, L_fb_classes, L_fb_scores, L_fb_detections]=parse_detections(...
+    L_fbdetections_file);
 
 %% Classification Error
 % 1st pass
@@ -46,9 +51,6 @@ L_detections_file='../results/feedfoward_detection_t21s1p16r0i100.txt';
 % 2nd pass Top 5 - Ranked with != labels
 [~, ~, C_fb_error5_r_av,C_fb_error5_r_std,~,C_fb_error5_r_pos]=classification_error_rates(...
     C_sigmas,C_threshs,C_fix_pts,images_number,C_fb_rankclasses,gt_classes,top_k);
-% 2nd pass Top 5 - could have same labels
-[~, ~, C_fb_error5_av,C_fb_error5_std,~,~]=classification_error_rates(...
-    C_sigmas,C_threshs,C_fix_pts,images_number,C_fb_classes,gt_classes,top_k);
 
 
 %% Localization Error

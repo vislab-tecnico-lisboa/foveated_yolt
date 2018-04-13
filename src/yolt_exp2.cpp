@@ -190,7 +190,10 @@ int main(int argc, char** argv){
 			        std::vector<string> labels;
 		            std::vector<float> scores;
                     std::vector<int> indexs;
-		            std::vector<Rect> bboxes;
+		            std::vector<Rect> bboxes1;
+                    std::vector<Rect> bboxes2;
+                    std::vector<Mat> foveation_points;
+
 
 		         	// Atual iteration
 		            int iteration=input+1+fixedpt_index*total_images+
@@ -213,6 +216,8 @@ int main(int argc, char** argv){
 
 		 			// Feedfoward - Prediciton of TOP N classes
 		            ClassData first_pass_data = Network.Classify(img, N);
+                    //std::cout << "-------1st------" << std::endl;
+                    //std::cout << first_pass_data << std::endl;
 
 		            // Store results
                     feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
@@ -235,7 +240,7 @@ int main(int argc, char** argv){
 		                Rect Min_Rect = Network.CalcBBox(class_index,img, first_pass_data, thresh);
 
 		              	// Save all bounding boxes
-		                bboxes.push_back(Min_Rect);
+		                bboxes1.push_back(Min_Rect);
 
 		                // Store results
 		                if (class_index==N-1) {
@@ -252,6 +257,7 @@ int main(int argc, char** argv){
 		                    					  << Min_Rect.width << ";" << Min_Rect.height << ";";
 		                }
 
+
 		                /////////////////////////////////////////////////////////
 		                //      Image Re-Classification with Attention         //
 		                // Foveated Image + Forward + Predict new class labels //
@@ -260,18 +266,23 @@ int main(int argc, char** argv){
 		                cv::Mat fixation_point(2,1,CV_32S);
 		                fixation_point.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
 		                fixation_point.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
-		                img_second_pass=foveate(img_orig,size_map,levels,sigma,fixation_point);
+		                
+                        foveation_points.push_back(fixation_point);
+
+                        img_second_pass=foveate(img_orig,size_map,levels,sigma,fixation_point);
 
 		                // Forward
+                        //std::cout << "-------25------" << std::endl;
 		                // Predict New top 5 of each predicted class
 		                ClassData feedback_data = Network.Classify(img_second_pass, N);
+                        //std::cout << feedback_data << std::endl;
 
 		                // For each bounding box
 		                for(int m=0; m<N; ++m) {
 		                    // Save all labels, scores and indexes
                             labels.push_back(feedback_data.label[m]);
 		                    scores.push_back(feedback_data.score[m]);
-                            indexs.push_back(feedback_data.score[m]);
+                            indexs.push_back(feedback_data.index[m]);
 
 		                    // Store Feedback results
 		                	if ((class_index+1)*(m+1) == N*N) {
@@ -290,7 +301,7 @@ int main(int argc, char** argv){
 		                    //cv::vconcat(a, b, dst); // vertical
 		                    namedWindow( "original image,    first pass,   second pass     class", WINDOW_AUTOSIZE ); // Create a window for display.
 		                    imshow( "original image,    first pass,   second pass     class", dst );                  // Show our image inside it.
-		                    waitKey(1);
+		                    waitKey(0);
 		                }
 					}
 
@@ -321,12 +332,18 @@ int main(int argc, char** argv){
 
                     // Feedfoward - 2nd Prediciton of TOP N classes
                     ClassData feedback_top_final_data = ClassData(top_final_labels,top_final_scores,top_final_index);
+                    //std::cout << "-------ranked------" << std::endl;
+                    //std::cout << feedback_top_final_data << std::endl;
 
                     for (int class_index = 0; class_index < N; ++class_index) {
                         //cout << "TOP 1 \t" << "Score: " << data_first_pass.score[class_index] << "\t Label: " << data_first_pass.label[class_index] << endl;
                         //cout << "TOP 2 \t" << "Score: " << top_final_scores[class_index]  << "\t Label: " << top_final_labels[class_index] << endl;
                         
+                       
                         Rect Min_Rect = Network.CalcBBox(class_index, img, feedback_top_final_data, thresh);
+                        
+                        // Save all bounding boxes
+                        bboxes2.push_back(Min_Rect);
 
                         // store results
                         if (class_index == N-1) {
@@ -339,6 +356,9 @@ int main(int argc, char** argv){
                             << ";" << Min_Rect.x << ";" << Min_Rect.y << ";" << Min_Rect.width << ";" << Min_Rect.height << ";";
                        
                     }
+
+                    //Network.VisualizeBBox(bboxes1,N,img,size_map,1);
+                    //Network.VisualizeBBox(bboxes2,N,img,size_map,2);
 
 		        }
       		}

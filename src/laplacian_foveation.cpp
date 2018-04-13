@@ -56,7 +56,8 @@ void LaplacianBlending::BuildPyramids() {
         current_img = down;
     }
             
-    image_smallest_level=up;           
+    image_smallest_level=up;
+  
 }
 
 void LaplacianBlending::ComputeRois(const cv::Mat &center, cv::Rect &kernel_roi_rect,

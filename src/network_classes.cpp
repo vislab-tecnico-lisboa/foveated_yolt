@@ -33,12 +33,12 @@ ClassData::~ClassData() {
     std::vector<int>().swap(index);
 }
 
-std::ostream & ClassData::operator<< (ostream &output) {
-
-    for(int i=0; i<N;++i) {
-        output << " Index: " << index[i] << "\n"
-               << " Label: " << label[i] << "\n"
-               << " Confidence: " << score[i] << "\n" << endl;
+ostream& operator<<(ostream& output, const ClassData& D)  
+{  
+    for(int i=0; i<D.N;++i) {
+        output << " Index: " << D.index[i] << "\n"
+               << " Label: " << D.label[i] << "\n"
+               << " Confidence: " << D.score[i] << "\n" << endl;
     }
     return output;
 }
@@ -402,23 +402,44 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
         bboxes[k].height = bboxes[k].height*img.size().height / size_map;
     }
 
-    for (int k =0; k< N; ++k)
-
-        rectangle(img, bboxes[k], Scalar(0, 0, 255), 1, 8, 0 );
-
+    cv::Mat img_ = img.clone();
     stringstream ss;
 
-    string name = "Figures/bbox_";
-    string type = ".jpg";
+    for (int k =0; k< N; ++k) {
 
-    ss<<name<<(ct + 1)<<type;
+        string name = "/home/cristina/Foveated-YOLT/Figures/bbox_";
+        string type = ".bmp";
 
-    string filename = ss.str();
-    ss.str("");
+        ss<<name<<(k + 1)<<type;
 
-    imwrite(filename, img);
-    imshow("box", img );
-    waitKey(0);
+        string filename = ss.str();
+        ss.str("");
+
+        rectangle(img_, bboxes[k], Scalar(0, 0, 255), 1, 8, 0 );
+        cout << "type: "<< img_.type() << endl;
+        if(!imwrite(filename, img_))
+            cout << "asneira"<< endl;
+        namedWindow(filename,WINDOW_AUTOSIZE);
+        imshow(filename, img_);
+        waitKey(0);
+        img_=img.clone();
+
+    }
+        
+    //stringstream ss;
+
+   // string name = "Figures/bbox_";
+    //string type = ".jpg";
+
+   // ss<<name<<(ct + 1)<<type;
+
+   // string filename = ss.str();
+    //ss.str("");
+
+    //imwrite(filename, img);
+    //namedWindow(filename,WINDOW_AUTOSIZE);
+    //imshow(filename, img );
+    //waitKey(0);
 }
 
 

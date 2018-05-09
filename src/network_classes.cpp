@@ -287,14 +287,14 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
 // Function CalcBBox //
 ///////////////////////
 
-Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh) {
+Rect Network::CalcBBox(int class_index, const cv::Mat& img, ClassData mydata, float thresh) {
 
     /*********************************************************/
     //                  Get Saliency Map                     //
     //              Backward and normalize                   //
     /*********************************************************/
 
-    int label_index = mydata.index[i];  // tem o indice da classe
+    int label_index = mydata.index[class_index];  // tem o indice da classe
 
     // Dados do 1 forward
     Blob<float>* forward_output_layer = net->output_blobs()[0];
@@ -328,14 +328,12 @@ Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh
         }
     }
 
+    VisualizeSaliencyMap(M2,class_index,img);
+
     cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
 
     // Find max across RGB channels
-    Mat saliency_map = CalcRGBmax(M2);
-
-//    imshow("saliency", saliency_map);
-//    waitKey(0);
-
+    Mat saliency_map = CalcRGBmax(M2); 
 
     /*********************************************************/
     //                  Segmentation Mask                    //
@@ -344,11 +342,11 @@ Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh
 
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
+    //imshow("Mask", foreground_mask);
+    //waitKey(0);
 
-//    imshow("Mask", foreground_mask);
-//    waitKey(0);
+  
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
-
     Mat Points;
     findNonZero(foreground_mask,Points);
 
@@ -408,39 +406,84 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
     for (int k =0; k< N; ++k) {
 
         string name = "/home/cristina/Foveated-YOLT/Figures/bbox_";
-        string type = ".bmp";
+        string type = ".png";
 
         ss<<name<<(k + 1)<<type;
 
         string filename = ss.str();
         ss.str("");
 
-        rectangle(img_, bboxes[k], Scalar(0, 0, 255), 1, 8, 0 );
-        cout << "type: "<< img_.type() << endl;
+        rectangle(img_, bboxes[k], Scalar(0, 0, 255), 2, 8, 0 );
+        //cout << "type: "<< img_.type() << endl;
         if(!imwrite(filename, img_))
             cout << "asneira"<< endl;
-        namedWindow(filename,WINDOW_AUTOSIZE);
-        imshow(filename, img_);
-        waitKey(0);
+        //namedWindow(filename,WINDOW_AUTOSIZE);
+        //imshow(filename, img_);
+        //waitKey(0);
         img_=img.clone();
 
     }
-        
-    //stringstream ss;
+}
 
-   // string name = "Figures/bbox_";
-    //string type = ".jpg";
+/////////////////////////////////
+// Function VisualizeFoveation //
+/////////////////////////////////
 
-   // ss<<name<<(ct + 1)<<type;
+void Network::VisualizeSaliencyMap(cv::Mat& M2, int k,cv::Mat img) {
 
-   // string filename = ss.str();
-    //ss.str("");
+    cv::Mat M3 = M2.clone();
 
-    //imwrite(filename, img);
-    //namedWindow(filename,WINDOW_AUTOSIZE);
-    //imshow(filename, img );
+    cv::normalize(M3, M3, 0, 255, NORM_MINMAX);
+    cv::Mat saliency_map = CalcRGBmax(M3); 
+
+    saliency_map.convertTo(saliency_map,CV_8UC1); 
+    cv::cvtColor(saliency_map, saliency_map, cv::COLOR_GRAY2BGR);
+    
+    string name = "/home/cristina/Foveated-YOLT/Figures/saliencymap_";
+    string type = ".png";
+    stringstream ss;
+    ss<<name<<(k + 1)<<type;
+    string filename = ss.str();
+    ss.str("");
+
+    if(!imwrite(filename, saliency_map))
+        cout << "ERROR: Saving Saliency Map"<< endl;
+
+    namedWindow(filename,WINDOW_AUTOSIZE);
+    //imshow(filename, saliency_map);
     //waitKey(0);
 }
+
+
+
+/////////////////////////////////
+// Function VisualizeFoveation //
+/////////////////////////////////
+
+void Network::VisualizeFoveation(cv::Mat fix_pt, cv::Mat& img, int sigma,int k) {
+
+    cv::Point pt;
+    pt.x = fix_pt.at<int>(0,0);
+    pt.y = fix_pt.at<int>(1,0);
+
+    string name = "/home/cristina/Foveated-YOLT/Figures/foveation_";
+    string type = ".png";
+    stringstream ss;
+    ss<<name<<(k + 1)<<type;
+    string filename = ss.str();
+    ss.str("");
+
+    cv::Mat img_ = img.clone();
+    circle(img_, pt, sigma,Scalar(0, 0, 255),2);
+
+    if(!imwrite(filename, img_))
+        cout << "ERROR: Saving Foveation Image"<< endl;
+
+    namedWindow(filename,WINDOW_AUTOSIZE);
+    //imshow(filename, img_);
+    //waitKey(1);
+}
+
 
 
 ///////////////////////////////////////

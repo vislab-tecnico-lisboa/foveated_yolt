@@ -45,8 +45,10 @@ class Network {
 
         // Return Top 5 prediction of image in mydata
         ClassData Classify(const cv::Mat& img, int N);
-        Rect CalcBBox(int i, const cv::Mat &img, ClassData mydata, float thresh); // NEW
+        Rect CalcBBox(int class_index, const cv::Mat &img, ClassData mydata, float thresh); // NEW
         void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map, int ct);
+        void VisualizeFoveation(cv::Mat fix_pt, cv::Mat& img, int sigma,int k);
+        void VisualizeSaliencyMap(cv::Mat& M2, int k, cv::Mat img);
         std::vector<String> GetDir(string dir, vector<String> &files);
 
         float* LimitValues(float* bottom_data); // NEW

@@ -55,15 +55,15 @@ target_link_libraries(
 
 # FOVEATION PYTHON BINDINGS
 
-boost_python_module(np_opencv_converter src/python_bindings/np_opencv_converter.cpp src/python_bindings/conversion.cpp)
-target_link_libraries(np_opencv_converter boost_system boost_python ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
+# boost_python_module(np_opencv_converter src/python_bindings/np_opencv_converter.cpp src/python_bindings/conversion.cpp)
+# target_link_libraries(np_opencv_converter boost_system boost_python ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-boost_python_module(np_opencv_module src/python_bindings/np_opencv_module.cpp)
-target_link_libraries(np_opencv_module boost_system boost_python np_opencv_converter ${OpenCV_LIBS})
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+# boost_python_module(np_opencv_module src/python_bindings/np_opencv_module.cpp)
+# target_link_libraries(np_opencv_module boost_system boost_python np_opencv_converter ${OpenCV_LIBS})
 
-add_library(yolt_python SHARED src/python_bindings/yolt_python.cpp)
-target_link_libraries(yolt_python -lboost_python -lboost_system ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
+# add_library(yolt_python SHARED src/python_bindings/yolt_python.cpp)
+# starget_link_libraries(yolt_python -lboost_python -lboost_system ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
 
 #  set_target_properties(yolt_python PROPERTIES SUFFIX .so)
 #  set_target_properties(yolt_python PROPERTIES PREFIX "")

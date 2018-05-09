@@ -2,7 +2,7 @@
 
 
 //////////////////////////////////////////////////////////
-/////////////////// CLASS CLASSDATA ////////////////////// 
+/////////////////// CLASS CLASSDATA //////////////////////
 //////////////////////////////////////////////////////////
 
 
@@ -19,31 +19,38 @@ ClassData::ClassData(int N_) {
     index.resize(N);
 }
 
+ClassData::ClassData(std::vector<string> label_, std::vector<float> score_, std::vector<int> index_) { 
+      label = label_;
+      score = score_;
+      index = index_;
+      N = label.size();
+}
+
 ClassData::~ClassData() {
-    
+
     std::vector<string>().swap(label);
     std::vector<float>().swap(score);
     std::vector<int>().swap(index);
 }
 
-std::ostream & ClassData::operator<< (ostream &output) {
-    
-    for(int i=0; i<N;++i) {
-        output << " Index: " << index[i] << "\n"
-               << " Label: " << label[i] << "\n"
-               << " Confidence: " << score[i] << "\n" << endl;
+ostream& operator<<(ostream& output, const ClassData& D)  
+{  
+    for(int i=0; i<D.N;++i) {
+        output << " Index: " << D.index[i] << "\n"
+               << " Label: " << D.label[i] << "\n"
+               << " Confidence: " << D.score[i] << "\n" << endl;
     }
     return output;
 }
 
 
 ////////////////////////////////////////////////////////
-// Function ArgMax                                    // 
+// Function ArgMax                                    //
 // Return the indices of the top N values of vector v //
 ////////////////////////////////////////////////////////
 
-std::vector<int> ClassData::ArgMax(const std::vector<float>& v, int n) {
-    
+std::vector<int> ArgMax(const std::vector<float>& v, int n) {
+
     std::vector<std::pair<float, int> > pairs;
     for (size_t i=0; i<v.size(); ++i)
         pairs.push_back(std::make_pair(v[i], i));
@@ -67,7 +74,7 @@ static bool PairCompare(const std::pair<float, int>& lhs,
 
 
 //////////////////////////////////////////////////////////
-///////////////////// CLASS NETWORK ////////////////////// 
+///////////////////// CLASS NETWORK //////////////////////
 //////////////////////////////////////////////////////////
 
 ////////////////////////////////////////
@@ -76,7 +83,7 @@ static bool PairCompare(const std::pair<float, int>& lhs,
 ////////////////////////////////////////
 Network::Network(const string& model_file, const string& weight_file,
                  const string& mean_file, const string& label_file) {
- 
+
     // Load Network and set phase (TRAIN / TEST)
     net.reset(new Net<float>(model_file, TEST));
 
@@ -85,6 +92,7 @@ Network::Network(const string& model_file, const string& weight_file,
 
     // Set input layer and check number of channels
     Blob<float>* input_layer = net->input_blobs()[0];
+
     num_channels = input_layer->channels();
     CHECK(num_channels == 3 || num_channels == 1)
             << "Input layer should have 1 or 3 channels";
@@ -108,17 +116,17 @@ Network::Network(const string& model_file, const string& weight_file,
 }
 
 //////////////////////////
-// Function SetMean     //   
+// Function SetMean     //
 // Create a mean image  //
 //////////////////////////
 
 void Network::SetMean(const string& mean_file) {
-    
+
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
     // Convert from BlobProto to Blob<float>
     Blob<float> mean_blob;
-    mean_blob.FromProto(blob_proto);			  // make copy
+    mean_blob.FromProto(blob_proto);              // make copy
     CHECK_EQ(mean_blob.channels(), num_channels)
             << "Number of channels of mean file doesn't match input layer";
 
@@ -159,7 +167,7 @@ ClassData Network::Classify(const cv::Mat& img, int N) {
     ClassData mydata(N); // objecto
 
     N = std::min<int>(labels.size(), N);       // tem 5 top labels
-    std::vector<int> maxN = mydata.ArgMax(output, N); // tem o top
+    std::vector<int> maxN = ArgMax(output, N); // tem o top
 
     for (int i = 0; i < N; ++i) {
         int idx = maxN[i];
@@ -173,15 +181,16 @@ ClassData Network::Classify(const cv::Mat& img, int N) {
 }
 
 ///////////////////////////////////////////////
-// Function Predict                          // 
+// Function Predict                          //
 // wrap input layers and make preprocessing  //
 ///////////////////////////////////////////////
 
 std::vector<float> Network::Predict(const cv::Mat& img) {
-    
+
     Blob<float>* input_layer = net->input_blobs()[0];
 
     input_layer->Reshape(1, num_channels, input_geometry.height, input_geometry.width);
+
 
     // Forward dimension change to all layers
     net->Reshape();
@@ -210,7 +219,7 @@ std::vector<float> Network::Predict(const cv::Mat& img) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Network::WrapInputLayer(std::vector<cv::Mat>* input_channels) {
-    
+
     Blob<float>* input_layer = net->input_blobs()[0];
 
     int width = input_layer->width();
@@ -265,7 +274,7 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
 
     // This operation will write the separate BGR planes directly to the
     //   input layer of the network because it is wrapped by the cv::Mat
-    //   objects in input_channels 
+    //   objects in input_channels
 
     cv::split(sample_normalized, *input_channels);
 
@@ -278,24 +287,24 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
 // Function CalcBBox //
 ///////////////////////
 
-Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh) {
+Rect Network::CalcBBox(int class_index, const cv::Mat& img, ClassData mydata, float thresh) {
 
     /*********************************************************/
     //                  Get Saliency Map                     //
     //              Backward and normalize                   //
     /*********************************************************/
 
-    int label_index = mydata.index[i];  // tem o indice da classe
+    int label_index = mydata.index[class_index];  // tem o indice da classe
 
     // Dados do 1 forward
     Blob<float>* forward_output_layer = net->output_blobs()[0];
+
     float* fc8Data = forward_output_layer->mutable_cpu_data();
     float* fc8Diff = forward_output_layer->mutable_cpu_diff();
 
     // Backward of a specific class
     for (int i = 0;  i< forward_output_layer->num() * forward_output_layer->channels() * forward_output_layer->height() * forward_output_layer->width(); ++i)
         fc8Diff[i] = 0.0f;
-
     fc8Diff[label_index] = 1.0f; // Specific class
 
     // Backward
@@ -303,7 +312,7 @@ Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh
 
     // Get Data
     boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");  // get data from Data layer
-    int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
+    //int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
     const float* begin_diff = out_data_layer->mutable_cpu_diff();
 
@@ -322,11 +331,7 @@ Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh
     cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
 
     // Find max across RGB channels
-    Mat saliency_map = CalcRGBmax(M2);
-
-//    imshow("saliency", saliency_map);
-//    waitKey(0);
-
+    Mat saliency_map = CalcRGBmax(M2); 
 
     /*********************************************************/
     //                  Segmentation Mask                    //
@@ -335,20 +340,20 @@ Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh
 
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
+    // imshow("Mask", foreground_mask);
+    // waitKey(0);
 
-//    imshow("Mask", foreground_mask);
-//    waitKey(0);
+  
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
-
     Mat Points;
     findNonZero(foreground_mask,Points);
- 
+
     cv::Rect Min_Rect;
     if(Points.empty())
         Min_Rect=cv::Rect();
     else
         Min_Rect = boundingRect(Points);
-        
+
 
     return Min_Rect;
 
@@ -361,7 +366,7 @@ Rect Network::CalcBBox(int i, const cv::Mat& img, ClassData mydata, float thresh
 ////////////////////////////////////////////////
 
 std::vector<String> Network::GetDir(string dir, vector<String> &files) {
-    
+
     DIR *dp;
     struct dirent *dirp;
     if((dp  = opendir(dir.c_str())) == NULL) {
@@ -393,24 +398,90 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
         bboxes[k].height = bboxes[k].height*img.size().height / size_map;
     }
 
-    for (int k =0; k< N; ++k)
-
-        rectangle(img, bboxes[k], Scalar(0, 0, 255), 1, 8, 0 );
-
+    cv::Mat img_ = img.clone();
     stringstream ss;
 
-    string name = "Figures/bbox_";
-    string type = ".jpg";
+    for (int k =0; k< N; ++k) {
 
-    ss<<name<<(ct + 1)<<type;
+        string name = "/home/cristina/Foveated-YOLT/Figures/bbox_";
+        string type = ".png";
 
+        ss<<name<<(k + 1)<<type;
+
+        string filename = ss.str();
+        ss.str("");
+
+        rectangle(img_, bboxes[k], Scalar(0, 0, 255), 2, 8, 0 );
+        //cout << "type: "<< img_.type() << endl;
+        if(!imwrite(filename, img_))
+            cout << "asneira"<< endl;
+        //namedWindow(filename,WINDOW_AUTOSIZE);
+        //imshow(filename, img_);
+        //waitKey(0);
+        img_=img.clone();
+
+    }
+}
+
+/////////////////////////////////
+// Function VisualizeFoveation //
+/////////////////////////////////
+
+void Network::VisualizeSaliencyMap(cv::Mat& M2, int k,cv::Mat img) {
+
+    cv::Mat M3 = M2.clone();
+
+    cv::normalize(M3, M3, 0, 255, NORM_MINMAX);
+    cv::Mat saliency_map = CalcRGBmax(M3); 
+
+    saliency_map.convertTo(saliency_map,CV_8UC1); 
+    cv::cvtColor(saliency_map, saliency_map, cv::COLOR_GRAY2BGR);
+    
+    string name = "/home/cristina/Foveated-YOLT/Figures/saliencymap_";
+    string type = ".png";
+    stringstream ss;
+    ss<<name<<(k + 1)<<type;
     string filename = ss.str();
     ss.str("");
 
-    imwrite(filename, img);
-    imshow("box", img );
-    waitKey(0);
+    if(!imwrite(filename, saliency_map))
+        cout << "ERROR: Saving Saliency Map"<< endl;
+
+    namedWindow(filename,WINDOW_AUTOSIZE);
+    //imshow(filename, saliency_map);
+    //waitKey(0);
 }
+
+
+
+/////////////////////////////////
+// Function VisualizeFoveation //
+/////////////////////////////////
+
+void Network::VisualizeFoveation(cv::Mat fix_pt, cv::Mat& img, int sigma,int k) {
+
+    cv::Point pt;
+    pt.x = fix_pt.at<int>(0,0);
+    pt.y = fix_pt.at<int>(1,0);
+
+    string name = "/home/cristina/Foveated-YOLT/Figures/foveation_";
+    string type = ".png";
+    stringstream ss;
+    ss<<name<<(k + 1)<<type;
+    string filename = ss.str();
+    ss.str("");
+
+    cv::Mat img_ = img.clone();
+    circle(img_, pt, sigma,Scalar(0, 0, 255),2);
+
+    if(!imwrite(filename, img_))
+        cout << "ERROR: Saving Foveation Image"<< endl;
+
+    namedWindow(filename,WINDOW_AUTOSIZE);
+    //imshow(filename, img_);
+    //waitKey(1);
+}
+
 
 
 ///////////////////////////////////////
@@ -420,7 +491,7 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
 ///////////////////////////////////////
 
 float* Network::LimitValues(float* bottom_data) {
-    
+
     float smallest = bottom_data[0];
     float largest = bottom_data[0];
     for (int i=1; i<sizeof(bottom_data); i++) {
@@ -458,5 +529,3 @@ cv::Mat Network::CalcRGBmax(cv::Mat i_RGB) {
 
     return maxRGB;
 }
-
-

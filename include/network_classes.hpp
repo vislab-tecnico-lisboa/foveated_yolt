@@ -1,5 +1,4 @@
 ﻿#include <caffe/caffe.hpp>
-
 #include <opencv2/opencv.hpp>
 
 #include <iostream>
@@ -16,24 +15,26 @@ using namespace cv;
 
 
 class ClassData {
-    
+
     public:
         ClassData(int N_);
+        ClassData(std::vector<string> label_, std::vector<float> score_, std::vector<int> index_);
         ~ClassData();
 
-        std::vector<int> ArgMax(const std::vector<float>& v, int n);
-        ostream & operator<<(std::ostream &output);
-
+        friend ostream& operator<<(ostream& output, const ClassData& D);  
         int N;
         std::vector<string> label;
         std::vector<float> score;
         std::vector<int> index;
+
+
 };
 
 
 // Callback for function std::partial_sort used in ArgMax
-static bool PairCompare(const std::pair<float, int>& lhs, 
+static bool PairCompare(const std::pair<float, int>& lhs,
                         const std::pair<float, int>& rhs);
+std::vector<int> ArgMax(const std::vector<float>& v, int n);
 
 
 class Network {
@@ -44,8 +45,10 @@ class Network {
 
         // Return Top 5 prediction of image in mydata
         ClassData Classify(const cv::Mat& img, int N);
-        Rect CalcBBox(int i, const cv::Mat &img, ClassData mydata, float thresh); // NEW
+        Rect CalcBBox(int class_index, const cv::Mat &img, ClassData mydata, float thresh); // NEW
         void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map, int ct);
+        void VisualizeFoveation(cv::Mat fix_pt, cv::Mat& img, int sigma,int k);
+        void VisualizeSaliencyMap(cv::Mat& M2, int k, cv::Mat img);
         std::vector<String> GetDir(string dir, vector<String> &files);
 
         float* LimitValues(float* bottom_data); // NEW
@@ -63,5 +66,5 @@ class Network {
 
         cv::Mat mean_;
         std::vector<string> labels;
-        cv::Size input_geometry;		// size of network - width and height
+        cv::Size input_geometry;        // size of network - width and height
 };

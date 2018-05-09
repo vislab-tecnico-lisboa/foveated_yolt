@@ -2,12 +2,8 @@ build/*
 files/*
 *.pdf
 *.zip
-dataset/*
 *~
-dataset/images/*
-temp/
-resuts/*.txt
+images/*
 results/
-data/
-CMakeFiles/
+cmake/Modules/*
 CMakeLists.txt.user

@@ -414,10 +414,10 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
         rectangle(img_, bboxes[k], Scalar(0, 0, 255), 2, 8, 0 );
         //cout << "type: "<< img_.type() << endl;
         if(!imwrite(filename, img_))
-            cout << "asneira"<< endl;
-        //namedWindow(filename,WINDOW_AUTOSIZE);
-        //imshow(filename, img_);
-        //waitKey(0);
+            cout << "ERROR: Saving BBox"<< endl;
+        namedWindow(filename,WINDOW_AUTOSIZE);
+        imshow(filename, img_);
+        waitKey(0);
         img_=img.clone();
 
     }
@@ -448,8 +448,8 @@ void Network::VisualizeSaliencyMap(cv::Mat& M2, int k,cv::Mat img) {
         cout << "ERROR: Saving Saliency Map"<< endl;
 
     namedWindow(filename,WINDOW_AUTOSIZE);
-    //imshow(filename, saliency_map);
-    //waitKey(0);
+    imshow(filename, saliency_map);
+    waitKey(0);
 }
 
 

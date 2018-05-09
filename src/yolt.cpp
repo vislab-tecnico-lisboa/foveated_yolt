@@ -117,7 +117,6 @@ int main(int argc, char** argv){
 
 	// store results
 	ofstream feedforward_detection;
-	ofstream feedforward_detection2;
 	ofstream feedback_detection;
 
 	// File with 5 classes + scores + 5 bounding boxes
@@ -131,18 +130,6 @@ int main(int argc, char** argv){
 
 	feedforward_detection.open (feedforward_detection_str.c_str(),ios::out);
 	feedforward_detection<<"sigma;thres;pt_w;pt_h;class1;score1;x1;y1;w1;h1;class2;score2;x2;y2;w2;h2;class3;score3;x3;y3;w3;h3;class4;score4;x4;y4;w4;h4;class5;score5;x5;y5;w5;h5"<<std::endl;
-
-	// File with 25 predicted classes + scores for each image
-	//  2nd pass
-	std::string feedforward_detection2_str=results_folder +"feedforward_detection_"+
-														   "t"   + ToString(threshs.size()) +
-														   "s"   + ToString(sigmas.size())  +
-														   "p"   + ToString(npoints)+
-														   "r"   + ToString(random)         +
-														   "i"   + ToString(total_images)   + "_2.txt";
-
-	feedforward_detection2.open (feedforward_detection2_str.c_str(), ios::out);
-	feedforward_detection2<<"sigma;thres;pt_w;pt_h;class1;score1;class2;score2;class3;score3;class4;score4;class5;score5;class6;score6;class7;score7;class8;score8;class9;score9;class10;score10;class11;score11;class12;score12;class13;score13;class14;score14;class15;score15;class16;score16;class17;score17;class18;score18;class19;score19;class20;score20;class21;score21;class22;score22;class23;score23;class24;score24;class25;score25"<<std::endl;
 
 	// File with 5 classes + scores + 5 bounding boxes
 	//  Re classification and Re localization
@@ -233,8 +220,6 @@ int main(int argc, char** argv){
 					// Store results
 					feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
 										  << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
-					feedforward_detection2<< std::fixed << std::setprecision(4) << sigma << ";" << thresh 
-										  << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
 					feedback_detection    << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
 										  << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
 
@@ -296,14 +281,6 @@ int main(int argc, char** argv){
 							labels.push_back(feedback_data.label[m]);
 							scores.push_back(feedback_data.score[m]);
 							indexs.push_back(feedback_data.index[m]);
-
-							// Store Feedback results
-							if ((class_index+1)*(m+1) == N*N) {
-								feedforward_detection2 <<  feedback_data.label[m] << ";" << feedback_data.score[m];
-								feedforward_detection2 << endl;
-							}
-							else
-								feedforward_detection2 <<  feedback_data.label[m] << ";" << feedback_data.score[m] << ";";
 						}
 
 						if(debug) {
@@ -313,7 +290,7 @@ int main(int argc, char** argv){
 							//cv::vconcat(a, b, dst); // vertical
 							namedWindow( "original image,    first pass,   second pass     class", WINDOW_AUTOSIZE ); // Create a window for display.
 							imshow( "original image,    first pass,   second pass     class", dst );                  // Show our image inside it.
-							waitKey(1);
+							waitKey(0);
 						}
 					}
 
@@ -368,7 +345,9 @@ int main(int argc, char** argv){
 					   
 					}
 
+					// Uncomment for Visualize Bounding Boxes 1st pass
 					//Network.VisualizeBBox(bboxes1,N,img_orig,size_map,1);
+					// Uncomment for Visualize Bounding Boxes 2nd pass
 					//Network.VisualizeBBox(bboxes2,N,img,size_map,2);
 
 				}
@@ -376,7 +355,6 @@ int main(int argc, char** argv){
 		}
 	}
 	feedforward_detection.close();
-	feedforward_detection2.close();
 	feedback_detection.close();
 }
 

@@ -1,10 +1,8 @@
 build/*
-files/*.caffemodel
-files/*.txt
+files/*
 *.pdf
-*.caffemodel*
 *.zip
-dataset/*.txt
+dataset/*
 *~
 dataset/images/*
 temp/

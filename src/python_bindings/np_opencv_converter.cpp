@@ -2,7 +2,7 @@
 // License: BSD
 // Last modified: Sep 14, 2014
 
-#include "np_opencv_converter.hpp"
+#include "python_bindings/np_opencv_converter.hpp"
 
 namespace fs { namespace python {
 

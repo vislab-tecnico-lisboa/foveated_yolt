@@ -11,7 +11,7 @@
 #include <opencv2/opencv.hpp>
 
 // np_opencv_converter
-#include "np_opencv_converter.hpp"
+#include "python_bindings/np_opencv_converter.hpp"
 
 namespace py = boost::python;
 

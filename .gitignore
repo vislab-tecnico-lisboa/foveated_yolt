@@ -4,6 +4,6 @@ files/*
 *.zip
 *~
 images/*
-results/
+results/*
 cmake/Modules/*
 CMakeLists.txt.user

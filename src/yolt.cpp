@@ -372,7 +372,7 @@ cv::Mat foveate(const cv::Mat &img, const int &size_map,
 	img.convertTo(image, CV_64F);
 
 	// Construct Pyramid
-	LaplacianBlending pyramid(image,levels, sigma);
+	LaplacianBlending pyramid(image.cols,image.rows,levels, sigma);
 
 	// Foveate
 	cv::Mat foveated_image = pyramid.Foveate(fixation_point);

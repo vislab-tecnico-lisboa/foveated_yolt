@@ -1,22 +1,30 @@
 cmake_minimum_required(VERSION 2.8)
-project(yolt)
+project(foveated_yolt)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/")
 
-# Include package config, boost-python
-find_package(PkgConfig REQUIRED)
-include(cmake/boost-python.cmake)
 
-#  add_definitions(-DOPENCV_3)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  cv_bridge
+  image_transport
+)
+
+SET(CMAKE_CXX_FLAGS_RELEASE "-Wall -O3 -std=c++11")
+# Include package config, boost-python
+#find_package(PkgConfig REQUIRED)
+#include(cmake/boost-python.cmake)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  cv_bridge
+  image_transport
+)
 
 find_package(Caffe REQUIRED)
 #  find_package(CUDA REQUIRED)
 find_package(Boost COMPONENTS system filesystem regex python REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(PythonInterp REQUIRED)
-find_package(NumPy REQUIRED)
-find_package(PythonLibs REQUIRED)
-
 
 option(-std "std" c++11)
 
@@ -25,23 +33,22 @@ include_directories(
 	${Caffe_INCLUDE_DIRS}
 	${PYTHON_INCLUDE_DIR}
 	${PYTHON_NUMPY_INCLUDE_DIR}
+  	${catkin_INCLUDE_DIRS}
 )
-
-message("Caffe_INCLUDE_DIRS is ${Caffe_INCLUDE_DIRS}") 
-message("PYTHON_INCLUDE_DIR is ${PYTHON_INCLUDE_DIR}")
-message("PYTHON_NUMPY_INCLUDE_DIR is ${PYTHON_NUMPY_INCLUDE_DIR}")
 
 add_definitions(${Caffe_DEFINITIONS})    # ex. -DCPU_ONLY
 add_definitions(-DCPU_ONLY)
 
 # ADD OUR OWN EXECUTABLE FILES
 set(GLOG_LIB glog)
+
 add_executable(
 	yolt 
 	src/yolt.cpp
 	src/laplacian_foveation.cpp
 	src/network_classes.cpp
 )
+
 target_link_libraries(
 	yolt
 	${Boost_LIBRARIES} 
@@ -49,6 +56,23 @@ target_link_libraries(
 	${PYTHON_LIBRARIES}
 	${GLOG_LIB}  
 	${OpenCV_LIBS}
+)
+
+add_executable(
+	yolt_ros
+	src/ros/yolt_ros.cpp
+	src/laplacian_foveation.cpp
+	src/network_classes.cpp
+)
+
+target_link_libraries(
+	yolt_ros
+	${Boost_LIBRARIES} 
+	${Caffe_LIBRARIES} 
+	${PYTHON_LIBRARIES}
+	${GLOG_LIB}  
+	${OpenCV_LIBS}
+  	${catkin_LIBRARIES}
 )
 
 

@@ -7,7 +7,7 @@ message(${Caffe_DIR})
 
 find_path(Caffe_INCLUDE_DIRS NAMES caffe/caffe.hpp caffe/common.hpp caffe/net.hpp caffe/proto/caffe.pb.h caffe/util/io.hpp caffe/vision_layers.hpp
   HINTS
-  ${Caffe_DIR}/install/include)
+  ${Caffe_DIR}/build/install/include)
 
 find_library(Caffe_LIBRARIES NAMES caffe
   HINTS

@@ -1,14 +1,13 @@
-
 #include "laplacian_foveation.hpp"
 
-LaplacianBlending::LaplacianBlending(const cv::Mat &_image, const int _levels, const int _sigma) {
+LaplacianBlending::LaplacianBlending(const int & _width, const int & _height, const int _levels, const int _sigma) : width(_width), height(_height)
+{
     
-    image=_image;
     levels=_levels; 
 
     // Foveate images
-    int m=floor(4*_image.size().height);
-    int n=floor(4*_image.size().width);
+    int m=floor(4*_height);
+    int n=floor(4*_width);
 
     CreateFilterPyr(m, n, _levels, _sigma);
 
@@ -16,32 +15,18 @@ LaplacianBlending::LaplacianBlending(const cv::Mat &_image, const int _levels, c
     foveated_pyr.resize(levels);
     image_sizes.resize(levels);
     kernel_sizes.resize(levels);
-    
-    BuildPyramids();
-    
-    for(int i=levels-1; i>=0; --i) {  
-        
-        cv::Mat image_size(2,1,CV_32S);
-	    image_size.at<int>(0,0)=image_lap_pyr[i].cols;
-	    image_size.at<int>(1,0)=image_lap_pyr[i].rows;
-	    image_sizes[i]=image_size;
-	    
-        cv::Mat kernel_size(2,1,CV_32S);    
-        kernel_size.at<int>(0,0)=kernels[i].cols;
-	    kernel_size.at<int>(1,0)=kernels[i].rows;
-	    kernel_sizes[i]=kernel_size;
-    }
+
 }
 
 LaplacianBlending::~LaplacianBlending() {
-	std::vector<cv::Mat>().swap(image_lap_pyr);
+    std::vector<cv::Mat>().swap(image_lap_pyr);
     std::vector<cv::Mat>().swap(foveated_pyr);
     std::vector<cv::Mat>().swap(kernels);
     std::vector<cv::Mat>().swap(image_sizes);
     std::vector<cv::Mat>().swap(kernel_sizes);
 }
 
-void LaplacianBlending::BuildPyramids() {
+void LaplacianBlending::BuildPyramids(const cv::Mat & image) {
 
     cv::Mat current_img=image;
     cv::Mat lap;
@@ -74,8 +59,22 @@ void LaplacianBlending::ComputeRois(const cv::Mat &center, cv::Rect &kernel_roi_
 }
 
 
-cv::Mat LaplacianBlending::Foveate(const cv::Mat &center) {
-    
+cv::Mat LaplacianBlending::Foveate(const cv::Mat &image, const cv::Mat &center) {
+    BuildPyramids(image);
+
+    for(int i=levels-1; i>=0; --i) {  
+	cv::Mat image_size(2,1,CV_32S);
+	image_size.at<int>(0,0)=image_lap_pyr[i].cols;
+	image_size.at<int>(1,0)=image_lap_pyr[i].rows;
+	image_sizes[i]=image_size;
+
+	cv::Mat kernel_size(2,1,CV_32S);    
+	kernel_size.at<int>(0,0)=kernels[i].cols;
+	kernel_size.at<int>(1,0)=kernels[i].rows;
+	kernel_sizes[i]=kernel_size;
+    }
+
+
     image_smallest_level.copyTo(foveated_image);
 
     for(int i=levels-1; i>=0; --i) {
@@ -119,6 +118,8 @@ cv::Mat LaplacianBlending::CreateFilter(int m, int n, int sigma) {
     double xc = n*0.5;
     double yc = m*0.5;
     double max_value = -std::numeric_limits<double>::max();
+
+
 
     for (int x=0; x<n; ++x) {
         

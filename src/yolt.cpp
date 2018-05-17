@@ -17,8 +17,8 @@ using namespace std;
 
 
 cv::Mat foveate(const cv::Mat &img, const int &size_map,
-				const int &levels, const int &sigma,
-				const cv::Mat &fixation_point);
+		const int &levels, const int &sigma,
+		const cv::Mat &fixation_point);
 
 std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random);
 
@@ -372,10 +372,10 @@ cv::Mat foveate(const cv::Mat &img, const int &size_map,
 	img.convertTo(image, CV_64F);
 
 	// Construct Pyramid
-	LaplacianBlending pyramid(image,levels, sigma);
+	LaplacianBlending pyramid(image.cols,image.rows,levels, sigma);
 
 	// Foveate
-	cv::Mat foveated_image = pyramid.Foveate(fixation_point);
+	cv::Mat foveated_image = pyramid.Foveate(image,fixation_point);
 
 	foveated_image.convertTo(foveated_image,CV_8UC3);
 	cv::resize(foveated_image,foveated_image,Size(size_map,size_map));

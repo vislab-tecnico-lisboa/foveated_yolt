@@ -8,15 +8,15 @@ using namespace std;
 class LaplacianBlending {
 
     public:
-        LaplacianBlending(const cv::Mat &_image, const int _levels, const int _sigma);
+        LaplacianBlending(const cv::Mat &_image, const int _levels, const int _sigma_x, const int _sigma_y);
         ~LaplacianBlending();
 
         void BuildPyramids();
         void ComputeRois(const cv::Mat &center, cv::Rect &kernel_roi_rect,
                          const cv::Mat &kernel_size, const cv::Mat &image_size);
         cv::Mat Foveate(const cv::Mat &center);
-        cv::Mat CreateFilter(int m, int n, int sigma);
-        void CreateFilterPyr(int m, int n, int levels, int sigma);
+        cv::Mat CreateFilter(int m, int n, int sigma_x, int sigma_y);
+        void CreateFilterPyr(int m, int n, int levels, int sigma_x, int sigma_y);
 
     private:
         cv::Mat image;

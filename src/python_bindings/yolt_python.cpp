@@ -7,7 +7,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(X_returnsum_overloads, LaplacianBlending:
 
 BOOST_PYTHON_MODULE(yolt_python)
 {
-    class_< LaplacianBlending >("LaplacianBlending", init<const cv::Mat,const int,const int >())
+    class_< LaplacianBlending >("LaplacianBlending", init<const cv::Mat,const int,const int,const int >())
       .def("foveate", &LaplacianBlending::Foveate, X_returnsum_overloads( ));//args("center"), "foveation function"));
 }
 

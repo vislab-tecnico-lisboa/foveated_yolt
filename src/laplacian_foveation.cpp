@@ -1,7 +1,7 @@
 
 #include "laplacian_foveation.hpp"
 
-LaplacianBlending::LaplacianBlending(const cv::Mat &_image, const int _levels, const int _sigma) {
+LaplacianBlending::LaplacianBlending(const cv::Mat &_image, const int _levels, const int _sigma_x, const int _sigma_y) {
     
     image=_image;
     levels=_levels; 
@@ -10,7 +10,7 @@ LaplacianBlending::LaplacianBlending(const cv::Mat &_image, const int _levels, c
     int m=floor(4*_image.size().height);
     int n=floor(4*_image.size().width);
 
-    CreateFilterPyr(m, n, _levels, _sigma);
+    CreateFilterPyr(m, n, _levels, _sigma_x, _sigma_y);
 
     image_lap_pyr.resize(levels);
     foveated_pyr.resize(levels);
@@ -110,12 +110,13 @@ cv::Mat LaplacianBlending::Foveate(const cv::Mat &center) {
     return foveated_image;
 }
 
-cv::Mat LaplacianBlending::CreateFilter(int m, int n, int sigma) {
+cv::Mat LaplacianBlending::CreateFilter(int m, int n, int sigma_x, int sigma_y) {
 
     cv::Mat gkernel(m,n,CV_64FC3);
 
     double r, rx, ry;
-    double s = 2.0*sigma*sigma;
+    double s_x = 2.0*sigma_x*sigma_x;
+    double s_y = 2.0*sigma_y*sigma_y;
     double xc = n*0.5;
     double yc = m*0.5;
     double max_value = -std::numeric_limits<double>::max();
@@ -128,10 +129,12 @@ cv::Mat LaplacianBlending::CreateFilter(int m, int n, int sigma) {
 
             ry=((y-yc)*(y-yc));
 
+	    double expression=exp(-rx/s_x)*exp(-ry/s_y);
+
             // FOR 3 CHANNELS
-            gkernel.at<Vec3d>(y,x)[0] = exp(-(rx + ry)/s);
-            gkernel.at<Vec3d>(y,x)[1] = exp(-(rx + ry)/s);
-            gkernel.at<Vec3d>(y,x)[2] = exp(-(rx + ry)/s);
+            gkernel.at<Vec3d>(y,x)[0] = expression;
+            gkernel.at<Vec3d>(y,x)[1] = expression;
+            gkernel.at<Vec3d>(y,x)[2] = expression;
 
             if(gkernel.at<Vec3d>(y,x)[0]>max_value)
                 max_value=gkernel.at<Vec3d>(y,x)[0];
@@ -152,9 +155,9 @@ cv::Mat LaplacianBlending::CreateFilter(int m, int n, int sigma) {
     return gkernel;
 }
 
-void LaplacianBlending::CreateFilterPyr(int m, int n, int levels, int sigma) {
+void LaplacianBlending::CreateFilterPyr(int m, int n, int levels, const int _sigma_x, const int _sigma_y) {
 
-    cv::Mat gkernel=CreateFilter(m,n,sigma);
+    cv::Mat gkernel=CreateFilter(m,n,_sigma_x,_sigma_y);
     kernels.push_back(gkernel);
 
     for (int l=0; l<levels; ++l) {
@@ -164,3 +167,4 @@ void LaplacianBlending::CreateFilterPyr(int m, int n, int levels, int sigma) {
         kernels.push_back(kernel_down);
     }
 }
+

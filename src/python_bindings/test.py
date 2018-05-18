@@ -6,21 +6,23 @@ from matplotlib import pyplot as plt
 from random import randint
 
 center=[230, 150];
-
-img = cv2.imread('dog.jpg')
+sigma_x=100
+sigma_y=100
+levels=4
+img = cv2.imread('image.jpg')
 img=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
-img=plt.imread('dog.jpg')
-
+img=plt.imread('image.jpg')
+i=10;
 try:
     while True:
     
         # RANDOM FIXATION POINTS
-        center=[randint(0, width), randint(0,height)]
+        center=[int(width/2.0), int(height/2.0)]
         # Convert np array to cv::Mat object
         my_mat_img = npcv.test_np_mat(img)
-		# Create the Laplacian blending object
-        my_lap_obj=fv(my_mat_img,4,100)
+	# Create the Laplacian blending object
+        my_lap_obj=fv(my_mat_img,levels,200,i*5)
         # Foveate the image
         foveated_img = my_lap_obj.foveate(npcv.test_np_mat(np.array(center)))
         # Display the foveated image
@@ -40,6 +42,7 @@ try:
         #plt.xticks([]), plt.yticks([])  # to hide tick values on X and Y axis
 
 
+	i=i+1
         #plt.show()
 
 except KeyboardInterrupt:

@@ -9,7 +9,7 @@ include(cmake/boost-python.cmake)
 
 #  add_definitions(-DOPENCV_3)
 
-find_package(Caffe REQUIRED)
+#find_package(Caffe REQUIRED)
 #  find_package(CUDA REQUIRED)
 find_package(Boost COMPONENTS system filesystem regex python REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -22,12 +22,12 @@ option(-std "std" c++11)
 
 include_directories(
 	include
-	${Caffe_INCLUDE_DIRS}
+	#${Caffe_INCLUDE_DIRS}
 	${PYTHON_INCLUDE_DIR}
 	${PYTHON_NUMPY_INCLUDE_DIR}
 )
 
-message("Caffe_INCLUDE_DIRS is ${Caffe_INCLUDE_DIRS}") 
+#message("Caffe_INCLUDE_DIRS is ${Caffe_INCLUDE_DIRS}") 
 message("PYTHON_INCLUDE_DIR is ${PYTHON_INCLUDE_DIR}")
 message("PYTHON_NUMPY_INCLUDE_DIR is ${PYTHON_NUMPY_INCLUDE_DIR}")
 
@@ -36,37 +36,21 @@ add_definitions(-DCPU_ONLY)
 
 # ADD OUR OWN EXECUTABLE FILES
 set(GLOG_LIB glog)
-add_executable(
-	yolt 
-	src/yolt.cpp
-	src/laplacian_foveation.cpp
-	src/network_classes.cpp
-)
-target_link_libraries(
-	yolt
-	${Boost_LIBRARIES} 
-	${Caffe_LIBRARIES} 
-	${PYTHON_LIBRARIES}
-	${GLOG_LIB}  
-	${OpenCV_LIBS}
-)
-
-
 
 # FOVEATION PYTHON BINDINGS
 
-# boost_python_module(np_opencv_converter src/python_bindings/np_opencv_converter.cpp src/python_bindings/conversion.cpp)
-# target_link_libraries(np_opencv_converter boost_system boost_python ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
+boost_python_module(np_opencv_converter src/python_bindings/np_opencv_converter.cpp src/python_bindings/conversion.cpp)
+target_link_libraries(np_opencv_converter boost_system boost_python ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
 
-# include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-# boost_python_module(np_opencv_module src/python_bindings/np_opencv_module.cpp)
-# target_link_libraries(np_opencv_module boost_system boost_python np_opencv_converter ${OpenCV_LIBS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+boost_python_module(np_opencv_module src/python_bindings/np_opencv_module.cpp)
+target_link_libraries(np_opencv_module boost_system boost_python np_opencv_converter ${OpenCV_LIBS})
 
-# add_library(yolt_python SHARED src/python_bindings/yolt_python.cpp)
-# starget_link_libraries(yolt_python -lboost_python -lboost_system ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
+add_library(yolt_python SHARED src/python_bindings/yolt_python.cpp src/laplacian_foveation.cpp)
+target_link_libraries(yolt_python -lboost_python -lboost_system ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
 
-#  set_target_properties(yolt_python PROPERTIES SUFFIX .so)
-#  set_target_properties(yolt_python PROPERTIES PREFIX "")
+set_target_properties(yolt_python PROPERTIES SUFFIX .so)
+set_target_properties(yolt_python PROPERTIES PREFIX "")
 
 
 

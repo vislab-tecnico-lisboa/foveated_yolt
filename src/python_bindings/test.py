@@ -7,10 +7,10 @@ from random import randint
 
 center=[230, 150];
 
-img = cv2.imread('watch.jpg')
+img = cv2.imread('dog.jpg')
 img=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
-img=plt.imread('watch.jpg')
+img=plt.imread('dog.jpg')
 
 try:
     while True:

@@ -3,9 +3,11 @@
 // Last modified: Sep 14, 2014
 
 // Wrapper for most external modules
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <exception>
+
 
 // Opencv includes
 #include <opencv2/opencv.hpp>

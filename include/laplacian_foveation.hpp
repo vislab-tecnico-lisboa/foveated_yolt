@@ -8,13 +8,14 @@ using namespace std;
 class LaplacianBlending {
 
     public:
-        LaplacianBlending(const int & _width, const int & _height, const int _levels, const int _sigma);
+        LaplacianBlending(const int & _width, const int & _height, const int _levels, const int _sigma_x, const int _sigma_y);
         ~LaplacianBlending();
 
 
-        cv::Mat Foveate(const cv::Mat &center);
+        cv::Mat Foveate(const cv::Mat &image, const cv::Mat &center);
 
-
+	// Change
+	void CreateFilterPyr(int width, int height, const int _sigma_x, const int _sigma_y);
     private:
         cv::Mat image;
         int levels;
@@ -24,6 +25,7 @@ class LaplacianBlending {
         std::vector<cv::Mat> foveated_pyr;
         std::vector<cv::Mat> image_sizes;
         std::vector<cv::Mat> kernel_sizes;
+        int sigma_x, sigma_y;
         
         cv::Mat image_smallest_level;
         cv::Mat down;
@@ -32,10 +34,10 @@ class LaplacianBlending {
 
 
 	// Private auxiliary methods
-        cv::Mat CreateFilter(int m, int n, int sigma);
-        void CreateFilterPyr(int m, int n, int levels, int sigma);   
+	cv::Mat CreateFilter(int m, int n, int sigma_x, int sigma_y);
 
-        void BuildPyramids();
+        //void BuildPyramids();
+	void BuildPyramids(const cv::Mat & image);
         void ComputeRois(const cv::Mat &center, cv::Rect &kernel_roi_rect,
                          const cv::Mat &kernel_size, const cv::Mat &image_size);
 };

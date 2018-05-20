@@ -4,25 +4,44 @@ import np_opencv_module as npcv
 from yolt_python import LaplacianBlending as fv
 from matplotlib import pyplot as plt
 from random import randint
+import time
 
 center=[230, 150];
-
-img = cv2.imread('watch.jpg')
+sigma_x_max=200
+sigma_y_max=100
+levels=10
+img = cv2.imread('image.jpg')
 img=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
-img=plt.imread('watch.jpg')
 
+sigma_x=sigma_x_max
+sigma_y=sigma_y_max
+
+# Create the Laplacian blending object
+my_lap_obj=fv(width,height,levels,sigma_x,sigma_y)
 try:
     while True:
-    
+        start = time.time()
+
+        sigma_x=randint(1, sigma_x_max)
+        sigma_y=randint(1, sigma_y_max)
+
+
         # RANDOM FIXATION POINTS
-        center=[randint(0, width), randint(0,height)]
+        center=[int(width/2.0), int(height/2.0)]
+
         # Convert np array to cv::Mat object
         my_mat_img = npcv.test_np_mat(img)
-		# Create the Laplacian blending object
-        my_lap_obj=fv(my_mat_img,4,100)
+
+        # RANDOM FOVEA SIZE
+        #my_lap_obj.update_fovea(width,height,sigma_x,sigma_y)
+
         # Foveate the image
-        foveated_img = my_lap_obj.foveate(npcv.test_np_mat(np.array(center)))
+        foveated_img = my_lap_obj.foveate(img,npcv.test_np_mat(np.array(center)))
+
+        end = time.time()
+        print(end - start)
+
         # Display the foveated image
         plt.imshow(foveated_img)
         #img.set_data(im)
@@ -33,14 +52,10 @@ try:
 
 
         plt.draw()
-        plt.pause(.1)
+        plt.pause(.001)
         plt.cla()
 
-        print('test')
-        #plt.xticks([]), plt.yticks([])  # to hide tick values on X and Y axis
 
-
-        #plt.show()
 
 except KeyboardInterrupt:
     print('interrupted!')

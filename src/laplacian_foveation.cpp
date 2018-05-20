@@ -167,4 +167,3 @@ void LaplacianBlending::CreateFilterPyr(int width, int height, const int _sigma_
     }
 
 }
-

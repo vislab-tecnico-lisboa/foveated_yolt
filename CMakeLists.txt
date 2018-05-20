@@ -75,4 +75,3 @@ set_target_properties(yolt_python PROPERTIES SUFFIX .so)
 set_target_properties(yolt_python PROPERTIES PREFIX "")
 
 
-

@@ -421,4 +421,3 @@ std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random) {
 		}		
 	return fixation_points;
 }
-

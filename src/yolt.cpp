@@ -17,7 +17,7 @@ using namespace std;
 
 
 cv::Mat foveate(const cv::Mat &img, const int &size_map,
-				const int &levels, const int &sigma,
+				const int &levels, const int &sigma_x, const int &sigma_y,
 				const cv::Mat &fixation_point);
 
 std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random);
@@ -203,7 +203,7 @@ int main(int argc, char** argv){
 							  << " ("<< 100.0*(iteration)/(total_iterations) << "%)"<< std::endl;
 
 					// 1st Foveation
-					img=foveate(img,size_map,levels,sigma,fixedpt);
+					img=foveate(img,size_map,levels,sigma,sigma,fixedpt);
 					cv::Mat img_first_pass=img.clone();
 					
 					// Uncomment for Visualize Foveated Image
@@ -265,7 +265,7 @@ int main(int argc, char** argv){
 						fixation_point.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
 						fixation_point.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
 						
-						img_second_pass=foveate(img_orig,size_map,levels,sigma,fixation_point);
+						img_second_pass=foveate(img_orig,size_map,levels,sigma,sigma,fixation_point);
 						//Network.VisualizeFoveation(fixation_point,img_second_pass,sigma,class_index+1);
 
 						// 2nd Feedforward with foveated image
@@ -365,17 +365,19 @@ int main(int argc, char** argv){
 //////////////////////
 
 cv::Mat foveate(const cv::Mat &img, const int &size_map,
-				const int &levels, const int &sigma,
+				const int &levels, 
+				const int &sigma_x, 
+				const int &sigma_y,
 				const cv::Mat &fixation_point) {
 
 	cv::Mat image;
 	img.convertTo(image, CV_64F);
 
 	// Construct Pyramid
-	LaplacianBlending pyramid(image,levels, sigma);
+	LaplacianBlending pyramid(img.cols, img.rows, levels, sigma_x,sigma_y);
 
 	// Foveate
-	cv::Mat foveated_image = pyramid.Foveate(fixation_point);
+	cv::Mat foveated_image = pyramid.Foveate(img,fixation_point);
 
 	foveated_image.convertTo(foveated_image,CV_8UC3);
 	cv::resize(foveated_image,foveated_image,Size(size_map,size_map));

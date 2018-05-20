@@ -9,7 +9,7 @@ import time
 center=[230, 150];
 sigma_x_max=200
 sigma_y_max=100
-levels=4
+levels=10
 img = cv2.imread('image.jpg')
 img=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
@@ -52,7 +52,7 @@ try:
 
 
         plt.draw()
-        plt.pause(.1)
+        plt.pause(.001)
         plt.cla()
 
 

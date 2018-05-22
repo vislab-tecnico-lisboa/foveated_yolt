@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+	<node name="foveated_yolt" pkg="foveated_yolt" type="yolt_ros" respawn="true">
+		<param name="model_file" value="$(find foveated_yolt)/deploy_googlenet.prototxt"/>
+		<param name="weight_file" value="$(find foveated_yolt)/bvlc_googlenet.caffemodel"/>
+		<param name="mean_file" value="$(find foveated_yolt)/imagenet_mean.binaryproto"/>
+		<param name="label_file" value="$(find foveated_yolt)/synset_words_change.txt"/>
+	</node>
+</launch>
+

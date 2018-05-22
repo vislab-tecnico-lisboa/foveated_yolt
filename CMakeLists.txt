@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
-project(yolt)
+cmake_minimum_required(VERSION 2.8.3)
+project(foveated_yolt)
 
+set(ROS TRUE)
 set(CLASSIFICATION TRUE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/")
 
@@ -12,13 +13,21 @@ include(cmake/Modules/FindCaffe.cmake)
 
 if(${CLASSIFICATION})
   find_package(Caffe REQUIRED)
-  find_package(CUDA REQUIRED)
+  #find_package(CUDA REQUIRED)
 endif(${CLASSIFICATION})
 find_package(Boost COMPONENTS system filesystem regex python REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(PythonInterp REQUIRED)
 find_package(NumPy REQUIRED)
 find_package(PythonLibs REQUIRED)
+
+
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  cv_bridge
+  image_transport
+)
 
 
 option(-std "std" c++11)
@@ -30,9 +39,9 @@ include_directories(
 	${PYTHON_NUMPY_INCLUDE_DIR}
 )
 
-#message("Caffe_INCLUDE_DIRS is ${Caffe_INCLUDE_DIRS}") 
-#message("PYTHON_INCLUDE_DIR is ${PYTHON_INCLUDE_DIR}")
-#message("PYTHON_NUMPY_INCLUDE_DIR is ${PYTHON_NUMPY_INCLUDE_DIR}")
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
 
 add_definitions(${Caffe_DEFINITIONS})    # ex. -DCPU_ONLY
 add_definitions(-DCPU_ONLY)
@@ -52,12 +61,14 @@ if(${CLASSIFICATION})
 	yolt
 	${Boost_LIBRARIES} 
 	${Caffe_LIBRARIES} 
-	${PYTHON_LIBRARIES}
 	${GLOG_LIB}  
 	${OpenCV_LIBS}
   )
 endif(${CLASSIFICATION})
 
+
+add_executable (yolt_ros src/ros/yolt_ros.cpp src/laplacian_foveation.cpp src/network_classes.cpp)
+target_link_libraries (yolt_ros ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${GLOG_LIB} ${Caffe_LIBRARIES})
 
 # FOVEATION PYTHON BINDINGS
 
@@ -68,10 +79,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 boost_python_module(np_opencv_module src/python_bindings/np_opencv_module.cpp)
 target_link_libraries(np_opencv_module boost_system boost_python np_opencv_converter ${OpenCV_LIBS})
 
-add_library(yolt_python SHARED src/python_bindings/yolt_python.cpp src/laplacian_foveation.cpp)
+add_library(yolt_python src/python_bindings/yolt_python.cpp src/laplacian_foveation.cpp)
 target_link_libraries(yolt_python -lboost_python -lboost_system ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
 
 set_target_properties(yolt_python PROPERTIES SUFFIX .so)
 set_target_properties(yolt_python PROPERTIES PREFIX "")
+
+
 
 

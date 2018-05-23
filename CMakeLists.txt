@@ -22,14 +22,6 @@ find_package(NumPy REQUIRED)
 find_package(PythonLibs REQUIRED)
 
 
-
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  cv_bridge
-  image_transport
-)
-
-
 option(-std "std" c++11)
 
 include_directories(
@@ -39,9 +31,25 @@ include_directories(
 	${PYTHON_NUMPY_INCLUDE_DIR}
 )
 
+if(${ROS})
+  find_package(catkin REQUIRED COMPONENTS
+    roscpp
+    cv_bridge
+    image_transport
+    dynamic_reconfigure
+  )
+
+  catkin_package(
+  #  INCLUDE_DIRS include
+  #  LIBRARIES camera_scheduling
+  #  CATKIN_DEPENDS message_runtime
+  )
+
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
+
+endif(${ROS})
 
 add_definitions(${Caffe_DEFINITIONS})    # ex. -DCPU_ONLY
 add_definitions(-DCPU_ONLY)

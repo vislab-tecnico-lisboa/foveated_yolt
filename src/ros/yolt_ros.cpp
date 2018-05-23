@@ -1,6 +1,6 @@
 #include "ros/yolt_ros.hpp"
 
-YoltRos::YoltRos (const ros::NodeHandle & nh_, const int & _width, const int & _height, const int & levels_, const int & sigma_x_, const int & sigma_y_, const int & size_map_) : nh(nh_), levels(levels_), sigma_x(sigma_x_), sigma_y(sigma_y_), size_map(size_map_) 
+YoltRos::YoltRos (const ros::NodeHandle & nh_, const int & _width, const int & _height, const int & levels_, const int & sigma_x_, const int & sigma_y_, const int & size_map_) : nh(nh_), levels(levels_), sigma_x(sigma_x_), sigma_y(sigma_y_), size_map(size_map_), nh_priv("~")
 {
 		foveation=boost::shared_ptr<LaplacianBlending> (new LaplacianBlending(_width, _height, levels, sigma_x,sigma_y));
 		image_transport::ImageTransport it(nh);
@@ -13,11 +13,14 @@ YoltRos::YoltRos (const ros::NodeHandle & nh_, const int & _width, const int & _
 		string label_file;
 		string dataset_folder;
 
-		nh_.param<std::string>("model_file", model_file, "");
-		nh_.param<std::string>("weight_file", weight_file, "");
-		nh_.param<std::string>("mean_file", mean_file, "");
-		nh_.param<std::string>("label_file", label_file, "");
-
+		nh_priv.param<std::string>("model_file", model_file, "");
+		nh_priv.param<std::string>("weight_file", weight_file, "");
+		nh_priv.param<std::string>("mean_file", mean_file, "");
+		nh_priv.param<std::string>("label_file", label_file, "");
+		ROS_INFO_STREAM("model_file: " << model_file);
+		ROS_INFO_STREAM("weight_file: " << weight_file);
+		ROS_INFO_STREAM("mean_file: " << mean_file);
+		ROS_INFO_STREAM("label_file: " << label_file);
 		network=boost::shared_ptr<Network>(new Network(model_file, weight_file, mean_file, label_file));
 		std::cout << "network initialized" << std::endl;
 }

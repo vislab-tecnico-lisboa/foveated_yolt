@@ -14,7 +14,7 @@ class YoltRos
 		int sigma_x,sigma_y;
 		int size_map;
 		boost::shared_ptr<LaplacianBlending> foveation;
-		ros::NodeHandle nh;
+		ros::NodeHandle nh, nh_priv;
 		image_transport::Subscriber sub;
 		boost::shared_ptr<Network> network;
 	public:

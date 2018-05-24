@@ -7,18 +7,26 @@
 #include "network_classes.hpp"
 #include <memory>
 #include <boost/shared_ptr.hpp>
+#include <dynamic_reconfigure/server.h>
+#include <foveated_yolt/FoveaConfig.h>
 
 class YoltRos
 {
-		int levels;
-		int sigma_x,sigma_y;
-		int size_map;
+		int levels, width, height, sigma_x, sigma_y;
+
 		boost::shared_ptr<LaplacianBlending> foveation;
+		boost::shared_ptr<Network> network;
+
 		ros::NodeHandle nh, nh_priv;
 		image_transport::Subscriber sub;
-		boost::shared_ptr<Network> network;
+
+		cv::Mat fixation_point;
+		dynamic_reconfigure::Server<foveated_yolt::FoveaConfig> server;
+		dynamic_reconfigure::Server<foveated_yolt::FoveaConfig>::CallbackType conf_callback;
+		
+		void configCallback(foveated_yolt::FoveaConfig &config, uint32_t level);
 	public:
-		YoltRos (const ros::NodeHandle & nh_, const int & _width, const int & _height, const int & levels_, const int & sigma_x_, const int & sigma_y_, const int & size_map_);
+		YoltRos (const ros::NodeHandle & nh_);
 		void imageCallback(const sensor_msgs::ImageConstPtr& msg);
 };
 

@@ -150,20 +150,19 @@ cv::Mat LaplacianBlending::CreateFilter(int m, int n, int sigma_x, int sigma_y) 
 }
 
 void LaplacianBlending::CreateFilterPyr(int width, int height, const int _sigma_x, const int _sigma_y) {
-    // Foveate images
-    int m=floor(4*height);
-    int n=floor(4*width);
-    sigma_x=_sigma_x;
-    sigma_y=_sigma_y;
+	// Foveate images
+	int m=floor(4*height);
+	int n=floor(4*width);
+	sigma_x=_sigma_x;
+	sigma_y=_sigma_y;
 
+	cv::Mat gkernel=CreateFilter(m,n,_sigma_x,_sigma_y);
+	kernels[0]=gkernel;
 
-    cv::Mat gkernel=CreateFilter(m,n,_sigma_x,_sigma_y);
-    kernels[0]=gkernel;
-
-    for (int l=1; l<levels; ++l) {
-        cv::Mat kernel_down;
-        cv::pyrDown(kernels[l-1], kernel_down);
-        kernels[l]=kernel_down;
-    }
-
+	for (int l=1; l<levels; ++l) {
+		cv::Mat kernel_down;
+		cv::pyrDown(kernels[l-1], kernel_down);
+		kernels[l]=kernel_down;
+	}
 }
+

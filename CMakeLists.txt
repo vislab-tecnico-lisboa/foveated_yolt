@@ -39,6 +39,11 @@ if(${ROS})
     dynamic_reconfigure
   )
 
+  generate_dynamic_reconfigure_options(
+    cfg/fovea.cfg
+    #...
+  )
+
   catkin_package(
   #  INCLUDE_DIRS include
   #  LIBRARIES camera_scheduling
@@ -72,12 +77,13 @@ if(${CLASSIFICATION})
 	${GLOG_LIB}  
 	${OpenCV_LIBS}
   )
+
 endif(${CLASSIFICATION})
 
 
 add_executable (yolt_ros src/ros/yolt_ros.cpp src/laplacian_foveation.cpp src/network_classes.cpp)
 target_link_libraries (yolt_ros ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${GLOG_LIB} ${Caffe_LIBRARIES})
-
+add_dependencies(yolt_ros ${PROJECT_NAME}_gencfg)
 # FOVEATION PYTHON BINDINGS
 
 boost_python_module(np_opencv_converter src/python_bindings/np_opencv_converter.cpp src/python_bindings/conversion.cpp)

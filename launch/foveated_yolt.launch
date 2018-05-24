@@ -1,6 +1,12 @@
 <?xml version="1.0"?>
 <launch>
 	<node name="foveated_yolt" pkg="foveated_yolt" type="yolt_ros" respawn="false" output="screen">
+		<param name="width"   value="500"/>
+		<param name="height"  value="500"/>
+		<param name="levels"  value="10"/>
+		<param name="sigma_x" value="100"/>
+		<param name="sigma_y" value="100"/>
+
 		<param name="model_file" value="$(find foveated_yolt)/files/deploy_googlenet.prototxt"/>
 		<param name="weight_file" value="$(find foveated_yolt)/files/bvlc_googlenet.caffemodel"/>
 		<param name="mean_file" value="$(find foveated_yolt)/files/imagenet_mean.binaryproto"/>

@@ -12,6 +12,10 @@
 #include "network_classes.hpp"
 #include "laplacian_foveation.hpp"
 
+const int CARTESIAN=1;
+const int FOVEATION=2;
+const int HYBRID=3;
+
 using namespace caffe;
 using namespace std;
 
@@ -43,15 +47,15 @@ int main(int argc, char** argv){
 
 	/* network params */
 	const string absolute_path_folder = string(argv[1]);
-	const string model_file 		  = absolute_path_folder + string(argv[2]);
+	const string model_file 	  = absolute_path_folder + string(argv[2]);
 	const string weight_file          = absolute_path_folder + string(argv[3]);
 	const string mean_file            = absolute_path_folder + string(argv[4]);
 	const string label_file           = absolute_path_folder + string(argv[5]);
 	const string dataset_folder       = string(argv[6]);
 	static int N                      = atoi(argv[7]);			// Define number of top predicted labels
 	static string threshs_            = string(argv[8]);		// Segmentation threshold for mask
-	static int size_map 			  = atoi(argv[9]);          // Size of the network input images (227,227)
-	static int levels 				  = atoi(argv[10]);         // Number of kernel levels
+	static int size_map 		  = atoi(argv[9]);          // Size of the network input images (227,227)
+	static int levels 		  = atoi(argv[10]);         // Number of kernel levels
 	static string sigmas_             = string(argv[11]);       // Size of the fovea
 	static string results_folder      = string(argv[12]);       // Folder to store results
 	static int mode                   = atoi(argv[13]);         // Mode
@@ -118,7 +122,9 @@ int main(int argc, char** argv){
 	// store results
 	ofstream feedforward_detection;
 	ofstream feedback_detection;
-
+	string foveation_filename = "/home/rui/Downloads/Foveated-YOLT/figures/foveation_";
+	string saliency_map_filename="/home/rui/Downloads/Foveated-YOLT/figures/saliencymap_";
+	string bbox_filename="/home/rui/Downloads/Foveated-YOLT/figures/bbox_";
 	// File with 5 classes + scores + 5 bounding boxes
 	// 1st classification and localization
 	std::string feedforward_detection_str=results_folder+"feedfoward_detection_"+
@@ -203,18 +209,29 @@ int main(int argc, char** argv){
 							  << " ("<< 100.0*(iteration)/(total_iterations) << "%)"<< std::endl;
 
 					// 1st Foveation
-					img=foveate(img,size_map,levels,sigma,sigma,fixedpt);
+					if(mode==FOVEATION)
+					{
+					    img=foveate(img,size_map,levels,sigma,sigma,fixedpt);
+					}
+					else
+					{
+					    cv::GaussianBlur(img,img, Size(5,5), sigma, sigma);
+					}
+
+
+
 					cv::Mat img_first_pass=img.clone();
 					
 					// Uncomment for Visualize Foveated Image
-					//Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index);
+					Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index,foveation_filename);
 
 					// 1st Feedforward with foveated image
 					//  Prediciton of TOP 5 classes
+
 					ClassData first_pass_data = Network.Classify(img, N);
-					
-					std::cout << "----- 1st Feedfoward Pass ------" << std::endl;
-					std::cout << first_pass_data << std::endl;
+
+					//std::cout << "----- 1st Feedfoward Pass ------" << std::endl;
+					//std::cout << first_pass_data << std::endl;
 
 					
 					// Store results
@@ -223,19 +240,17 @@ int main(int argc, char** argv){
 					feedback_detection    << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
 										  << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
 
-					cv::Mat img_=img_orig.clone();
 
 					// For each predicted class labels
 					for (int class_index = 0; class_index < N; ++class_index) {
-						cv::Mat img_second_pass;
 
+						cv::Mat img_=img_orig.clone();
 						/////////////////////////////////////////////
 						//  Weakly Supervised Object Localization  //
 						// Saliency Map + Segmentation Mask + BBox //
 						/////////////////////////////////////////////
-						
-						Rect Min_Rect = Network.CalcBBox(class_index,img_, first_pass_data, thresh);
-						img_=img_orig.clone();
+						cv::Mat saliency_map;
+						cv::Rect Min_Rect = Network.CalcBBox(class_index,img, first_pass_data, thresh,saliency_map);
 
 						
 						// Save all bounding boxes
@@ -265,15 +280,15 @@ int main(int argc, char** argv){
 						fixation_point.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
 						fixation_point.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
 						
-						img_second_pass=foveate(img_orig,size_map,levels,sigma,sigma,fixation_point);
-						//Network.VisualizeFoveation(fixation_point,img_second_pass,sigma,class_index+1);
+						cv::Mat img_second_pass=foveate(img_orig,size_map,levels,sigma,sigma,fixation_point);
+
 
 						// 2nd Feedforward with foveated image
 						//  Prediciton New top 5 of each predicted class
 						ClassData feedback_data = Network.Classify(img_second_pass, N);
 						
-						std::cout << "----- 2nd Feedfoward Pass ------" << std::endl;
-						std::cout << feedback_data << std::endl;
+						//std::cout << "----- 2nd Feedfoward Pass ------" << std::endl;
+						//std::cout << feedback_data << std::endl;
 
 						// For each bounding box
 						for(int m=0; m<N; ++m) {
@@ -284,13 +299,16 @@ int main(int argc, char** argv){
 						}
 
 						if(debug) {
+							//std::cout << saliency_map.size() << " " << saliency_map.type() << " " << img.size() << " " << img.type() << std::endl;
+   							Network.VisualizeSaliencyMap(saliency_map,class_index,saliency_map_filename);
+							Network.VisualizeFoveation(fixation_point,img_second_pass,sigma,class_index+1,foveation_filename);
 							Mat dst;
 							cv::hconcat(img_orig,img_first_pass, dst); // horizontal
 							cv::hconcat(dst, img_second_pass, dst); // horizontal
 							//cv::vconcat(a, b, dst); // vertical
 							namedWindow( "original image,    first pass,   second pass     class", WINDOW_AUTOSIZE ); // Create a window for display.
 							imshow( "original image,    first pass,   second pass     class", dst );                  // Show our image inside it.
-							waitKey(0);
+							waitKey(1);
 						}
 					}
 
@@ -322,14 +340,16 @@ int main(int argc, char** argv){
 					// Feedfoward - 2nd Prediciton of TOP N classes
 					ClassData feedback_top_final_data = ClassData(top_final_labels,top_final_scores,top_final_index);
 					
-					std::cout << "----- Ranked ------" << std::endl;
-					std::cout << feedback_top_final_data << std::endl;
+					//std::cout << "----- Ranked ------" << std::endl;
+					//std::cout << feedback_top_final_data << std::endl;
 
 
 					for (int class_index = 0; class_index < N; ++class_index) {				
-					   
-						Rect Min_Rect = Network.CalcBBox(class_index, img, feedback_top_final_data, thresh);
-						
+						cv::Mat saliency_map;
+						Rect Min_Rect = Network.CalcBBox(class_index, img, feedback_top_final_data, thresh,saliency_map);
+						if(debug) {
+   							Network.VisualizeSaliencyMap(saliency_map,class_index, saliency_map_filename);
+						}
 						// Save all bounding boxes
 						bboxes2.push_back(Min_Rect);
 
@@ -346,9 +366,9 @@ int main(int argc, char** argv){
 					}
 
 					// Uncomment for Visualize Bounding Boxes 1st pass
-					//Network.VisualizeBBox(bboxes1,N,img_orig,size_map,1);
+					Network.VisualizeBBox(bboxes1,N,img_orig,size_map,1,bbox_filename);
 					// Uncomment for Visualize Bounding Boxes 2nd pass
-					//Network.VisualizeBBox(bboxes2,N,img,size_map,2);
+					Network.VisualizeBBox(bboxes2,N,img,size_map,2,bbox_filename);
 
 				}
 			}

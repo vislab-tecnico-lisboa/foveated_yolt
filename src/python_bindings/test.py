@@ -6,11 +6,10 @@ from matplotlib import pyplot as plt
 from random import randint
 import time
 
-center=[230, 150];
-sigma_x_max=200
+sigma_x_max=100
 sigma_y_max=100
-levels=10
-img = cv2.imread('image.jpg')
+levels=7
+img = cv2.imread('vizzy.jpg')
 img=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
 
@@ -28,7 +27,7 @@ try:
 
 
         # RANDOM FIXATION POINTS
-        center=[int(width/2.0), int(height/2.0)]
+        center=[int(width/2.0 - 20), int(height/2.0-30)]
 
         # Convert np array to cv::Mat object
         my_mat_img = npcv.test_np_mat(img)
@@ -48,7 +47,7 @@ try:
 
         circle=plt.Circle((center[0],center[1]),1.0,color='blue')
         ax = plt.gca()
-        ax.add_artist(circle)
+        #ax.add_artist(circle)
 
 
         plt.draw()

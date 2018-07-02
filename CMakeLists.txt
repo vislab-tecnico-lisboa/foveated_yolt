@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(foveated_yolt)
 
-set(ROS TRUE)
+set(ROS FALSE)
 set(CLASSIFICATION TRUE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/")
 
@@ -54,6 +54,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_executable (yolt_ros src/ros/yolt_ros.cpp src/laplacian_foveation.cpp src/network_classes.cpp)
+target_link_libraries (yolt_ros ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${GLOG_LIB} ${Caffe_LIBRARIES})
+add_dependencies(yolt_ros ${PROJECT_NAME}_gencfg)
+# FOVEATION PYTHON BINDINGS
+
 endif(${ROS})
 
 add_definitions(${Caffe_DEFINITIONS})    # ex. -DCPU_ONLY
@@ -81,10 +86,7 @@ if(${CLASSIFICATION})
 endif(${CLASSIFICATION})
 
 
-add_executable (yolt_ros src/ros/yolt_ros.cpp src/laplacian_foveation.cpp src/network_classes.cpp)
-target_link_libraries (yolt_ros ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${GLOG_LIB} ${Caffe_LIBRARIES})
-add_dependencies(yolt_ros ${PROJECT_NAME}_gencfg)
-# FOVEATION PYTHON BINDINGS
+
 
 boost_python_module(np_opencv_converter src/python_bindings/np_opencv_converter.cpp src/python_bindings/conversion.cpp)
 target_link_libraries(np_opencv_converter boost_system boost_python ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})

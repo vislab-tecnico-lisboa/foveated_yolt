@@ -284,7 +284,7 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
 // Function CalcBBox //
 ///////////////////////
 
-Rect Network::CalcBBox(int class_index, const cv::Mat& img, ClassData mydata, float thresh) {
+Rect Network::CalcBBox(int class_index, const cv::Mat& img, ClassData mydata, float thresh, cv::Mat & saliency_map) {
 
     /*********************************************************/
     //                  Get Saliency Map                     //
@@ -327,8 +327,9 @@ Rect Network::CalcBBox(int class_index, const cv::Mat& img, ClassData mydata, fl
 
     cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
 
+
     // Find max across RGB channels
-    Mat saliency_map = CalcRGBmax(M2); 
+    saliency_map = CalcRGBmax(M2); 
 
     /*********************************************************/
     //                  Segmentation Mask                    //
@@ -337,8 +338,8 @@ Rect Network::CalcBBox(int class_index, const cv::Mat& img, ClassData mydata, fl
 
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
-    // imshow("Mask", foreground_mask);
-    // waitKey(0);
+    //imshow("Mask", foreground_mask);
+    //waitKey(0);
 
   
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
@@ -384,7 +385,7 @@ std::vector<String> Network::GetDir(string dir, vector<String> &files) {
 // Function VisualiseBbox //
 ////////////////////////////
 
-void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int size_map, int ct) {
+void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int size_map, int ct, const std::string & name) {
 
     // Transformation from (227*227) to (height*width) of input image
     for (int k =0; k< N; ++k){
@@ -397,11 +398,8 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
 
     cv::Mat img_ = img.clone();
     stringstream ss;
-
+    string type = ".png";
     for (int k =0; k< N; ++k) {
-
-        string name = "/home/cristina/Foveated-YOLT/Figures/bbox_";
-        string type = ".png";
 
         ss<<name<<(k + 1)<<type;
 
@@ -409,12 +407,11 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
         ss.str("");
 
         rectangle(img_, bboxes[k], Scalar(0, 0, 255), 2, 8, 0 );
-        //cout << "type: "<< img_.type() << endl;
         if(!imwrite(filename, img_))
             cout << "ERROR: Saving BBox"<< endl;
-        namedWindow(filename,WINDOW_AUTOSIZE);
-        imshow(filename, img_);
-        waitKey(0);
+        //namedWindow(filename,WINDOW_AUTOSIZE);
+        //imshow(filename, img_);
+        //waitKey(0);
         img_=img.clone();
 
     }
@@ -424,29 +421,26 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
 // Function VisualizeFoveation //
 /////////////////////////////////
 
-void Network::VisualizeSaliencyMap(cv::Mat& M2, int k,cv::Mat img) {
+void Network::VisualizeSaliencyMap(const cv::Mat & saliency_map, int k, const std::string & name) {
 
-    cv::Mat M3 = M2.clone();
-
-    cv::normalize(M3, M3, 0, 255, NORM_MINMAX);
-    cv::Mat saliency_map = CalcRGBmax(M3); 
-
-    saliency_map.convertTo(saliency_map,CV_8UC1); 
-    cv::cvtColor(saliency_map, saliency_map, cv::COLOR_GRAY2BGR);
+    cv::Mat saliency_map_;
+    saliency_map_=saliency_map.clone();
+    saliency_map_=255.0*saliency_map_;
+    saliency_map_.convertTo(saliency_map_,CV_8UC1); 
+    cv::cvtColor(saliency_map_, saliency_map_, cv::COLOR_GRAY2BGR);
     
-    string name = "/home/cristina/Foveated-YOLT/Figures/saliencymap_";
     string type = ".png";
     stringstream ss;
     ss<<name<<(k + 1)<<type;
     string filename = ss.str();
     ss.str("");
 
-    if(!imwrite(filename, saliency_map))
+    if(!imwrite(filename, saliency_map_))
         cout << "ERROR: Saving Saliency Map"<< endl;
 
-    namedWindow(filename,WINDOW_AUTOSIZE);
-    imshow(filename, saliency_map);
-    waitKey(0);
+    //namedWindow(filename,WINDOW_AUTOSIZE);
+    //imshow(filename, saliency_map_);
+    //waitKey(0);
 }
 
 
@@ -455,13 +449,12 @@ void Network::VisualizeSaliencyMap(cv::Mat& M2, int k,cv::Mat img) {
 // Function VisualizeFoveation //
 /////////////////////////////////
 
-void Network::VisualizeFoveation(cv::Mat fix_pt, cv::Mat& img, int sigma,int k) {
+void Network::VisualizeFoveation(const cv::Mat & fix_pt, const cv::Mat & img, const int & sigma, const int & k, const std::string & name) {
 
     cv::Point pt;
     pt.x = fix_pt.at<int>(0,0);
     pt.y = fix_pt.at<int>(1,0);
 
-    string name = "/home/cristina/Foveated-YOLT/Figures/foveation_";
     string type = ".png";
     stringstream ss;
     ss<<name<<(k + 1)<<type;
@@ -474,7 +467,7 @@ void Network::VisualizeFoveation(cv::Mat fix_pt, cv::Mat& img, int sigma,int k) 
     if(!imwrite(filename, img_))
         cout << "ERROR: Saving Foveation Image"<< endl;
 
-    namedWindow(filename,WINDOW_AUTOSIZE);
+    //namedWindow(filename,WINDOW_AUTOSIZE);
     //imshow(filename, img_);
     //waitKey(1);
 }

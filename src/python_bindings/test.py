@@ -6,31 +6,27 @@ from matplotlib import pyplot as plt
 from random import randint
 import time
 
-sigma_x_max=100
-sigma_y_max=100
+rho=-0.5
+sigma_xx=80
+sigma_yy=100
+sigma_xy=int(np.floor(rho*sigma_xx*sigma_yy))
+
 levels=7
-img = cv2.imread('vizzy.jpg')
-img=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+img = cv2.imread('image.jpg')
+img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
 
-sigma_x=sigma_x_max
-sigma_y=sigma_y_max
-
 # Create the Laplacian blending object
-my_lap_obj=fv(width,height,levels,sigma_x,sigma_y)
+my_lap_obj=fv(width,height,levels,sigma_xx,sigma_yy,sigma_xy)
 try:
     while True:
         start = time.time()
 
-        sigma_x=randint(1, sigma_x_max)
-        sigma_y=randint(1, sigma_y_max)
-
+        #sigma_x=randint(1, sigma_x_max)
+        #sigma_y=randint(1, sigma_y_max)
 
         # RANDOM FIXATION POINTS
-        center=[int(width/2.0 - 20), int(height/2.0-30)]
-
-        # Convert np array to cv::Mat object
-        my_mat_img = npcv.test_np_mat(img)
+        center=[int(width/2.0), int(height/2.0)]
 
         # RANDOM FOVEA SIZE
         #my_lap_obj.update_fovea(width,height,sigma_x,sigma_y)

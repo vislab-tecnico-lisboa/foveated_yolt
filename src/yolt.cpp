@@ -171,17 +171,16 @@ int main(int argc, char** argv){
 			// For each fixation point
 			for (unsigned int fixedpt_index = 0; fixedpt_index < fixedpts.size(); ++fixedpt_index){
 				fixedpt = fixedpts[fixedpt_index];
-				
 				// For each image
 				for (unsigned int input=0; input<total_images; ++input){
 
 					// Preprocess each image:
 					//  Read image
-					//  Resize to network size 
-					//  Save it in img_orig    
+					//  Resize to network size
+					//  Save it in img_orig
 					string file = image_image_files[input];
 					cv::Mat img = cv::imread(file, 1);
-					resize(img,img, Size(size_map,size_map)); 
+					resize(img,img, Size(size_map,size_map));
 					cv::Mat img_orig=img.clone();
 
 					// Varibles
@@ -191,7 +190,7 @@ int main(int argc, char** argv){
 					std::vector<Rect> bboxes1;
 					std::vector<Rect> bboxes2;
 
-					// Set a specific foveation point				
+					// Set a specific foveation point
 					//fixedpt.at<int>(0,0)=50;
 					//fixedpt.at<int>(1,0)=170;
 
@@ -221,9 +220,9 @@ int main(int argc, char** argv){
 
 
 					cv::Mat img_first_pass=img.clone();
-					
+
 					// Uncomment for Visualize Foveated Image
-					Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index,foveation_filename);
+					//Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index,foveation_filename);
 
 					// 1st Feedforward with foveated image
 					//  Prediciton of TOP 5 classes
@@ -233,7 +232,6 @@ int main(int argc, char** argv){
 					//std::cout << "----- 1st Feedfoward Pass ------" << std::endl;
 					//std::cout << first_pass_data << std::endl;
 
-					
 					// Store results
 					feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
 										  << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
@@ -243,7 +241,6 @@ int main(int argc, char** argv){
 
 					// For each predicted class labels
 					for (int class_index = 0; class_index < N; ++class_index) {
-
 						cv::Mat img_=img_orig.clone();
 						/////////////////////////////////////////////
 						//  Weakly Supervised Object Localization  //
@@ -252,7 +249,6 @@ int main(int argc, char** argv){
 						cv::Mat saliency_map;
 						cv::Rect Min_Rect = Network.CalcBBox(class_index,img, first_pass_data, thresh,saliency_map);
 
-						
 						// Save all bounding boxes
 						bboxes1.push_back(Min_Rect);
 
@@ -279,14 +275,13 @@ int main(int argc, char** argv){
 						cv::Mat fixation_point(2,1,CV_32S);
 						fixation_point.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
 						fixation_point.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
-						
 						cv::Mat img_second_pass=foveate(img_orig,size_map,levels,sigma,sigma,fixation_point);
 
 
 						// 2nd Feedforward with foveated image
 						//  Prediciton New top 5 of each predicted class
 						ClassData feedback_data = Network.Classify(img_second_pass, N);
-						
+
 						//std::cout << "----- 2nd Feedfoward Pass ------" << std::endl;
 						//std::cout << feedback_data << std::endl;
 
@@ -327,7 +322,7 @@ int main(int argc, char** argv){
 
 					// Finding top 5 diferent labels 
 					int top = 0;
-					while(top_final_labels.size() < 5){
+					while(top_final_labels.size() < N){
 						int idx = sort_scores_index[top];
 						if((std::find(top_final_labels.begin(), top_final_labels.end(), labels[idx])) == (top_final_labels.end())) {
 							top_final_labels.push_back(labels[idx]);
@@ -366,9 +361,9 @@ int main(int argc, char** argv){
 					}
 
 					// Uncomment for Visualize Bounding Boxes 1st pass
-					Network.VisualizeBBox(bboxes1,N,img_orig,size_map,1,bbox_filename);
+					//Network.VisualizeBBox(bboxes1,N,img_orig,size_map,1,bbox_filename);
 					// Uncomment for Visualize Bounding Boxes 2nd pass
-					Network.VisualizeBBox(bboxes2,N,img,size_map,2,bbox_filename);
+					//Network.VisualizeBBox(bboxes2,N,img,size_map,2,bbox_filename);
 
 				}
 			}

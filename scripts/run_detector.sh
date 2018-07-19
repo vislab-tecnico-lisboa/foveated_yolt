@@ -10,7 +10,7 @@
 DIR=$PWD ; # Foveated_YOLT
 
 # Choose set mode for caffe  [CPU | GPU]
-SET_MODE=CPU
+SET_MODE=GPU
 
 # Choose which GPU the detector runs on
 GPU_ID=0
@@ -25,17 +25,18 @@ SIZE_MAP=227
 LEVELS=5
 
 # Set debug - see images
-DEBUG=1
+DEBUG=0
 
 # Number of images processed
-TOTAL_IMAGES=1
+TOTAL_IMAGES=500
 
 # Define size of the fovea
 #SIGMAS="0,1,10,20,30,40,50,60,70,80,90,100,110,120,130,140"
-SIGMAS="30"
+#SIGMAS="30"
+SIGMAS="0,25,50,75,100,125"
 
 #THRESHOLDS="0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.80,0.85,0.90,0.95,1.0"
-THRESHOLDS="0.7"
+THRESHOLDS="0.7,0.8,0.9"
 
 #Number of fixation points
 POINTS=10

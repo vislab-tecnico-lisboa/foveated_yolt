@@ -62,7 +62,7 @@ add_dependencies(yolt_ros ${PROJECT_NAME}_gencfg)
 endif(${ROS})
 
 add_definitions(${Caffe_DEFINITIONS})    # ex. -DCPU_ONLY
-add_definitions(-DCPU_ONLY)
+#add_definitions(-DCPU_ONLY)
 
 # ADD OUR OWN EXECUTABLE FILES
 set(GLOG_LIB glog)

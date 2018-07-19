@@ -23,7 +23,7 @@ LaplacianBlending::~LaplacianBlending() {
 void LaplacianBlending::BuildPyramids(const cv::Mat & image) {
 
     cv::Mat current_img=image;
-    if(current_img.depth()==CV_8U)
+    if(current_img.depth()==CV_8UC3)
     {
 	    current_img.convertTo(current_img, CV_64FC3); 
 	    current_img/=255.0;

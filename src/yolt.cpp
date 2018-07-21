@@ -238,10 +238,9 @@ int main(int argc, char** argv){
 					feedback_detection    << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
 										  << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
 
-
 					// For each predicted class labels
 					for (int class_index = 0; class_index < N; ++class_index) {
-						cv::Mat img_=img_orig.clone();
+
 						/////////////////////////////////////////////
 						//  Weakly Supervised Object Localization  //
 						// Saliency Map + Segmentation Mask + BBox //

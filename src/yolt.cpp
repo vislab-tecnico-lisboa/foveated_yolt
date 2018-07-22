@@ -8,6 +8,7 @@
 #include <math.h>
 #include <limits>
 #include <time.h>
+#include <string> 
 
 #include "network_classes.hpp"
 #include "laplacian_foveation.hpp"
@@ -58,19 +59,20 @@ int main(int argc, char** argv){
 	static int levels 		  = atoi(argv[10]);         // Number of kernel levels
 	static string sigmas_             = string(argv[11]);       // Size of the fovea
 	static string results_folder      = string(argv[12]);       // Folder to store results
-	static int mode                   = atoi(argv[13]);         // Mode
-	static bool debug                 = atoi(argv[14]);         // Set debug = 1 to see figures
-	static int total_images           = atoi(argv[15]);         // Number of images
-	if (strcmp(argv[16], "CPU") == 0)                           // Set Mode
+	static string figures_folder      = string(argv[13]);       // Folder to store results
+	static int mode                   = atoi(argv[14]);         // Mode
+	static bool debug                 = atoi(argv[15]);         // Set debug = 1 to see figures
+	static int total_images           = atoi(argv[16]);         // Number of images
+	if (strcmp(argv[17], "CPU") == 0)                           // Set Mode
 		Caffe::set_mode(Caffe::CPU);
 	else {
 		Caffe::set_mode(Caffe::GPU);
-		int device_id = atoi(argv[17]);
+		int device_id = atoi(argv[18]);
 		Caffe::SetDevice(device_id);
 				std::cout << "GPU MODE" << std::endl;
 	}
-	static int npoints                  = atoi(argv[18]);         // Number of fixation points
-	static bool random                  = atoi(argv[19]);         // Set random = 1 to random fixation points
+	static int npoints                  = atoi(argv[19]);         // Number of fixation points
+	static bool random                  = atoi(argv[20]);         // Set random = 1 to random fixation points
 
 	std::cout << "Absolute Path Folder: " 	<< absolute_path_folder<< std::endl;
 	std::cout << "Model File: " 			<< model_file << std::endl;
@@ -79,6 +81,7 @@ int main(int argc, char** argv){
 	std::cout << "Labels File: " 			<< label_file<< std::endl;
 	std::cout << "Dataset Folder: " 		<< dataset_folder<< std::endl;
 	std::cout << "Results Folder: "			<< results_folder << std::endl;
+	std::cout << "Figures Folder: "			<< figures_folder << std::endl;
 	std::cout << "Top Classes: " 			<< N << std::endl;
 	std::cout << "Levels: " 				<< levels << std::endl;
 	std::cout << "Sigmas: " 				<< sigmas_ << std::endl;
@@ -122,9 +125,9 @@ int main(int argc, char** argv){
 	// store results
 	ofstream feedforward_detection;
 	ofstream feedback_detection;
-	string foveation_filename = "/home/rui/Downloads/Foveated-YOLT/figures/foveation_";
-	string saliency_map_filename="/home/rui/Downloads/Foveated-YOLT/figures/saliencymap_";
-	string bbox_filename="/home/rui/Downloads/Foveated-YOLT/figures/bbox_";
+	string foveation_filename = figures_folder+"foveation_";
+	string saliency_map_filename=figures_folder+"saliency_map_";
+	string bbox_filename=figures_folder+"bounding_box_";
 	// File with 5 classes + scores + 5 bounding boxes
 	// 1st classification and localization
 	std::string feedforward_detection_str=results_folder+"feedfoward_detection_"+
@@ -221,8 +224,13 @@ int main(int argc, char** argv){
 
 					cv::Mat img_first_pass=img.clone();
 
-					// Uncomment for Visualize Foveated Image
-					//Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index,foveation_filename);
+					// For Visualizing Foveated Image
+
+					if(debug)
+					{
+						std::string foveation_filename_=foveation_filename+ToString(iteration)+"_"+ToString(1)+"_";;
+						Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index,foveation_filename_);
+					}
 
 					// 1st Feedforward with foveated image
 					//  Prediciton of TOP 5 classes
@@ -246,7 +254,7 @@ int main(int argc, char** argv){
 						// Saliency Map + Segmentation Mask + BBox //
 						/////////////////////////////////////////////
 						cv::Mat saliency_map;
-						cv::Rect Min_Rect = Network.CalcBBox(class_index,img, first_pass_data, thresh,saliency_map);
+						cv::Rect Min_Rect = Network.CalcBBox(class_index,first_pass_data, thresh, saliency_map);
 
 						// Save all bounding boxes
 						bboxes1.push_back(Min_Rect);
@@ -274,8 +282,17 @@ int main(int argc, char** argv){
 						cv::Mat fixation_point(2,1,CV_32S);
 						fixation_point.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
 						fixation_point.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
-						cv::Mat img_second_pass=foveate(img_orig,size_map,levels,sigma,sigma,fixation_point);
 
+						cv::Mat img_second_pass;
+
+						if(mode==FOVEATION)
+						{
+							img_second_pass=foveate(img_orig,size_map,levels,sigma,sigma,fixation_point);
+						}
+						else
+						{
+						    cv::GaussianBlur(img_orig,img_second_pass, Size(5,5), sigma, sigma);
+						}
 
 						// 2nd Feedforward with foveated image
 						//  Prediciton New top 5 of each predicted class
@@ -294,14 +311,21 @@ int main(int argc, char** argv){
 
 						if(debug) {
 							//std::cout << saliency_map.size() << " " << saliency_map.type() << " " << img.size() << " " << img.type() << std::endl;
-   							Network.VisualizeSaliencyMap(saliency_map,class_index,saliency_map_filename);
-							Network.VisualizeFoveation(fixation_point,img_second_pass,sigma,class_index+1,foveation_filename);
+							std::string saliency_map_filename_=saliency_map_filename+ToString(iteration)+"_"+ToString(1)+"_";
+   							Network.VisualizeSaliencyMap(saliency_map,class_index,saliency_map_filename_);
+							std::string foveation_filename_=foveation_filename+ToString(iteration)+"_"+ToString(2)+"_";
+							Network.VisualizeFoveation(fixation_point,img_second_pass,sigma,class_index,foveation_filename_);
 							Mat dst;
 							cv::hconcat(img_orig,img_first_pass, dst); // horizontal
 							cv::hconcat(dst, img_second_pass, dst); // horizontal
+
+   							cv::normalize(saliency_map, saliency_map, 255, 0,NORM_MINMAX);
+							saliency_map.convertTo(saliency_map,CV_8UC1); 
+							cv::cvtColor(saliency_map, saliency_map, cv::COLOR_GRAY2BGR);
+							cv::hconcat(dst, saliency_map, dst); // horizontal
 							//cv::vconcat(a, b, dst); // vertical
-							namedWindow( "original image,    first pass,   second pass     class", WINDOW_AUTOSIZE ); // Create a window for display.
-							imshow( "original image,    first pass,   second pass     class", dst );                  // Show our image inside it.
+							namedWindow( "original image,    first pass,   second pass,     saliency map", WINDOW_FULLSCREEN); // Create a window for display.
+							imshow( "original image,    first pass,   second pass,    saliency map", dst );                  // Show our image inside it.
 							waitKey(1);
 						}
 					}
@@ -340,9 +364,10 @@ int main(int argc, char** argv){
 
 					for (int class_index = 0; class_index < N; ++class_index) {				
 						cv::Mat saliency_map;
-						Rect Min_Rect = Network.CalcBBox(class_index, img, feedback_top_final_data, thresh,saliency_map);
+						Rect Min_Rect = Network.CalcBBox(class_index, feedback_top_final_data, thresh,saliency_map);
 						if(debug) {
-   							Network.VisualizeSaliencyMap(saliency_map,class_index, saliency_map_filename);
+							std::string saliency_map_filename_=saliency_map_filename+ToString(iteration)+"_"+ToString(2)+"_";
+   							Network.VisualizeSaliencyMap(saliency_map,class_index, saliency_map_filename_);
 						}
 						// Save all bounding boxes
 						bboxes2.push_back(Min_Rect);
@@ -359,11 +384,13 @@ int main(int argc, char** argv){
 					   
 					}
 
-					// Uncomment for Visualize Bounding Boxes 1st pass
-					//Network.VisualizeBBox(bboxes1,N,img_orig,size_map,1,bbox_filename);
-					// Uncomment for Visualize Bounding Boxes 2nd pass
-					//Network.VisualizeBBox(bboxes2,N,img,size_map,2,bbox_filename);
-
+					if(debug) {
+						// Uncomment for Visualize Bounding Boxes 1st pass
+						std::string bbox_filename_=bbox_filename+ToString(iteration)+"_";
+						Network.VisualizeBBox(bboxes1,N,img_orig,size_map,1,bbox_filename_);
+						// Uncomment for Visualize Bounding Boxes 2nd pass
+						Network.VisualizeBBox(bboxes2,N,img,size_map,2,bbox_filename_);
+					}
 				}
 			}
 		}
@@ -435,3 +462,4 @@ std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random) {
 		}		
 	return fixation_points;
 }
+

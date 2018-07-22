@@ -1,20 +1,21 @@
 <?xml version="1.0"?>
 <launch>
 	<node name="foveation_ros" pkg="foveated_yolt" type="foveation_ros" respawn="false" output="screen">
-		<param name="width"   value="500"/>
-		<param name="height"  value="500"/>
-		<param name="levels"  value="5"/>
-		<param name="sigma_x" value="100"/>
-		<param name="sigma_y" value="100"/>
+		<param name="width"   value="227"/>
+		<param name="height"  value="227"/>
+		<param name="levels"  value="6"/>
+		<param name="sigma_x" value="60"/>
+		<param name="sigma_y" value="60"/>
 		<remap from="input_image" to="/usb_cam/image_raw"/>
 		<remap from="output_image" to="foveated_image"/>
 	</node>
 
 	<node name="yolt_ros" pkg="foveated_yolt" type="yolt_ros" respawn="false" output="screen">
-		<param name="model_file" value="$(find foveated_yolt)/files/deploy_googlenet.prototxt"/>
-		<param name="weight_file" value="$(find foveated_yolt)/files/bvlc_googlenet.caffemodel"/>
+		<param name="model_file" value="$(find foveated_yolt)/files/deploy_squeezenet.prototxt"/>
+		<param name="weight_file" value="$(find foveated_yolt)/files/squeezenet_v1.1.caffemodel"/>
 		<param name="mean_file" value="$(find foveated_yolt)/files/imagenet_mean.binaryproto"/>
-		<param name="label_file" value="$(find foveated_yolt)/files/imagenet1000_clsid_to_human.txt"/>
+		<param name="label_file" value="$(find foveated_yolt)/files/synset_words_change.txt"/>
+		<param name="top_classes" value="1"/>
 		<remap from="input_image" to="foveated_image"/>
 		<remap from="output" to="saliency_map"/>
 	</node>
@@ -25,6 +26,10 @@
 
 	<node name="yolt_view" pkg="image_view" type="image_view" respawn="false" output="screen">
 		<remap from="image" to="/saliency_map"/>
+	</node>
+
+	<node name="usb_cam" pkg="usb_cam" type="usb_cam_node"  respawn="false" output="screen">
+		<param name="pixel_format" value="yuyv" />
 	</node>
 </launch>
 

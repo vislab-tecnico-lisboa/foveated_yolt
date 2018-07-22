@@ -23,12 +23,13 @@ LaplacianBlending::~LaplacianBlending() {
 void LaplacianBlending::BuildPyramids(const cv::Mat & image) {
 
     cv::Mat current_img=image;
-    if(current_img.depth()==CV_8UC3)
+    if(current_img.depth()==CV_8UC3 || current_img.depth()==CV_8U)
     {
 	    current_img.convertTo(current_img, CV_64FC3); 
 	    current_img/=255.0;
-    }
-
+	    //cv::normalize(current_img, current_img); 
+    } 
+	//std::cout << current_img << std::endl;
     for (int l=0; l<levels; ++l) {
         cv::pyrDown(current_img, down);
         cv::pyrUp(down, up, current_img.size());
@@ -80,6 +81,9 @@ cv::Mat LaplacianBlending::Foveate(const cv::Mat &image, const cv::Mat &center) 
             cv::add(foveated_image,aux_pyr,foveated_image);                   
         }
     }
+
+    foveated_image=foveated_image*255.0; 
+    foveated_image.convertTo(foveated_image, CV_8UC3);
 
     return foveated_image;
 }

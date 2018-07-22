@@ -16,7 +16,7 @@ SET_MODE=GPU
 GPU_ID=0
 
 # Choose number of top prediction that you want
-TOP=5
+TOP=1
 
 # Size of the images received by the network
 SIZE_MAP=227
@@ -25,15 +25,15 @@ SIZE_MAP=227
 LEVELS=5
 
 # Set debug - see images
-DEBUG=0
+DEBUG=1
 
 # Number of images processed
-TOTAL_IMAGES=500
+TOTAL_IMAGES=1
 
 # Define size of the fovea
 #SIGMAS="0,1,10,20,30,40,50,60,70,80,90,100,110,120,130,140"
-#SIGMAS="30"
-SIGMAS="0,25,50,75,100,125"
+SIGMAS="100"
+#SIGMAS="0,25,50,75,100,125"
 
 #THRESHOLDS="0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.80,0.85,0.90,0.95,1.0"
 THRESHOLDS="0.7,0.8,0.9"
@@ -49,13 +49,14 @@ MODE=2
 
 # change this path to the absolute location of the network related files
 FILES_FOLDER_ABSOLUTE_PATH=$DIR"/files/"
-DATASET=$DIR"/images"
+FIGURES_FOLDER_ABSOLUTE_PATH=$DIR"/figures/"
+DATASET_FOLDER=$DIR"/images"
 RESULTS_FOLDER_ABSOLUTE_PATH=$DIR"/results/"
 
-MODEL_FILE="deploy_googlenet.prototxt"
-WEIGHTS_FILE="bvlc_googlenet.caffemodel"
+MODEL_FILE="deploy_squeezenet.prototxt"
+WEIGHTS_FILE="squeezenet_v1.1.caffemodel"
 MEAN_FILE="imagenet_mean.binaryproto"
 LABELS_FILE="synset_words_change.txt"
 
-$DIR/build/yolt $FILES_FOLDER_ABSOLUTE_PATH $MODEL_FILE $WEIGHTS_FILE $MEAN_FILE $LABELS_FILE $DATASET $TOP $THRESHOLDS $SIZE_MAP $LEVELS $SIGMAS $RESULTS_FOLDER_ABSOLUTE_PATH $MODE $DEBUG $TOTAL_IMAGES $SET_MODE $GPU_ID $POINTS $RAND
+$DIR/build/yolt $FILES_FOLDER_ABSOLUTE_PATH $MODEL_FILE $WEIGHTS_FILE $MEAN_FILE $LABELS_FILE $DATASET_FOLDER $TOP $THRESHOLDS $SIZE_MAP $LEVELS $SIGMAS $RESULTS_FOLDER_ABSOLUTE_PATH $FIGURES_FOLDER_ABSOLUTE_PATH $MODE $DEBUG $TOTAL_IMAGES $SET_MODE $GPU_ID $POINTS $RAND
 

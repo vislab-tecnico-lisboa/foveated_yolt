@@ -60,8 +60,8 @@ void FoveationRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	try
 	{
 		cv::Mat image;
-		cv_bridge::toCvShare(msg, "bgr8")->image.convertTo(image, CV_64F);
-
+		cv_bridge::toCvShare(msg, "bgr8")->image.convertTo(image, CV_64FC3);
+		image=image/255.0;
 		cv::resize(image,image,cv::Size(this->width,this->height));//resize image
 
 		// Foveate
@@ -70,9 +70,10 @@ void FoveationRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		// Visualize
 		cv::Scalar color_=cv::Scalar(255,0,0);
 		cv::Point center_(fixation_point.at<int>(0,0),fixation_point.at<int>(1,0));
-		cv::circle(foveated_image, center_ , 5, color_);
+		//cv::circle(foveated_image, center_ , 5, color_);
 		//RotatedRect (const Point2f &center, const Size2f &size, float angle)
 		//cv::ellipse(foveated_image, const RotatedRect& box, color_);
+		//std::cout << foveated_image << std::endl;
 		foveated_image.convertTo(foveated_image,CV_8UC3);
 
 		sensor_msgs::ImagePtr msg_out = cv_bridge::CvImage(std_msgs::Header(), "bgr8", foveated_image).toImageMsg();

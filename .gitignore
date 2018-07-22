@@ -5,5 +5,6 @@ files/*
 *~
 images/*
 results/*
+figures/
 cmake/Modules/FindCaffe.cmake
 CMakeLists.txt.user

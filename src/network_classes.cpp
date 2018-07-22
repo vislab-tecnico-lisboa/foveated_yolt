@@ -284,7 +284,7 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
 // Function CalcBBox //
 ///////////////////////
 
-Rect Network::CalcBBox(int class_index, const cv::Mat& img, ClassData mydata, float thresh, cv::Mat & saliency_map) {
+Rect Network::CalcBBox(int class_index, ClassData mydata, float thresh, cv::Mat & saliency_map) {
 
     /*********************************************************/
     //                  Get Saliency Map                     //
@@ -309,6 +309,7 @@ Rect Network::CalcBBox(int class_index, const cv::Mat& img, ClassData mydata, fl
 
     // Get Data
     boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");  // get data from Data layer
+    //Blob<float>* out_data_layer = net->input_blobs()[0];
     //int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
     const float* begin_diff = out_data_layer->mutable_cpu_diff();
@@ -326,7 +327,7 @@ Rect Network::CalcBBox(int class_index, const cv::Mat& img, ClassData mydata, fl
     }
 
     cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
-
+    //std::cout << M2<< std::endl;
 
     // Find max across RGB channels
     saliency_map = CalcRGBmax(M2); 
@@ -401,7 +402,7 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
     string type = ".png";
     for (int k =0; k< N; ++k) {
 
-        ss<<name<<(k + 1)<<type;
+        ss<<name<< ct <<"_"<<(k + 1)<<type;
 
         string filename = ss.str();
         ss.str("");

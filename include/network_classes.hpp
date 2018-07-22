@@ -45,7 +45,7 @@ class Network {
 
         // Return Top 5 prediction of image in mydata
         ClassData Classify(const cv::Mat& img, int N);
-        Rect CalcBBox(int class_index, const cv::Mat &img, ClassData mydata, float thresh,cv::Mat & saliency_map); // NEW
+        Rect CalcBBox(int class_index, ClassData mydata, float thresh,cv::Mat & saliency_map); // NEW
         void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map, int ct, const std::string & name);
         void VisualizeFoveation(const cv::Mat & fix_pt, const cv::Mat & img, const int & sigma, const int & k, const std::string & name);
         void VisualizeSaliencyMap(const cv::Mat & saliency_map, int k, const std::string & name);

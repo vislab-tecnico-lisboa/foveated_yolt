@@ -78,12 +78,6 @@ void YoltRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		std::vector<int> indexes;
 		std::vector<cv::Mat> saliency_maps;
 
-
-		//std::cout << image << std::endl;
-	    	//cv::normalize(image, image); 
-		//std::cout << image << std::endl;
-		//std::cout << image << std::endl;
-
 		// Weak object localization
 		for (int class_index = 0; class_index < top_classes; ++class_index) {
 			cv::Mat saliency_map;
@@ -125,11 +119,10 @@ void YoltRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		std::cout << std::endl;
 
 
-
-		//top_final_saliency_maps[0]=255.0*top_final_saliency_maps[0];
-
-    		//cv::cvtColor(top_final_saliency_maps[0], top_final_saliency_maps[0], cv::COLOR_GRAY2BGR);
-    		//top_final_saliency_maps[0].convertTo(top_final_saliency_maps[0],CV_8UC1); 
+	    	//cv::normalize(top_final_saliency_maps[0], top_final_saliency_maps[0],0,255.0); 
+    		cv::cvtColor(top_final_saliency_maps[0], top_final_saliency_maps[0], cv::COLOR_GRAY2BGR);
+		top_final_saliency_maps[0].convertTo(top_final_saliency_maps[0],CV_8UC3, 255.0);
+    		//top_final_saliency_maps[0].convertTo(top_final_saliency_maps[0],CV_8UC3); 
 
 		sensor_msgs::ImagePtr msg_out = cv_bridge::CvImage(std_msgs::Header(), "bgr8", top_final_saliency_maps[0]).toImageMsg();
 
@@ -141,7 +134,7 @@ void YoltRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	}
 	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
-	std::cout << "total yolt time: " << duration << " ms"<<  std::endl;
+	ROS_DEBUG_STREAM("total yolt time: " << duration << " ms");
 }
 
 

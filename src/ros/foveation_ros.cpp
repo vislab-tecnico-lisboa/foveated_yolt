@@ -78,8 +78,9 @@ void FoveationRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		//RotatedRect (const Point2f &center, const Size2f &size, float angle)
 		//cv::ellipse(foveated_image, const RotatedRect& box, color_);
 		//std::cout << foveated_image << std::endl;
-		foveated_image.convertTo(foveated_image,CV_8UC3);
-
+		//foveated_image.convertTo(foveated_image,CV_8UC3);
+    		//cv::cvtColor(top_final_saliency_maps[0], top_final_saliency_maps[0], cv::COLOR_GRAY2BGR);
+		foveated_image.convertTo(foveated_image,CV_8UC3, 255.0);
 		sensor_msgs::ImagePtr msg_out = cv_bridge::CvImage(std_msgs::Header(), "bgr8", foveated_image).toImageMsg();
 
 		pub.publish(msg_out);
@@ -90,7 +91,7 @@ void FoveationRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	}
 	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
-	std::cout << "total foveation time: " << duration << " ms"<<  std::endl;
+	ROS_DEBUG_STREAM("total yolt time: " << duration << " ms");
 }
 
 

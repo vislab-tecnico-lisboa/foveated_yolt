@@ -21,6 +21,7 @@ function get_network_weights
 
 	# Mobilenet
 	wget https://raw.githubusercontent.com/shicai/MobileNet-Caffe/master/mobilenet_v2.caffemodel
+
 	# VGGNet 16 weight layers
 	#wget http://www.robots.ox.ac.uk/~vgg/software/very_deep/caffe/VGG_ILSVRC_16_layers.caffemodel
 
@@ -34,6 +35,7 @@ function get_network_weights
 	wget https://raw.githubusercontent.com/BVLC/caffe/master/models/bvlc_alexnet/deploy.prototxt -O deploy_alexnet.prototxt
         wget https://raw.githubusercontent.com/DeepScale/SqueezeNet/master/SqueezeNet_v1.1/deploy.prototxt  -O deploy_squeezenet.prototxt
 	wget https://raw.githubusercontent.com/shicai/MobileNet-Caffe/master/mobilenet_v2_deploy.prototxt -O deploy_mobilenet.prototxt
+
 	cd ..
 }
 

@@ -69,7 +69,7 @@ int main(int argc, char** argv){
 		Caffe::set_mode(Caffe::GPU);
 		int device_id = atoi(argv[18]);
 		Caffe::SetDevice(device_id);
-				std::cout << "GPU MODE" << std::endl;
+		std::cout << "GPU MODE" << std::endl;
 	}
 	static int npoints                  = atoi(argv[19]);         // Number of fixation points
 	static bool random                  = atoi(argv[20]);         // Set random = 1 to random fixation points
@@ -118,7 +118,7 @@ int main(int argc, char** argv){
 	std::vector<cv::String> image_image_files ;
 	image_image_files = Network.GetDir (dataset_folder, image_image_files);
 
-	if(total_images>image_image_files.size())
+	if(total_images>(int)image_image_files.size())
 		total_images=image_image_files.size();
 	glob(dataset_folder, image_image_files);
 
@@ -175,7 +175,7 @@ int main(int argc, char** argv){
 			for (unsigned int fixedpt_index = 0; fixedpt_index < fixedpts.size(); ++fixedpt_index){
 				fixedpt = fixedpts[fixedpt_index];
 				// For each image
-				for (unsigned int input=0; input<total_images; ++input){
+				for (unsigned int input=0; input<(unsigned int)total_images; ++input){
 
 					// Preprocess each image:
 					//  Read image
@@ -192,10 +192,6 @@ int main(int argc, char** argv){
 					std::vector<int> indexs;
 					std::vector<Rect> bboxes1;
 					std::vector<Rect> bboxes2;
-
-					// Set a specific foveation point
-					//fixedpt.at<int>(0,0)=50;
-					//fixedpt.at<int>(1,0)=170;
 
 					// Atual iteration
 					int iteration=input+1+fixedpt_index*total_images+
@@ -225,12 +221,12 @@ int main(int argc, char** argv){
 					cv::Mat img_first_pass=img.clone();
 
 					// For Visualizing Foveated Image
-
 					if(debug)
 					{
 						std::string foveation_filename_=foveation_filename+ToString(iteration)+"_"+ToString(1)+"_";;
 						Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index,foveation_filename_);
 					}
+					//Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index,foveation_filename);
 
 					// 1st Feedforward with foveated image
 					//  Prediciton of TOP 5 classes
@@ -254,7 +250,7 @@ int main(int argc, char** argv){
 						// Saliency Map + Segmentation Mask + BBox //
 						/////////////////////////////////////////////
 						cv::Mat saliency_map;
-						cv::Rect Min_Rect = Network.CalcBBox(class_index,first_pass_data, thresh, saliency_map);
+						cv::Rect Min_Rect = Network.CalcBBox(class_index,first_pass_data,thresh,saliency_map);
 
 						// Save all bounding boxes
 						bboxes1.push_back(Min_Rect);
@@ -291,7 +287,7 @@ int main(int argc, char** argv){
 						}
 						else
 						{
-						    cv::GaussianBlur(img_orig,img_second_pass, Size(5,5), sigma, sigma);
+						    	cv::GaussianBlur(img_orig,img_second_pass, Size(5,5), sigma, sigma);
 						}
 
 						// 2nd Feedforward with foveated image
@@ -310,7 +306,6 @@ int main(int argc, char** argv){
 						}
 
 						if(debug) {
-							//std::cout << saliency_map.size() << " " << saliency_map.type() << " " << img.size() << " " << img.type() << std::endl;
 							std::string saliency_map_filename_=saliency_map_filename+ToString(iteration)+"_"+ToString(1)+"_";
    							Network.VisualizeSaliencyMap(saliency_map,class_index,saliency_map_filename_);
 							std::string foveation_filename_=foveation_filename+ToString(iteration)+"_"+ToString(2)+"_";
@@ -345,7 +340,7 @@ int main(int argc, char** argv){
 
 					// Finding top 5 diferent labels 
 					int top = 0;
-					while(top_final_labels.size() < N){
+					while((int)top_final_labels.size() < N){
 						int idx = sort_scores_index[top];
 						if((std::find(top_final_labels.begin(), top_final_labels.end(), labels[idx])) == (top_final_labels.end())) {
 							top_final_labels.push_back(labels[idx]);
@@ -462,4 +457,3 @@ std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random) {
 		}		
 	return fixation_points;
 }
-

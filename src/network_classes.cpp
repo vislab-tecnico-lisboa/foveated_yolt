@@ -69,7 +69,6 @@ std::vector<int> ArgMax(const std::vector<float>& v, int n) {
 }
 
 
-
 //////////////////////////////////////////////////////////
 ///////////////////// CLASS NETWORK //////////////////////
 //////////////////////////////////////////////////////////
@@ -158,7 +157,6 @@ void Network::SetMean(const string& mean_file) {
 ///////////////////////////////////
 
 ClassData Network::Classify(const cv::Mat& img, int N) {
-
     std::vector<float> output = Predict(img);  // output is a float vector
 
     ClassData mydata(N); // objecto
@@ -309,7 +307,6 @@ Rect Network::CalcBBox(int class_index, ClassData mydata, float thresh, cv::Mat 
 
     // Get Data
     boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");  // get data from Data layer
-    //Blob<float>* out_data_layer = net->input_blobs()[0];
     //int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
     const float* begin_diff = out_data_layer->mutable_cpu_diff();
@@ -327,7 +324,6 @@ Rect Network::CalcBBox(int class_index, ClassData mydata, float thresh, cv::Mat 
     }
 
     cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
-    //std::cout << M2<< std::endl;
 
     // Find max across RGB channels
     saliency_map = CalcRGBmax(M2); 

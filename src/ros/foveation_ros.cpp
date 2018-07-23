@@ -1,4 +1,6 @@
 #include "ros/foveation_ros.hpp"
+#include <chrono>
+#include <ctime>
 
 FoveationRos::FoveationRos (const ros::NodeHandle & nh_, const std::string & name) : nh(nh_), nh_priv("~"),
     as_(nh_, name, boost::bind(&FoveationRos::executeCB, this, _1), false),
@@ -6,8 +8,8 @@ FoveationRos::FoveationRos (const ros::NodeHandle & nh_, const std::string & nam
 {
 	image_transport::ImageTransport it(nh);
 	std::cout << "network initialized" << std::endl;
-	sub = it.subscribe("input_image", 1, &FoveationRos::imageCallback, this);
-	pub = it.advertise("output_image", 1);
+	sub = it.subscribe("input_image", 5, &FoveationRos::imageCallback, this);
+	pub = it.advertise("output_image", 5);
 	// Load network, pre-processment, set mean and load labels
 
 	// Foveation parameters
@@ -57,6 +59,7 @@ void FoveationRos::configCallback(foveated_yolt::FoveaConfig &config, uint32_t l
 
 void FoveationRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	try
 	{
 		cv::Mat image;
@@ -68,8 +71,9 @@ void FoveationRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		cv::Mat foveated_image = foveation->Foveate(image,fixation_point);
 
 		// Visualize
-		cv::Scalar color_=cv::Scalar(255,0,0);
-		cv::Point center_(fixation_point.at<int>(0,0),fixation_point.at<int>(1,0));
+
+		//cv::Point center_(fixation_point.at<int>(0,0),fixation_point.at<int>(1,0));
+		//cv::Scalar color_=cv::Scalar(255,0,0);
 		//cv::circle(foveated_image, center_ , 5, color_);
 		//RotatedRect (const Point2f &center, const Size2f &size, float angle)
 		//cv::ellipse(foveated_image, const RotatedRect& box, color_);
@@ -84,6 +88,9 @@ void FoveationRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	{
 		ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
 	}
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+	std::cout << "total foveation time: " << duration << " ms"<<  std::endl;
 }
 
 
@@ -118,16 +125,4 @@ void FoveationRos::executeCB(const foveated_yolt::EyeGoalConstPtr &goal)
 
 }
 
-int main(int argc, char **argv)
-{
-	ros::init(argc, argv, "image_listener");
-	ros::NodeHandle nh;
-	//cv::namedWindow("view");
-	//cv::startWindowThread();
-	std::string node_name="foveation";
-
-	FoveationRos foveation_ros(nh,node_name);
-	ros::spin();
-	//cv::destroyWindow("view");
-}
 

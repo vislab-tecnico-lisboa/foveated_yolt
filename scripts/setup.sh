@@ -33,7 +33,7 @@ function get_network_weights
 	wget https://raw.githubusercontent.com/BVLC/caffe/master/models/bvlc_googlenet/deploy.prototxt -O deploy_googlenet.prototxt
 	wget https://raw.githubusercontent.com/BVLC/caffe/master/models/bvlc_alexnet/deploy.prototxt -O deploy_alexnet.prototxt
         wget https://raw.githubusercontent.com/DeepScale/SqueezeNet/master/SqueezeNet_v1.1/deploy.prototxt  -O deploy_squeezenet.prototxt
-	wget https://raw.githubusercontent.com/shicai/MobileNet-Caffe/master/mobilenet_deploy.prototxt -O deploy_mobilenet.prototxt
+	wget https://raw.githubusercontent.com/shicai/MobileNet-Caffe/master/mobilenet_v2_deploy.prototxt -O deploy_mobilenet.prototxt
 	cd ..
 }
 

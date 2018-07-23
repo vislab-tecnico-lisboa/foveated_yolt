@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(foveated_yolt)
 
-set(ROS FALSE)
+set(ROS TRUE)
 set(CLASSIFICATION TRUE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/")
+
+SET(CMAKE_CXX_FLAGS_RELEASE "-Wall -O3 -Wno-deprecated-declarations -std=c++11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
 
 # Include package config, boost-python
 find_package(PkgConfig REQUIRED)
@@ -67,11 +70,11 @@ if(${ROS})
     ${catkin_INCLUDE_DIRS}
   )
 
-add_executable (foveation_ros src/ros/foveation_ros.cpp src/laplacian_foveation.cpp)
+add_executable (foveation_ros src/ros/foveation_ros_node.cpp src/ros/foveation_ros.cpp src/laplacian_foveation.cpp)
 target_link_libraries (foveation_ros ${Boost_LIBRARIES} ${Caffe_LIBRARIES} ${GLOG_LIB} ${OpenCV_LIBS} ${catkin_LIBRARIES})
 add_dependencies(foveation_ros ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_EXPORTED_TARGETS)
 
-add_executable (yolt_ros src/ros/yolt_ros.cpp src/network_classes.cpp)
+add_executable (yolt_ros src/ros/yolt_ros_node.cpp src/ros/yolt_ros.cpp src/network_classes.cpp)
 target_link_libraries (yolt_ros ${Boost_LIBRARIES} ${Caffe_LIBRARIES} ${GLOG_LIB} ${OpenCV_LIBS} ${catkin_LIBRARIES})
 add_dependencies(yolt_ros ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_EXPORTED_TARGETS)
 

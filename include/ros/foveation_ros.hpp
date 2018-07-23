@@ -14,10 +14,12 @@
 class FoveationRos
 {
 		int levels, width, height, sigma_x, sigma_y;
-		std::string action_name_;
+
 		boost::shared_ptr<LaplacianBlending> foveation;
 
 		ros::NodeHandle nh, nh_priv;
+		actionlib::SimpleActionServer<foveated_yolt::EyeAction> as_;
+		std::string action_name_;
 		image_transport::Subscriber sub;
 		image_transport::Publisher pub;
 
@@ -26,7 +28,7 @@ class FoveationRos
 		dynamic_reconfigure::Server<foveated_yolt::FoveaConfig>::CallbackType conf_callback;
 		
 		void configCallback(foveated_yolt::FoveaConfig &config, uint32_t level);
-		actionlib::SimpleActionServer<foveated_yolt::EyeAction> as_;
+
 
 		foveated_yolt::EyeFeedback feedback_;
 		foveated_yolt::EyeResult result_;

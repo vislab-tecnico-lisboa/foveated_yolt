@@ -1,4 +1,6 @@
 #include "ros/yolt_ros.hpp"
+#include <chrono>
+#include <ctime>
 
 YoltRos::YoltRos (const ros::NodeHandle & nh_, const std::string & name) : nh(nh_), nh_priv("~"),
     as_(nh_, name, boost::bind(&YoltRos::executeCB, this, _1), false),
@@ -6,8 +8,8 @@ YoltRos::YoltRos (const ros::NodeHandle & nh_, const std::string & name) : nh(nh
 {
 	image_transport::ImageTransport it(nh);
 
-	sub = it.subscribe("/input_image", 1, &YoltRos::imageCallback, this);
-	pub = it.advertise("/output", 1);
+	sub = it.subscribe("/input_image", 5, &YoltRos::imageCallback, this);
+	pub = it.advertise("/output", 5);
 	// Load network, pre-processment, set mean and load labels
 
 	// Network parameters
@@ -17,23 +19,29 @@ YoltRos::YoltRos (const ros::NodeHandle & nh_, const std::string & name) : nh(nh
 	string label_file;
 	string device;
 	int device_id;
+
+
 	nh_priv.param<int>("top_classes", top_classes, 5);
 	nh_priv.param<int>("width", width, 227);
 	nh_priv.param<int>("height", height, 227);
+	nh_priv.param<double>("saliency_threshold", saliency_threshold, 0.7);
 	nh_priv.param<std::string>("model_file", model_file, "");
 	nh_priv.param<std::string>("weight_file", weight_file, "");
 	nh_priv.param<std::string>("mean_file", mean_file, "");
 	nh_priv.param<std::string>("label_file", label_file, "");
 	nh_priv.param<std::string>("device", device, "CPU");
-
 	nh_priv.param<int>("device_id", device_id, 0);
+
+	ROS_INFO_STREAM("top_classes: " << top_classes);
+	ROS_INFO_STREAM("width: " << width);
+	ROS_INFO_STREAM("height: " << height);
+	ROS_INFO_STREAM("saliency_threshold: " << saliency_threshold);
 	ROS_INFO_STREAM("model_file: " << model_file);
 	ROS_INFO_STREAM("weight_file: " << weight_file);
 	ROS_INFO_STREAM("mean_file: " << mean_file);
 	ROS_INFO_STREAM("label_file: " << label_file);
 	ROS_INFO_STREAM("device: " << device);
 	ROS_INFO_STREAM("device_id: " << device_id);
-	ROS_INFO_STREAM("top_classes: " << top_classes);
 
 	if (device=="CPU")                           // Set Mode
 		Caffe::set_mode(Caffe::CPU);
@@ -54,6 +62,7 @@ YoltRos::YoltRos (const ros::NodeHandle & nh_, const std::string & name) : nh(nh
 
 void YoltRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	try
 	{
 		cv::Mat image;
@@ -75,18 +84,13 @@ void YoltRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		//std::cout << image << std::endl;
 		//std::cout << image << std::endl;
 
-
-
-
-		float thresh=0.5;
-
 		// Weak object localization
-		for (unsigned int class_index = 0; class_index < top_classes; ++class_index) {
+		for (int class_index = 0; class_index < top_classes; ++class_index) {
 			cv::Mat saliency_map;
-			cv::Rect bounding_box = yolt_network->CalcBBox(class_index, first_pass_data, (float)thresh, saliency_map);
+			cv::Rect bounding_box = yolt_network->CalcBBox(class_index, first_pass_data, (float)saliency_threshold, saliency_map);
 			//std::cout << bounding_box << std::endl;
 			// Save all labels, scores, indexes, bounding boxes and saliency maps
-			for (unsigned int class_index_bb = 0; class_index_bb < top_classes; ++class_index_bb) {
+			for (int class_index_bb = 0; class_index_bb < top_classes; ++class_index_bb) {
 				bounding_boxes.push_back(bounding_box);
 				saliency_maps.push_back(saliency_map);
 				labels.push_back(first_pass_data.label[class_index_bb]);
@@ -103,7 +107,7 @@ void YoltRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		std::vector<int> sort_scores_index  = ArgMax(scores, top_classes*top_classes);
 		int top = 0;
 
-		while(top_final_labels.size() < top_classes){
+		while((int)top_final_labels.size() < top_classes){
 			int idx = sort_scores_index[top];
 			if((std::find(top_final_labels.begin(), top_final_labels.end(), labels[idx])) == (top_final_labels.end())) {
 				top_final_labels.push_back(labels[idx]);
@@ -114,7 +118,7 @@ void YoltRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 			++top;
 		}
 
-		for (unsigned int class_index = 0; class_index < top_classes; ++class_index) {
+		for (int class_index = 0; class_index < top_classes; ++class_index) {
 
 			std::cout << top_final_index[class_index] << ": " << top_final_labels[class_index] << " " << top_final_scores[class_index] << " :::: ";
 		}
@@ -135,16 +139,19 @@ void YoltRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	{
 		ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
 	}
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+	std::cout << "total yolt time: " << duration << " ms"<<  std::endl;
 }
 
 
 void YoltRos::executeCB(const foveated_yolt::TaskGoalConstPtr &goal)
 {
 	// helper variables
-	bool success = true;
+	/*bool success = true;
 
 
-	/*if(goal->levels!=this->levels)
+	if(goal->levels!=this->levels)
 	{
 		foveation=boost::shared_ptr<LaplacianBlending> (new LaplacianBlending(this->width,this->height,goal->levels,this->sigma_x,this->sigma_y));
 		this->levels=goal->levels;
@@ -167,16 +174,5 @@ void YoltRos::executeCB(const foveated_yolt::TaskGoalConstPtr &goal)
 
 }
 
-int main(int argc, char **argv)
-{
-	ros::init(argc, argv, "image_listener");
-	ros::NodeHandle nh;
-	//cv::namedWindow("view");
-	//cv::startWindowThread();
-	std::string node_name="foveation";
 
-	YoltRos yolt_ros(nh,node_name);
-	ros::spin();
-	//cv::destroyWindow("view");
-}
 

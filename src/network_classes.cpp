@@ -40,6 +40,13 @@ ostream& operator<<(ostream& output, const ClassData& D)
     return output;
 }
 
+// Function PairCompare
+// Compare 2 pairs
+
+bool PairCompare(const std::pair<float, int>& lhs,
+                        const std::pair<float, int>& rhs) {
+    return lhs.first > rhs.first;
+}
 
 ////////////////////////////////////////////////////////
 // Function ArgMax                                    //
@@ -61,13 +68,6 @@ std::vector<int> ArgMax(const std::vector<float>& v, int n) {
     return result;
 }
 
-// Function PairCompare
-// Compare 2 pairs
-
-static bool PairCompare(const std::pair<float, int>& lhs,
-                        const std::pair<float, int>& rhs) {
-    return lhs.first > rhs.first;
-}
 
 
 //////////////////////////////////////////////////////////
@@ -296,7 +296,7 @@ Rect Network::CalcBBox(int class_index, ClassData mydata, float thresh, cv::Mat 
     // Dados do 1 forward
     Blob<float>* forward_output_layer = net->output_blobs()[0];
 
-    float* fc8Data = forward_output_layer->mutable_cpu_data();
+    //float* fc8Data = forward_output_layer->mutable_cpu_data();
     float* fc8Diff = forward_output_layer->mutable_cpu_diff();
 
     // Backward of a specific class
@@ -485,7 +485,7 @@ float* Network::LimitValues(float* bottom_data) {
 
     float smallest = bottom_data[0];
     float largest = bottom_data[0];
-    for (int i=1; i<sizeof(bottom_data); i++) {
+    for (unsigned int i=1; i<sizeof(bottom_data); i++) {
         if (bottom_data[i] < smallest)
             smallest = bottom_data[i];
         if (bottom_data[i] > largest)
@@ -496,7 +496,7 @@ float* Network::LimitValues(float* bottom_data) {
     result.push_back(largest);
 
     // Normalize
-    for (int i=0; i< sizeof(bottom_data); ++i){
+    for (unsigned int i=0; i< sizeof(bottom_data); ++i){
         bottom_data[i] = bottom_data[i]-result[0];
         bottom_data[i] = bottom_data[i]/result[1];
         //cout << bottom_data[i] << "\n" << endl;

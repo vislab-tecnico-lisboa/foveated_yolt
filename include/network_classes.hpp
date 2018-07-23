@@ -32,7 +32,7 @@ class ClassData {
 
 
 // Callback for function std::partial_sort used in ArgMax
-static bool PairCompare(const std::pair<float, int>& lhs,
+bool PairCompare(const std::pair<float, int>& lhs,
                         const std::pair<float, int>& rhs);
 std::vector<int> ArgMax(const std::vector<float>& v, int n);
 
@@ -62,7 +62,7 @@ class Network {
         std::vector<float> Predict(const cv::Mat& img);
 
         int num_channels;
-        shared_ptr<Net<float> > net;
+        boost::shared_ptr<caffe::Net<float> > net;
 
         cv::Mat mean_;
         std::vector<string> labels;

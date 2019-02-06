@@ -35,7 +35,7 @@ ostream& operator<<(ostream& output, const ClassData& D)
     for(int i=0; i<D.N;++i) {
         output << " Index: " << D.index[i] << "\n"
                << " Label: " << D.label[i] << "\n"
-               << " Confidence: " << D.score[i] << "\n" << endl;
+               << " Confidence: " << D.score[i] << endl;
     }
     return output;
 }
@@ -176,6 +176,51 @@ ClassData Network::Classify(const cv::Mat& img, int N) {
 
     return mydata;
 }
+
+
+
+
+ClassData Network::Classify(const cv::Mat& img) {
+
+    std::vector<float> output = Predict(img);  // output is a float vector
+
+    int N = labels.size();       // tem 5 top labels
+
+    ClassData mydata(N); // objecto
+
+    mydata.score = output;
+    mydata.label = labels;
+
+    /*for (int i = 0; i < N; ++i) {
+        int idx = maxN[i];
+
+        mydata.index[i] = idx;
+        mydata.label[i] = labels[idx];
+        mydata.score[i] = output[idx];
+    }*/
+
+    return mydata;
+}
+
+ClassData Network::OrderPrediction(ClassData data, int N){
+
+    ClassData mydata(N);
+
+    std::vector<int> maxN = ArgMax(data.score, N); // tem o top
+
+    for (int i = 0; i < N; ++i) {
+        int idx = maxN[i];
+
+        mydata.index[i] = idx;
+        mydata.label[i] = labels[idx];
+        mydata.score[i] = data.score[idx];
+    }
+
+    return mydata;
+
+}
+
+
 
 ///////////////////////////////////////////////
 // Function Predict                          //
@@ -327,21 +372,64 @@ Rect Network::CalcBBox(int class_index, const cv::Mat& img, ClassData mydata, fl
 
     cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
 
-
     // Find max across RGB channels
-    saliency_map = CalcRGBmax(M2); 
+    saliency_map = CalcRGBmax(M2);
+    
 
     /*********************************************************/
     //                  Segmentation Mask                    //
     //       Set pixels > threshold to 1 and define box      //
     /*********************************************************/
 
+
+    
+    /*
+    Mat saliency_map_idx;
+    Mat saliency_map_sort = saliency_map.clone();
+    saliency_map_sort = saliency_map_sort.reshape(1,1);
+
+    cv::sortIdx(saliency_map_sort, saliency_map_idx, CV_SORT_DESCENDING);
+    cv::sort(saliency_map_sort, saliency_map_sort, CV_SORT_DESCENDING);
+
+    Mat foreground_mask(saliency_map_sort.size(), saliency_map_sort.type(), 0.0);
+    
+    double total_energy = double(cv::sum(saliency_map_sort)[0]);
+    double energy = 0;
+
+    //std::cout << "Total Energy " << total_energy << std::endl;
+    //::cout << "Energy " << energy << std::endl;
+     
+
+    //std::cout << saliency_map_sort << std::endl;
+
+    int i = 0;
+
+    while(energy < 0.98*total_energy){
+        //cout << i << endl;
+        float value = saliency_map_sort.at<float>(0,i);
+        i++;
+        //std::cout <<"value " << value << std::endl;
+
+        int idx = saliency_map_idx.at<int>(0,i);
+        //std::cout <<"idx " << idx << std::endl;
+
+        energy = energy + value;
+        //std::cout << "Energy" << energy << std::endl;
+        
+        foreground_mask.at<float>(idx) = 1.0;
+
+    }
+
+
+    foreground_mask = foreground_mask.reshape(1,saliency_map.rows);
+
+    foreground_mask=255.0*foreground_mask;
+    foreground_mask.convertTo(foreground_mask,CV_8UC1); 
+   */
+    
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
-    //imshow("Mask", foreground_mask);
-    //waitKey(0);
-
-  
+    
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
     Mat Points;
     findNonZero(foreground_mask,Points);
@@ -410,15 +498,15 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
         if(!imwrite(filename, img_))
             cout << "ERROR: Saving BBox"<< endl;
         //namedWindow(filename,WINDOW_AUTOSIZE);
-        //imshow(filename, img_);
-        //waitKey(0);
+        imshow(filename, img_);
+        waitKey(0);
         img_=img.clone();
 
     }
 }
 
 /////////////////////////////////
-// Function VisualizeFoveation //
+// Function VisualizeSaliencyMap //
 /////////////////////////////////
 
 void Network::VisualizeSaliencyMap(const cv::Mat & saliency_map, int k, const std::string & name) {
@@ -462,14 +550,14 @@ void Network::VisualizeFoveation(const cv::Mat & fix_pt, const cv::Mat & img, co
     ss.str("");
 
     cv::Mat img_ = img.clone();
-    circle(img_, pt, sigma,Scalar(0, 0, 255),2);
+    circle(img_, pt, 5,Scalar(0, 0, 255),2);
 
-    if(!imwrite(filename, img_))
-        cout << "ERROR: Saving Foveation Image"<< endl;
+    //if(!imwrite(filename, img_))
+    //    cout << "ERROR: Saving Foveation Image"<< endl;
 
-    //namedWindow(filename,WINDOW_AUTOSIZE);
-    //imshow(filename, img_);
-    //waitKey(1);
+    namedWindow(filename,WINDOW_AUTOSIZE);
+    imshow(filename, img_);
+    waitKey(0);
 }
 
 

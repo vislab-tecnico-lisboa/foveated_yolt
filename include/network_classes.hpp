@@ -22,6 +22,39 @@ class ClassData {
         ~ClassData();
 
         friend ostream& operator<<(ostream& output, const ClassData& D);  
+
+        ClassData operator + (ClassData const &data) { 
+            
+            ClassData res(this->N); 
+            res.label = this->label;
+            for (int i=0; i<label.size(); i++)
+            {
+                res.score[i] = (this->score[i] + data.score[i]);  
+                res.index[i] = i;
+            } 
+            
+            //for (int i=0)
+            //res.score[index] = score[index] + data.score[index]; 
+            //res.N = N;
+
+            return res; 
+        }
+
+        ClassData operator * (const float &scalar) {
+ 
+            ClassData res(this->N);
+            res.label = this->label;
+            for (int i=0; i<label.size(); i++)
+            {
+                res.score[i] = (this->score[i] * scalar);  
+                res.index[i] = i;
+            } 
+
+            return res;  
+    
+        }
+        
+
         int N;
         std::vector<string> label;
         std::vector<float> score;
@@ -30,6 +63,8 @@ class ClassData {
 
 };
 
+
+ 
 
 // Callback for function std::partial_sort used in ArgMax
 static bool PairCompare(const std::pair<float, int>& lhs,
@@ -45,6 +80,10 @@ class Network {
 
         // Return Top 5 prediction of image in mydata
         ClassData Classify(const cv::Mat& img, int N);
+        ClassData Classify(const cv::Mat& img);
+
+        ClassData OrderPrediction(ClassData data, int N);
+
         Rect CalcBBox(int class_index, const cv::Mat &img, ClassData mydata, float thresh,cv::Mat & saliency_map); // NEW
         void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map, int ct, const std::string & name);
         void VisualizeFoveation(const cv::Mat & fix_pt, const cv::Mat & img, const int & sigma, const int & k, const std::string & name);

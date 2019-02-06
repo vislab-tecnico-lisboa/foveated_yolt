@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 2.8)
 project(foveated_yolt)
 
 set(ROS FALSE)
@@ -7,9 +7,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modu
 
 # Include package config, boost-python
 find_package(PkgConfig REQUIRED)
+
 include(cmake/boost-python.cmake)
 include(cmake/Modules/FindCaffe.cmake)
-#  add_definitions(-DOPENCV_3)
+
+add_definitions(-DOPENCV_3)
 
 if(${CLASSIFICATION})
   find_package(Caffe REQUIRED)
@@ -95,12 +97,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 boost_python_module(np_opencv_module src/python_bindings/np_opencv_module.cpp)
 target_link_libraries(np_opencv_module boost_system boost_python np_opencv_converter ${OpenCV_LIBS})
 
-add_library(yolt_python src/python_bindings/yolt_python.cpp src/laplacian_foveation.cpp)
+boost_python_module(yolt_python src/python_bindings/yolt_python.cpp src/laplacian_foveation.cpp)
 target_link_libraries(yolt_python -lboost_python -lboost_system ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
 
 set_target_properties(yolt_python PROPERTIES SUFFIX .so)
 set_target_properties(yolt_python PROPERTIES PREFIX "")
-
 
 
 

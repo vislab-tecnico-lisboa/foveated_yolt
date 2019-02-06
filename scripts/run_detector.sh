@@ -25,30 +25,30 @@ SIZE_MAP=227
 LEVELS=5
 
 # Set debug - see images
-DEBUG=1
+DEBUG=0
 
 # Number of images processed
-TOTAL_IMAGES=1
+TOTAL_IMAGES=212
 
 # Define size of the fovea
-#SIGMAS="0,1,10,20,30,40,50,60,70,80,90,100,110,120,130,140"
-SIGMAS="30"
+SIGMAS="10,20,30,40,50,60,70,80,90,100"
+#SIGMAS="30"
 
 #THRESHOLDS="0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.80,0.85,0.90,0.95,1.0"
-THRESHOLDS="0.7"
+THRESHOLDS="0.60"
 
 #Number of fixation points
-POINTS=10
+POINTS=16
 
 #Random fixation points
-RAND=0
+RAND=1
 
 # Choose method (1-CARTESIAN 2-FOVEATION 3-HYBRID)
 MODE=2
 
 # change this path to the absolute location of the network related files
 FILES_FOLDER_ABSOLUTE_PATH=$DIR"/files/"
-DATASET=$DIR"/images"
+DATASET="/home/cristina/Documents/JPEG_Compression/ILSVRC2012_img_val_partition_notcentered_2/"
 RESULTS_FOLDER_ABSOLUTE_PATH=$DIR"/results/"
 
 MODEL_FILE="deploy_googlenet.prototxt"

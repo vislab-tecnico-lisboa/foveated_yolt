@@ -8,6 +8,8 @@
 #include <math.h>
 #include <limits>
 #include <time.h>
+#include "jpeglib.h"
+#include <setjmp.h>
 
 #include "network_classes.hpp"
 #include "laplacian_foveation.hpp"
@@ -24,7 +26,10 @@ cv::Mat foveate(const cv::Mat &img, const int &size_map,
 				const int &levels, const int &sigma_x, const int &sigma_y,
 				const cv::Mat &fixation_point);
 
-std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random);
+std::vector<cv::Mat> fixationPoints (int img_size, int n_points, int random);
+bool getFileContent(std::string fileName, std::vector<std::string> & vecOfStrs);
+
+
 
 template<typename T>
 string ToString(T t) {
@@ -47,15 +52,15 @@ int main(int argc, char** argv){
 
 	/* network params */
 	const string absolute_path_folder = string(argv[1]);
-	const string model_file 	  = absolute_path_folder + string(argv[2]);
+	const string model_file 	      = absolute_path_folder + string(argv[2]);
 	const string weight_file          = absolute_path_folder + string(argv[3]);
 	const string mean_file            = absolute_path_folder + string(argv[4]);
 	const string label_file           = absolute_path_folder + string(argv[5]);
 	const string dataset_folder       = string(argv[6]);
 	static int N                      = atoi(argv[7]);			// Define number of top predicted labels
 	static string threshs_            = string(argv[8]);		// Segmentation threshold for mask
-	static int size_map 		  = atoi(argv[9]);          // Size of the network input images (227,227)
-	static int levels 		  = atoi(argv[10]);         // Number of kernel levels
+	static int size_map 		      = atoi(argv[9]);          // Size of the network input images (227,227)
+	static int levels 		          = atoi(argv[10]);         // Number of kernel levels
 	static string sigmas_             = string(argv[11]);       // Size of the fovea
 	static string results_folder      = string(argv[12]);       // Folder to store results
 	static int mode                   = atoi(argv[13]);         // Mode
@@ -120,26 +125,28 @@ int main(int argc, char** argv){
 	glob(dataset_folder, image_image_files);
 
 	// store results
-	ofstream feedforward_detection;
+	ofstream detections;
 	ofstream feedback_detection;
 	string foveation_filename = "/home/rui/Downloads/Foveated-YOLT/figures/foveation_";
 	string saliency_map_filename="/home/rui/Downloads/Foveated-YOLT/figures/saliencymap_";
 	string bbox_filename="/home/rui/Downloads/Foveated-YOLT/figures/bbox_";
+	
 	// File with 5 classes + scores + 5 bounding boxes
 	// 1st classification and localization
-	std::string feedforward_detection_str=results_folder+"feedfoward_detection_"+
+	
+	std::string detection_str=results_folder+"feedfoward_detection_"+
 														 "t"    + ToString(threshs.size()) +
 														 "s"   + ToString(sigmas.size())  +
 														 "p"   + ToString(npoints)+
 														 "r"   + ToString(random)         +
 														 "i"   + ToString(total_images)   + ".txt";                                        
 
-	feedforward_detection.open (feedforward_detection_str.c_str(),ios::out);
-	feedforward_detection<<"sigma;thres;pt_w;pt_h;class1;score1;x1;y1;w1;h1;class2;score2;x2;y2;w2;h2;class3;score3;x3;y3;w3;h3;class4;score4;x4;y4;w4;h4;class5;score5;x5;y5;w5;h5"<<std::endl;
+	detections.open(detection_str.c_str(),ios::out);
+	detections <<"id sig th fpx fpy iter topk label1 conf1"<<std::endl;
 
 	// File with 5 classes + scores + 5 bounding boxes
 	//  Re classification and Re localization
-	std::string feedback_detection_str=results_folder+"feedback_detection_"+
+	/*std::string feedback_detection_str=results_folder+"feedback_detection_"+
 														 "t"    + ToString(threshs.size()) +
 														 "s"   + ToString(sigmas.size())  +
 														 "p"   + ToString(npoints)+
@@ -148,17 +155,32 @@ int main(int argc, char** argv){
 
 	feedback_detection.open (feedback_detection_str.c_str(),ios::out);
 	feedback_detection<<"sigma;thres;pt_w;pt_h;class1;score1;x1;y1;w1;h1;class2;score2;x2;y2;w2;h2;class3;score3;x3;y3;w3;h3;class4;score4;x4;y4;w4;h4;class5;score5;x5;y5;w5;h5"<<std::endl;
-
+	*/
+	
 	// Seed for random fixation points
 	srand (time(NULL));
-	std::vector<cv::Mat> fixedpts = FixationPoints(size_map,npoints,random);
+	std::vector<cv::Mat> fixedpts = fixationPoints(size_map,npoints,random);
  
-   // Total number of iterations
-	int total_iterations=total_images*threshs.size()*sigmas.size()*fixedpts.size();
 
 	float thresh;
 	int sigma;
 	cv::Mat fixedpt;
+
+	std::string ground_truth_filename = "/home/cristina/Documents/JPEG_Compression/ground_truth_labels_ilsvrc12_partition_notcentered_2.txt";
+	std::vector<std::string> groundtruth;
+	bool result = getFileContent(ground_truth_filename, groundtruth);
+	//for (int i=0; i<total_images;i++)
+	//	std::cout << groundtruth[i]<< std::endl;
+
+	int N_iter = 3;
+	int erros[sigmas.size()][N_iter+1] ;
+
+	for (int i=0; i<sigmas.size(); i++)
+		for(int j=0; j< N_iter+1;j++)
+			erros[i][j]=0;
+
+	// Total number of iterations
+	int total_iterations = total_images*threshs.size()*sigmas.size()*fixedpts.size()*N_iter;
 
 	// For each threshold
 	for (unsigned int thresh_index=0; thresh_index<threshs.size(); ++thresh_index){
@@ -171,7 +193,7 @@ int main(int argc, char** argv){
 			// For each fixation point
 			for (unsigned int fixedpt_index = 0; fixedpt_index < fixedpts.size(); ++fixedpt_index){
 				fixedpt = fixedpts[fixedpt_index];
-				
+				 
 				// For each image
 				for (unsigned int input=0; input<total_images; ++input){
 
@@ -182,7 +204,7 @@ int main(int argc, char** argv){
 					string file = image_image_files[input];
 					cv::Mat img = cv::imread(file, 1);
 					resize(img,img, Size(size_map,size_map)); 
-					cv::Mat img_orig=img.clone();
+					cv::Mat img_orig = img.clone();
 
 					// Varibles
 					std::vector<string> labels;
@@ -192,14 +214,39 @@ int main(int argc, char** argv){
 					std::vector<Rect> bboxes2;
 
 					// Set a specific foveation point				
-					//fixedpt.at<int>(0,0)=50;
-					//fixedpt.at<int>(1,0)=170;
+					//fixedpt.at<int>(0,0)=127;
+					//fixedpt.at<int>(1,0)=140;
 
-					// Atual iteration
-					int iteration=input+1+fixedpt_index*total_images+
-								  sigma_index*total_images*fixedpts.size()+
-								  thresh_index*total_images*sigmas.size()*fixedpts.size();
-					std::cout << "Th:" << thresh
+					// 1st Foveation
+					if(mode==FOVEATION)
+					{
+					    img = foveate(img,size_map,levels,sigma,sigma,fixedpt);
+					}
+					else
+					{
+					    cv::GaussianBlur(img,img, Size(5,5), sigma, sigma);
+					}
+
+					cv::Mat img_feedfoward_pass = img.clone();
+
+					if(debug)
+						Network.VisualizeFoveation(fixedpt,img_feedfoward_pass,sigma,0,foveation_filename);
+
+
+					/*1st iteration */
+					ClassData feedfoward_data_all = Network.Classify(img_feedfoward_pass);
+					ClassData feedfoward_data = Network.OrderPrediction(feedfoward_data_all, N);
+					
+
+					std::vector<cv::Mat> fixation_points;
+
+					for (int n_iter = 0; n_iter < N_iter; ++ n_iter){
+
+						// Atual iteration
+						int iteration=n_iter+1 + input*N_iter +fixedpt_index*total_images*N_iter+
+								  sigma_index*total_images*fixedpts.size()*N_iter+
+								  thresh_index*total_images*sigmas.size()*fixedpts.size()*N_iter;
+						std::cout << "Th:" << thresh
 							  << "\tSig:" << sigma
 							  << "\tPt: (" << fixedpt.at<int>(0,0)<<","<<fixedpt.at<int>(1,0)<<')'
 							  << "\tImg:" << input+1
@@ -208,174 +255,186 @@ int main(int argc, char** argv){
 							  << " of "  << total_iterations
 							  << " ("<< 100.0*(iteration)/(total_iterations) << "%)"<< std::endl;
 
-					// 1st Foveation
-					if(mode==FOVEATION)
-					{
-					    img=foveate(img,size_map,levels,sigma,sigma,fixedpt);
-					}
-					else
-					{
-					    cv::GaussianBlur(img,img, Size(5,5), sigma, sigma);
-					}
+						std::cout << "Iteration " << n_iter << std::endl;						
 
-
-
-					cv::Mat img_first_pass=img.clone();
-					
-					// Uncomment for Visualize Foveated Image
-					Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index,foveation_filename);
-
-					// 1st Feedforward with foveated image
-					//  Prediciton of TOP 5 classes
-
-					ClassData first_pass_data = Network.Classify(img, N);
-
-					//std::cout << "----- 1st Feedfoward Pass ------" << std::endl;
-					//std::cout << first_pass_data << std::endl;
-
-					
-					// Store results
-					feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
-										  << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
-					feedback_detection    << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
-										  << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
-
-
-					// For each predicted class labels
-					for (int class_index = 0; class_index < N; ++class_index) {
-
-						cv::Mat img_=img_orig.clone();
-						/////////////////////////////////////////////
-						//  Weakly Supervised Object Localization  //
-						// Saliency Map + Segmentation Mask + BBox //
-						/////////////////////////////////////////////
-						cv::Mat saliency_map;
-						cv::Rect Min_Rect = Network.CalcBBox(class_index,img, first_pass_data, thresh,saliency_map);
-
-						
-						// Save all bounding boxes
-						bboxes1.push_back(Min_Rect);
-
-						// Store results
-						if (class_index==N-1) {
-							feedforward_detection << first_pass_data.label[class_index] << ";" 
-												  << first_pass_data.score[class_index] << ";"
-												  << Min_Rect.x << ";" << Min_Rect.y << ";"
-												  << Min_Rect.width << ";" << Min_Rect.height;
-							feedforward_detection << endl;
-						}
-						else {
-							feedforward_detection << first_pass_data.label[class_index] << ";" 
-												  << first_pass_data.score[class_index] << ";"
-												  << Min_Rect.x << ";" << Min_Rect.y << ";"
-												  << Min_Rect.width << ";" << Min_Rect.height << ";";
-						}
-
-						/////////////////////////////////////////////////////////
-						//      Image Re-Classification with Attention         //
-						// Foveated Image + Forward + Predict new class labels //
-						/////////////////////////////////////////////////////////
+						std::vector<string> labels;
+						std::vector<float> scores;
+						std::vector<int> indexs;
+						std::vector<cv::Mat> points;
 
 						cv::Mat fixation_point(2,1,CV_32S);
-						fixation_point.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
-						fixation_point.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
-						
-						cv::Mat img_second_pass=foveate(img_orig,size_map,levels,sigma,sigma,fixation_point);
+
+						// For each predicted class labels
+						for (int class_index = 0; class_index < N; ++class_index) {						
+							
+							if (n_iter>0)
+								img_feedfoward_pass = foveate(img_orig,size_map,levels,sigma,sigma,fixation_points[class_index]);
+
+							/////////////////////////////////////////////
+							//  Weakly Supervised Object Localization  //
+							// Saliency Map + Segmentation Mask + BBox //
+							/////////////////////////////////////////////
+							
+							cv::Mat saliency_map;
+							cv::Rect Min_Rect = Network.CalcBBox(class_index, img_feedfoward_pass, feedfoward_data, thresh, saliency_map);
+							
+							detections <<input<<"\t"<<sigma<<"\t"<<thresh<<"\t"<<fixedpt.at<int>(0,0)<<"\t"<<fixedpt.at<int>(1,0)<<"\t"<< n_iter<<"\t";
+							detections <<class_index<<"\t"<<feedfoward_data.label[class_index]<<"\t"<<feedfoward_data.score[class_index]<<"\t";
+							detections <<Min_Rect.x<<"\t"<<Min_Rect.y<<"\t"<<Min_Rect.width<<"\t"<<Min_Rect.height<<std::endl;
+							
+
+							//std::cout << "BBox: "<< Min_Rect << std::endl;
+
+							/////////////////////////////////////////////////////////
+							//      Image Re-Classification with Attention         //
+							// Foveated Image + Forward + Predict new class labels //
+							/////////////////////////////////////////////////////////
+
+							fixation_point.at<int>(1,0) = Min_Rect.y + Min_Rect.height/2;
+							fixation_point.at<int>(0,0) = Min_Rect.x + Min_Rect.width/2;
 
 
-						// 2nd Feedforward with foveated image
-						//  Prediciton New top 5 of each predicted class
-						ClassData feedback_data = Network.Classify(img_second_pass, N);
-						
-						//std::cout << "----- 2nd Feedfoward Pass ------" << std::endl;
-						//std::cout << feedback_data << std::endl;
+							//std::cout << "\tPt: (" << fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<<')' << std::endl;
 
-						// For each bounding box
-						for(int m=0; m<N; ++m) {
-							// Save all labels, scores and indexes
-							labels.push_back(feedback_data.label[m]);
-							scores.push_back(feedback_data.score[m]);
-							indexs.push_back(feedback_data.index[m]);
+							img_feedfoward_pass = foveate(img_orig,size_map,levels,sigma,sigma,fixation_point);
+
+
+							// 2nd Feedforward with foveated image
+							//  Prediciton New top 5 of each predicted class
+							ClassData feedback_data_all = Network.Classify(img_feedfoward_pass);							
+							feedfoward_data_all = feedback_data_all*0.55 + feedfoward_data_all*0.45;
+							ClassData feedback_data = Network.OrderPrediction(feedfoward_data_all, N);
+
+							// For each bounding box
+							for(int m=0; m<N; ++m) {
+								// Save all labels, scores and indexes
+								labels.push_back(feedback_data.label[m]);
+								scores.push_back(feedback_data.score[m]);
+								indexs.push_back(feedback_data.index[m]);
+								points.push_back(fixation_point);
+
+							}
+
 						}
+
+						/////////////////////////////////////////////////////////
+						//      Image Re-Localization with Attention           //
+						// Saliency Map + Segmentation Mask + BBox             //
+						/////////////////////////////////////////////////////////
+
+						// Variables for top 5 ranked classes
+			
+						std::vector<string> top_final_labels;
+						std::vector<float> top_final_scores;
+						std::vector<int> top_final_index;		
+						std::vector<cv::Mat> top_final_points;
+						
+						// Sorting
+						std::vector<int> sort_scores_index = ArgMax(scores, N*N);
+
+						// Finding top 5 diferent labels 
+						int top = 0;
+						while(top_final_labels.size() < N){
+							int idx = sort_scores_index[top];
+							if((std::find(top_final_labels.begin(), top_final_labels.end(), labels[idx])) == (top_final_labels.end())) {
+								top_final_labels.push_back(labels[idx]);
+								top_final_scores.push_back(scores[idx]);
+								top_final_index.push_back(indexs[idx]);   
+								top_final_points.push_back(points[idx]);        
+							}
+							top ++;
+						}
+
+						// Feedfoward - 2nd Prediciton of TOP N classes
+						ClassData feedfoward_data = ClassData(top_final_labels,top_final_scores,top_final_index);
+						
+						std::cout << "----- Ranked ------\n";
+						std::cout << feedfoward_data << std::endl;
+						
+
+						// for (int i=0; i<N;++i){
+						// 	detections <<input<<" "<<sigma<<" "<<thresh<<" "<<fixedpt.at<int>(0,0)<<" "<<fixedpt.at<int>(1,0)<<" "<<n_iter+1 << " ";
+						// 	detections <<i<<" "<<feedfoward_data.label[i]<<" "<<feedfoward_data.score[i]<<std::endl;
+						// }
+
+
+						int flag = 0;
+						for (int i=0; i<N; i++){
+							std::string feedfoward_data_label(feedfoward_data.label[i]);
+							//std::cout << i << ' ' << feedfoward_data_label << ' ' << groundtruth[input] << std::endl;;
+							if (feedfoward_data_label == groundtruth[input])
+								break;		
+							flag = flag + 1;
+						}
+						if (flag == N)
+							erros[sigma_index][n_iter] = erros[sigma_index][n_iter] + 1;
+						
+						// std::string feedfoward_data_label(feedfoward_data.label[0]);
+
+						// if (feedfoward_data_label !=groundtruth[input])
+						// 	erros1 = erros1 + 1;
+
+						fixation_points = top_final_points;
+
+
+						if (feedfoward_data.score[0] > 0.70 && flag < N)
+							break;
+
 
 						if(debug) {
 							//std::cout << saliency_map.size() << " " << saliency_map.type() << " " << img.size() << " " << img.type() << std::endl;
-   							Network.VisualizeSaliencyMap(saliency_map,class_index,saliency_map_filename);
-							Network.VisualizeFoveation(fixation_point,img_second_pass,sigma,class_index+1,foveation_filename);
-							Mat dst;
-							cv::hconcat(img_orig,img_first_pass, dst); // horizontal
-							cv::hconcat(dst, img_second_pass, dst); // horizontal
+   							//Network.VisualizeSaliencyMap(saliency_map,class_index,saliency_map_filename);
+							Network.VisualizeFoveation(fixation_point,img_feedfoward_pass,sigma,n_iter+1,foveation_filename);
+							//Mat dst;
+							//cv::hconcat(img_orig,img_feedfoward_pass, dst); // horizontal
+							//cv::hconcat(dst, img_feedback_pass, dst); // horizontal
 							//cv::vconcat(a, b, dst); // vertical
-							namedWindow( "original image,    first pass,   second pass     class", WINDOW_AUTOSIZE ); // Create a window for display.
-							imshow( "original image,    first pass,   second pass     class", dst );                  // Show our image inside it.
-							waitKey(1);
+							//namedWindow( "original image,    first pass,   second pass     class", WINDOW_AUTOSIZE ); // Create a window for display.
+							//imshow( "original image,    first pass,   second pass     class", dst );                  // Show our image inside it.
 						}
-					}
-
-					/////////////////////////////////////////////////////////
-					//      Image Re-Localization with Attention           //
-					// Saliency Map + Segmentation Mask + BBox             //
-					/////////////////////////////////////////////////////////
-
-					// Variables for top 5 ranked classes
-					std::vector<string> top_final_labels;
-					std::vector<float> top_final_scores;
-					std::vector<int> top_final_index;
-					
-					// Sorting
-					std::vector<int> sort_scores_index  = ArgMax(scores, N*N);
-
-					// Finding top 5 diferent labels 
-					int top = 0;
-					while(top_final_labels.size() < 5){
-						int idx = sort_scores_index[top];
-						if((std::find(top_final_labels.begin(), top_final_labels.end(), labels[idx])) == (top_final_labels.end())) {
-							top_final_labels.push_back(labels[idx]);
-							top_final_scores.push_back(scores[idx]);
-							top_final_index.push_back(indexs[idx]);             
-						}
-						top ++;
-					}
-
-					// Feedfoward - 2nd Prediciton of TOP N classes
-					ClassData feedback_top_final_data = ClassData(top_final_labels,top_final_scores,top_final_index);
-					
-					//std::cout << "----- Ranked ------" << std::endl;
-					//std::cout << feedback_top_final_data << std::endl;
+					} //for iterations
+				} //for image
+			} // for fixpt
+		} //for sigma
+	} // for threhold
 
 
-					for (int class_index = 0; class_index < N; ++class_index) {				
-						cv::Mat saliency_map;
-						Rect Min_Rect = Network.CalcBBox(class_index, img, feedback_top_final_data, thresh,saliency_map);
-						if(debug) {
-   							Network.VisualizeSaliencyMap(saliency_map,class_index, saliency_map_filename);
-						}
-						// Save all bounding boxes
-						bboxes2.push_back(Min_Rect);
-
-						// store results
-						if (class_index == N-1) {
-							feedback_detection << feedback_top_final_data.label[class_index] << ";" << feedback_top_final_data.score[class_index] 
-							<< ";" << Min_Rect.x << ";" << Min_Rect.y << ";" << Min_Rect.width << ";" << Min_Rect.height ;
-							feedback_detection << endl;
-						}
-						else
-							feedback_detection << feedback_top_final_data.label[class_index] << ";" << feedback_top_final_data.score[class_index] 
-							<< ";" << Min_Rect.x << ";" << Min_Rect.y << ";" << Min_Rect.width << ";" << Min_Rect.height << ";";
-					   
-					}
-
-					// Uncomment for Visualize Bounding Boxes 1st pass
-					Network.VisualizeBBox(bboxes1,N,img_orig,size_map,1,bbox_filename);
-					// Uncomment for Visualize Bounding Boxes 2nd pass
-					Network.VisualizeBBox(bboxes2,N,img,size_map,2,bbox_filename);
-
-				}
-			}
-		}
+	for (int i=0; i<sigmas.size(); i++){
+		sigma=sigmas[i];
+		for(int j=0; j< N_iter;j++)
+			printf("Sig: %d Sac: %d Error: %d\n", sigma,j,erros[i][j]);
 	}
-	feedforward_detection.close();
-	feedback_detection.close();
+
+	//feedforward_detection.close();
+	//feedback_detection.close();
+}
+
+
+
+bool getFileContent(std::string fileName, std::vector<std::string> & vecOfStrs)
+{
+ 
+	// Open the File
+	std::ifstream in(fileName.c_str());
+ 
+	// Check if object is valid
+	if(!in)
+	{
+		std::cerr << "Cannot open the File : "<<fileName<<std::endl;
+		return false;
+	}
+ 
+	std::string str;
+	// Read the next line from File untill it reaches the end.
+	while (std::getline(in, str))
+	{
+		// Line contains string of length > 0 then save it in vector
+		if(str.size() > 0)
+			vecOfStrs.push_back(str);
+	}
+	//Close The File
+	in.close();
+	return true;
 }
 
 
@@ -411,7 +470,7 @@ cv::Mat foveate(const cv::Mat &img, const int &size_map,
 // FIXATION POINTS FUNTION  //
 //////////////////////////////
 
-std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random) {
+std::vector<cv::Mat> fixationPoints (int img_size, int n_points, int random) {
 
 	std::vector<cv::Mat> fixation_points;
 

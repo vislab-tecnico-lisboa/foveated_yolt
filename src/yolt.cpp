@@ -76,6 +76,7 @@ int main(int argc, char** argv){
 	}
 	static int npoints                  = atoi(argv[18]);         // Number of fixation points
 	static bool random                  = atoi(argv[19]);         // Set random = 1 to random fixation points
+	static int N_iter 					= atoi(argv[20]);
 
 	std::cout << "Absolute Path Folder: " 	<< absolute_path_folder<< std::endl;
 	std::cout << "Model File: " 			<< model_file << std::endl;
@@ -92,6 +93,7 @@ int main(int argc, char** argv){
 	std::cout << "Mode: " 					<< mode << std::endl;
 	std::cout << "N Pts: "                  << npoints << std::endl;
 	std::cout << "Random : "                << random << std::endl;
+	std::cout << "Niter : "                 << N_iter << std::endl;
 	std::cout << "Total_images: " 			<< total_images << std::endl;
 	std::cout << "Debug: "                  << debug << std::endl;
 
@@ -142,7 +144,7 @@ int main(int argc, char** argv){
 														 "i"   + ToString(total_images)   + ".txt";                                        
 
 	detections.open(detection_str.c_str(),ios::out);
-	detections <<"id sig th fpx fpy iter topk label1 conf1"<<std::endl;
+	detections <<"id\tsig\tth\tfpx\tfpy\titer\ttopk\tlabel1\tconf1\tx\ty\tw\th"<<std::endl;
 
 	// File with 5 classes + scores + 5 bounding boxes
 	//  Re classification and Re localization
@@ -160,24 +162,27 @@ int main(int argc, char** argv){
 	// Seed for random fixation points
 	srand (time(NULL));
 	std::vector<cv::Mat> fixedpts = fixationPoints(size_map,npoints,random);
- 
 
 	float thresh;
 	int sigma;
 	cv::Mat fixedpt;
 
-	std::string ground_truth_filename = "/home/cristina/Documents/JPEG_Compression/ground_truth_labels_ilsvrc12_partition_notcentered_2.txt";
-	std::vector<std::string> groundtruth;
-	bool result = getFileContent(ground_truth_filename, groundtruth);
+	//std::string ground_truth_filename = "/home/cristina/Documents/JPEG_Compression/ground_truth_labels_ilsvrc12_partition_notcentered_2.txt";
+	std::string images_partition_id = "files/id_ilsvrc12_partition_notcentered.txt";
+
+	//std::vector<std::string> groundtruth;
+	std::vector<std::string> images_id;
+	
+	//bool result = getFileContent(ground_truth_filename, groundtruth);
+	bool result = getFileContent(images_partition_id, images_id);
 	//for (int i=0; i<total_images;i++)
 	//	std::cout << groundtruth[i]<< std::endl;
 
-	int N_iter = 3;
-	int erros[sigmas.size()][N_iter+1] ;
+	//int erros[sigmas.size()][N_iter+1] ;
 
-	for (int i=0; i<sigmas.size(); i++)
-		for(int j=0; j< N_iter+1;j++)
-			erros[i][j]=0;
+	// for (int i=0; i<sigmas.size(); i++)
+	// 	for(int j=0; j< N_iter+1;j++)
+	// 		erros[i][j]=0;
 
 	// Total number of iterations
 	int total_iterations = total_images*threshs.size()*sigmas.size()*fixedpts.size()*N_iter;
@@ -210,8 +215,8 @@ int main(int argc, char** argv){
 					std::vector<string> labels;
 					std::vector<float> scores;
 					std::vector<int> indexs;
-					std::vector<Rect> bboxes1;
-					std::vector<Rect> bboxes2;
+					//std::vector<Rect> bboxes1;
+					//std::vector<Rect> bboxes2;
 
 					// Set a specific foveation point				
 					//fixedpt.at<int>(0,0)=127;
@@ -237,7 +242,6 @@ int main(int argc, char** argv){
 					ClassData feedfoward_data_all = Network.Classify(img_feedfoward_pass);
 					ClassData feedfoward_data = Network.OrderPrediction(feedfoward_data_all, N);
 					
-
 					std::vector<cv::Mat> fixation_points;
 
 					for (int n_iter = 0; n_iter < N_iter; ++ n_iter){
@@ -255,8 +259,7 @@ int main(int argc, char** argv){
 							  << " of "  << total_iterations
 							  << " ("<< 100.0*(iteration)/(total_iterations) << "%)"<< std::endl;
 
-						std::cout << "Iteration " << n_iter << std::endl;						
-
+						
 						std::vector<string> labels;
 						std::vector<float> scores;
 						std::vector<int> indexs;
@@ -278,7 +281,7 @@ int main(int argc, char** argv){
 							cv::Mat saliency_map;
 							cv::Rect Min_Rect = Network.CalcBBox(class_index, img_feedfoward_pass, feedfoward_data, thresh, saliency_map);
 							
-							detections <<input<<"\t"<<sigma<<"\t"<<thresh<<"\t"<<fixedpt.at<int>(0,0)<<"\t"<<fixedpt.at<int>(1,0)<<"\t"<< n_iter<<"\t";
+							detections <<images_id[input]<<"\t"<<sigma<<"\t"<<thresh<<"\t"<<fixedpt.at<int>(0,0)<<"\t"<<fixedpt.at<int>(1,0)<<"\t"<< n_iter<<"\t";
 							detections <<class_index<<"\t"<<feedfoward_data.label[class_index]<<"\t"<<feedfoward_data.score[class_index]<<"\t";
 							detections <<Min_Rect.x<<"\t"<<Min_Rect.y<<"\t"<<Min_Rect.width<<"\t"<<Min_Rect.height<<std::endl;
 							
@@ -348,37 +351,26 @@ int main(int argc, char** argv){
 						// Feedfoward - 2nd Prediciton of TOP N classes
 						ClassData feedfoward_data = ClassData(top_final_labels,top_final_scores,top_final_index);
 						
-						std::cout << "----- Ranked ------\n";
-						std::cout << feedfoward_data << std::endl;
+						//std::cout << "----- Ranked ------\n";
+						//std::cout << feedfoward_data << std::endl;
 						
 
-						// for (int i=0; i<N;++i){
-						// 	detections <<input<<" "<<sigma<<" "<<thresh<<" "<<fixedpt.at<int>(0,0)<<" "<<fixedpt.at<int>(1,0)<<" "<<n_iter+1 << " ";
-						// 	detections <<i<<" "<<feedfoward_data.label[i]<<" "<<feedfoward_data.score[i]<<std::endl;
+						// int flag = 0;
+						// for (int i=0; i<N; i++){
+						// 	std::string feedfoward_data_label(feedfoward_data.label[i]);
+						// 	//std::cout << i << ' ' << feedfoward_data_label << ' ' << groundtruth[input] << std::endl;;
+						// 	if (feedfoward_data_label == groundtruth[input])
+						// 		break;		
+						// 	flag = flag + 1;
 						// }
-
-
-						int flag = 0;
-						for (int i=0; i<N; i++){
-							std::string feedfoward_data_label(feedfoward_data.label[i]);
-							//std::cout << i << ' ' << feedfoward_data_label << ' ' << groundtruth[input] << std::endl;;
-							if (feedfoward_data_label == groundtruth[input])
-								break;		
-							flag = flag + 1;
-						}
-						if (flag == N)
-							erros[sigma_index][n_iter] = erros[sigma_index][n_iter] + 1;
-						
-						// std::string feedfoward_data_label(feedfoward_data.label[0]);
-
-						// if (feedfoward_data_label !=groundtruth[input])
-						// 	erros1 = erros1 + 1;
+						// if (flag == N)
+						// 	erros[sigma_index][n_iter] = erros[sigma_index][n_iter] + 1;
 
 						fixation_points = top_final_points;
 
 
-						if (feedfoward_data.score[0] > 0.70 && flag < N)
-							break;
+						// if (feedfoward_data.score[0] > 0.70 && flag < N)
+						// 	break;
 
 
 						if(debug) {
@@ -399,13 +391,13 @@ int main(int argc, char** argv){
 	} // for threhold
 
 
-	for (int i=0; i<sigmas.size(); i++){
-		sigma=sigmas[i];
-		for(int j=0; j< N_iter;j++)
-			printf("Sig: %d Sac: %d Error: %d\n", sigma,j,erros[i][j]);
-	}
+	// for (int i=0; i<sigmas.size(); i++){
+	// 	sigma=sigmas[i];
+	// 	for(int j=0; j< N_iter;j++)
+	// 		printf("Sig: %d Sac: %d Error: %d\n", sigma,j,erros[i][j]);
+	// }
 
-	//feedforward_detection.close();
+	detections.close();
 	//feedback_detection.close();
 }
 

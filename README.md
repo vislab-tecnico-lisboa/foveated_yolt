@@ -18,12 +18,11 @@ cmake ..
 make
 ```
 
-To run yolt.cpp from root:
-
+First, run the setup.sh script
 ```
 bash scripts/setup.sh
 ```
-
+Second, run the detector from the root:
 ```
 bash scripts/run_detector.sh
 ```
@@ -43,5 +42,10 @@ If you use our code, please cite our work:
 }
 ```
 
+To test the python wrapper on an example image, change the ```filename='filename.jpg' ```, and run the following command from the root directory:
+
+```
+python src/python_bindings/test.py
+```
 
 

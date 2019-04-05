@@ -6,33 +6,29 @@ The pre-trained models used to test our method are CaffeNet, AlexNet, GoogLeNet 
 
 
 Donwload files and from root, create a build directory (mkdir build).
-
 Execute from root
-
 
 bash scripts/setup.sh to directly download the pre-trained models.
 
-
-
 To compile from root: 
 
+```
 cd build
-
 cmake ..
-
 make
-
-
-
+```
 
 To run yolt.cpp from root:
 
+```
+bash scripts/setup.sh
+```
+
+```
 bash scripts/run_detector.sh
- 
+```
 
-
-To configure your network and its parameters, change accordingly the run_detector.sh file.
-
+To configure your network and its parameters, change the ```run_detector.sh``` file accordingly.
 
 If you use our code, please cite our work:
 

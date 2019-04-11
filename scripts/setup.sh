@@ -1,7 +1,6 @@
 #!/bin/bash
 
 ##### Functions
-
 function get_network_weights
 {
 	#download pre-trained network model
@@ -21,16 +20,16 @@ function get_network_weights
 
 	# Ground Truth Bounding Boxes ILSVRC 2012
 	#wget https://www.dropbox.com/s/3nsb0prw9uxynkf/ILSVRC2012_bbox_val_v3.tgz?dl=0
+
 	wget https://raw.githubusercontent.com/Robert0812/deepsaldet/master/caffe-sal/data/ilsvrc12/imagenet_mean.binaryproto
 	#wget https://git.ustclug.org/zvant/caffe-nvjetson/blob/8bc372e45125bc61896675ee2a35c674ba16362f/data/ilsvrc12/imagenet_mean.binaryproto
 
 	wget https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/c2c91c8e767d04621020c30ed31192724b863041/imagenet1000_clsid_to_human.txt
 
 	wget https://raw.githubusercontent.com/BVLC/caffe/master/models/bvlc_googlenet/deploy.prototxt -O deploy_googlenet.prototxt
+
 	cd ..
 }
-
-
 
 function get_data
 {

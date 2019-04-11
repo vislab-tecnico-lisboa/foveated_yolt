@@ -188,7 +188,6 @@ std::vector<float> Network::Predict(const cv::Mat& img) {
 
     input_layer->Reshape(1, num_channels, input_geometry.height, input_geometry.width);
 
-
     // Forward dimension change to all layers
     net->Reshape();
 
@@ -399,27 +398,27 @@ void Network::VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat& img, int s
     cv::Mat img_ = img.clone();
     stringstream ss;
     string type = ".png";
-    for (int k =0; k< N; ++k) {
-
+    for (int k =0; k< N; ++k) 
+    {
         ss<<name<<(k + 1)<<type;
 
         string filename = ss.str();
         ss.str("");
 
         rectangle(img_, bboxes[k], Scalar(0, 0, 255), 2, 8, 0 );
+
         if(!imwrite(filename, img_))
-            cout << "ERROR: Saving BBox"<< endl;
+            cout << "ERROR: Saving BBox" << endl;
         //namedWindow(filename,WINDOW_AUTOSIZE);
         //imshow(filename, img_);
         //waitKey(0);
         img_=img.clone();
-
     }
 }
 
-/////////////////////////////////
-// Function VisualizeFoveation //
-/////////////////////////////////
+//////////////////////////////////
+// Function Visualize Foveation //
+//////////////////////////////////
 
 void Network::VisualizeSaliencyMap(const cv::Mat & saliency_map, int k, const std::string & name) {
 
@@ -434,23 +433,20 @@ void Network::VisualizeSaliencyMap(const cv::Mat & saliency_map, int k, const st
     ss<<name<<(k + 1)<<type;
     string filename = ss.str();
     ss.str("");
-
     if(!imwrite(filename, saliency_map_))
-        cout << "ERROR: Saving Saliency Map"<< endl;
-
-    //namedWindow(filename,WINDOW_AUTOSIZE);
-    //imshow(filename, saliency_map_);
-    //waitKey(0);
+        cout << "ERROR: Saving Saliency Map" << endl;
 }
-
-
 
 /////////////////////////////////
 // Function VisualizeFoveation //
 /////////////////////////////////
 
-void Network::VisualizeFoveation(const cv::Mat & fix_pt, const cv::Mat & img, const int & sigma, const int & k, const std::string & name) {
-
+void Network::VisualizeFoveation(const cv::Mat & fix_pt, 
+				 const cv::Mat & img, 
+				 const int & sigma, 
+				 const int & k,
+                                 const std::string & name)
+{ 
     cv::Point pt;
     pt.x = fix_pt.at<int>(0,0);
     pt.y = fix_pt.at<int>(1,0);
@@ -465,14 +461,17 @@ void Network::VisualizeFoveation(const cv::Mat & fix_pt, const cv::Mat & img, co
     circle(img_, pt, sigma,Scalar(0, 0, 255),2);
 
     if(!imwrite(filename, img_))
-        cout << "ERROR: Saving Foveation Image"<< endl;
+        cout << "ERROR: Saving Foveation Image" << endl;
+
+    /*
+    namedWindow("teste2",WINDOW_AUTOSIZE);
+    imshow("teste2", img_first_pass);
+    waitKey(100);*/
 
     //namedWindow(filename,WINDOW_AUTOSIZE);
     //imshow(filename, img_);
     //waitKey(1);
 }
-
-
 
 ///////////////////////////////////////
 // Function Limit Values             //
@@ -502,7 +501,6 @@ float* Network::LimitValues(float* bottom_data) {
     }
 
     return bottom_data;
-
 }
 
 
@@ -519,3 +517,4 @@ cv::Mat Network::CalcRGBmax(cv::Mat i_RGB) {
 
     return maxRGB;
 }
+

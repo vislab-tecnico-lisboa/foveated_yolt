@@ -18,7 +18,7 @@ namespace py = boost::python;
 cv::Mat test_np_mat(const cv::Mat& in) {
   //std::cerr << "in: " << in << std::endl;
   std::cerr << "sz: " << in.size() << std::endl;
-  return in.clone();
+  return in;
 }
 
 cv::Mat test_with_args(const cv::Mat_<float>& in, const int& var1 = 1,

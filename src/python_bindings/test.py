@@ -7,23 +7,19 @@ from random import randint
 import time
 
 rho=-0.5
-<<<<<<< HEAD
+
 sigma_xx=50
 sigma_yy=50
 sigma_xy=int(np.floor(rho*sigma_xx*sigma_yy))
 
 levels=7
 img = cv2.imread('images/image_r_100.jpg')
-=======
-sigma_xx=80
-sigma_yy=100
-sigma_xy=int(np.floor(rho*sigma_xx*sigma_yy))
 
-levels=7
-img = cv2.imread('image.jpg')
->>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
+
+
+
 
 # Create the Laplacian blending object
 my_lap_obj=fv(width,height,levels,sigma_xx,sigma_yy,sigma_xy)
@@ -36,10 +32,6 @@ try:
 
         # RANDOM FIXATION POINTS
         center=[int(width/2.0), int(height/2.0)]
-<<<<<<< HEAD
-        #print npcv.test_np_mat(np.array(center))
-=======
->>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
 
         # RANDOM FOVEA SIZE
         #my_lap_obj.update_fovea(width,height,sigma_x,sigma_y)

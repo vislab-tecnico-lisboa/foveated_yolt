@@ -19,6 +19,7 @@ make
 ```
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 To run yolt.cpp from root:
 
 ```
@@ -26,11 +27,16 @@ bash scripts/setup.sh
 ```
 
 =======
+=======
+>>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
 First, run the setup.sh script
 ```
 bash scripts/setup.sh
 ```
 Second, run the detector from the root:
+<<<<<<< HEAD
+>>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
+=======
 >>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
 ```
 bash scripts/run_detector.sh

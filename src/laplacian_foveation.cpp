@@ -8,17 +8,8 @@ LaplacianBlending::LaplacianBlending(const int & _width, const int & _height, co
 	kernel_sizes.resize(levels);
 	kernels.resize(levels+1);
 
-<<<<<<< HEAD
 	CreateFilterPyr(width, height, _sigma_x, _sigma_y, _sigma_xy);
-=======
-    image_lap_pyr.resize(levels);
-    foveated_pyr.resize(levels);
-    image_sizes.resize(levels);
-    kernel_sizes.resize(levels);
-    kernels.resize(levels+1);
 
-    CreateFilterPyr(width, height, _sigma_x, _sigma_y, _sigma_xy);
->>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
 }
 
 LaplacianBlending::~LaplacianBlending() {
@@ -27,46 +18,6 @@ LaplacianBlending::~LaplacianBlending() {
 	std::vector<cv::Mat>().swap(kernels);
 	std::vector<cv::Mat>().swap(image_sizes);
 	std::vector<cv::Mat>().swap(kernel_sizes);
-}
-
-<<<<<<< HEAD
-void LaplacianBlending::BuildPyramids(const cv::Mat & image) 
-{
-	cv::Mat current_img=image;
-	if(current_img.depth()==CV_8U)
-	{
-		current_img.convertTo(current_img, CV_64FC3); 
-		current_img/=255.0;
-	}
-
-	for (int l=0; l<levels; ++l) 
-	{
-		cv::pyrDown(current_img, down);
-		cv::pyrUp(down, up, current_img.size());
-		image_lap_pyr[l]=current_img-up;
-		current_img = down;
-	}
-	    
-	image_smallest_level=up;           
-=======
-void LaplacianBlending::BuildPyramids(const cv::Mat & image) {
-
-    cv::Mat current_img=image;
-    if(current_img.depth()==CV_8U)
-    {
-	    current_img.convertTo(current_img, CV_64FC3); 
-	    current_img/=255.0;
-    }
-
-    for (int l=0; l<levels; ++l) {
-        cv::pyrDown(current_img, down);
-        cv::pyrUp(down, up, current_img.size());
-        image_lap_pyr[l]=current_img-up;
-        current_img = down;
-    }
-            
-    image_smallest_level=up;           
->>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
 }
 
 void LaplacianBlending::ComputeRois(const cv::Mat &center, cv::Rect &kernel_roi_rect, const cv::Mat &kernel_size, const cv::Mat &image_size) {
@@ -78,50 +29,6 @@ void LaplacianBlending::ComputeRois(const cv::Mat &center, cv::Rect &kernel_roi_
     kernel_roi_rect=cv::Rect(upper_left_kernel_corner.at<int>(0,0), upper_left_kernel_corner.at<int>(1,0), image_size.at<int>(0,0), image_size.at<int>(1,0));
 }
 
-
-<<<<<<< HEAD
-cv::Mat LaplacianBlending::Foveate(const cv::Mat &image, cv::Mat center) 
-{
-	BuildPyramids(image);
-	image_smallest_level.copyTo(foveated_image);
-
-	int width =image.cols*0.5; 
-	int height=image.rows*0.5;
-
-	//center=cv::Mat(width, height, CV_64FC1);
-	//fixation_point.at<int>(0,0) = width;
-	//fixation_point.at<int>(1,0) = height;
-	//std::cout << center << std::endl;
-
-	for(int i=levels-1; i>=0; --i) 
-	{
-		cv::Mat aux;
-		aux=center/(powf(2,i));
-		cv::Rect kernel_roi_rect;         
-
-		cv::Mat result_roi;
-		cv::Mat aux_pyr;
-
-		ComputeRois(aux, kernel_roi_rect, kernel_sizes[i], image_sizes[i]);
-		    
-		// Multiplicar
-		image_lap_pyr[i].copyTo(aux_pyr);
-		cv::multiply(aux_pyr, kernels[i](kernel_roi_rect), result_roi, 1.0, aux_pyr.type());
-		result_roi.copyTo(aux_pyr);
-
-		if(i==(levels-1))
-		    cv::add(foveated_image,aux_pyr,foveated_image);
-		else 
-		{
-		    cv::pyrUp(foveated_image,foveated_image,Size(image_sizes[i].at<int>(0,0),image_sizes[i].at<int>(1,0)));
-		    cv::add(foveated_image,aux_pyr,foveated_image);                   
-		}
-	}
-
-	return foveated_image;
-}
-
-=======
 cv::Mat LaplacianBlending::Foveate(const cv::Mat &image, const cv::Mat &center) {
 
     BuildPyramids(image);
@@ -154,7 +61,7 @@ cv::Mat LaplacianBlending::Foveate(const cv::Mat &image, const cv::Mat &center) 
 }
 
 
->>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
+
 cv::Mat LaplacianBlending::CreateFilter(const int & m, const int & n, const int & sigma_x, const int & sigma_y, const int & sigma_xy) {
 
     cv::Mat gkernel(m,n,CV_64FC3);
@@ -171,7 +78,7 @@ cv::Mat LaplacianBlending::CreateFilter(const int & m, const int & n, const int 
     double max_value = -std::numeric_limits<double>::max();
 
     // build kernel
-<<<<<<< HEAD
+
     for (unsigned int x=0; x<n; ++x) 
     {
         double dx=(x-xc);
@@ -179,13 +86,6 @@ cv::Mat LaplacianBlending::CreateFilter(const int & m, const int & n, const int 
         
         for(unsigned int y=0; y<m; ++y) 
 	{
-=======
-    for (unsigned int x=0; x<n; ++x) {
-        double dx=(x-xc);
-        double rx = dx*dx;
-        
-        for(unsigned int y=0; y<m; ++y) {
->>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
 	    double dy=(y-yc);
             double ry=dy*dy;
             double rxy=dx*dy;
@@ -215,12 +115,9 @@ cv::Mat LaplacianBlending::CreateFilter(const int & m, const int & n, const int 
     return gkernel;
 }
 
-<<<<<<< HEAD
+
 void LaplacianBlending::CreateFilterPyr(const int & width, const int & height, const int & _sigma_x, const int & _sigma_y, const int & sigma_xy) 
 {
-=======
-void LaplacianBlending::CreateFilterPyr(const int & width, const int & height, const int & _sigma_x, const int & _sigma_y, const int & sigma_xy) {
->>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
 	// Foveate images
 	int m=floor(4*height);
 	int n=floor(4*width);

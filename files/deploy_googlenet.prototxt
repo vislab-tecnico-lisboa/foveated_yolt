@@ -5,9 +5,6 @@ layer {
   top: "data"
   input_param { shape: { dim: 10 dim: 3 dim: 224 dim: 224 } }
 }
-
-force_backward: true
-
 layer {
   name: "conv1/7x7_s2"
   type: "Convolution"

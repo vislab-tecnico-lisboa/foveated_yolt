@@ -2,31 +2,22 @@
 
 LaplacianBlending::LaplacianBlending(const int & _width, const int & _height, const int & _levels, const int & _sigma_x, const int & _sigma_y, const int & _sigma_xy) : width(_width), height(_height), levels(_levels)
 {
-	image_lap_pyr.resize(levels);
-	foveated_pyr.resize(levels);
-	image_sizes.resize(levels);
-	kernel_sizes.resize(levels);
-	kernels.resize(levels+1);
 
-	CreateFilterPyr(width, height, _sigma_x, _sigma_y, _sigma_xy);
+    image_lap_pyr.resize(levels);
+    foveated_pyr.resize(levels);
+    image_sizes.resize(levels);
+    kernel_sizes.resize(levels);
+    kernels.resize(levels+1);
 
+    CreateFilterPyr(width, height, _sigma_x, _sigma_y, _sigma_xy);
 }
 
 LaplacianBlending::~LaplacianBlending() {
-	std::vector<cv::Mat>().swap(image_lap_pyr);
-	std::vector<cv::Mat>().swap(foveated_pyr);
-	std::vector<cv::Mat>().swap(kernels);
-	std::vector<cv::Mat>().swap(image_sizes);
-	std::vector<cv::Mat>().swap(kernel_sizes);
-}
-
-void LaplacianBlending::ComputeRois(const cv::Mat &center, cv::Rect &kernel_roi_rect, const cv::Mat &kernel_size, const cv::Mat &image_size) {
-    // Kernel center - image coordinate
-    cv::Mat upper_left_kernel_corner = ((kernel_size) / 2.0) - center;
-
-    // encontrar roi no kernel
-    // cv::Rect take (upper left corner, width, heigth)
-    kernel_roi_rect=cv::Rect(upper_left_kernel_corner.at<int>(0,0), upper_left_kernel_corner.at<int>(1,0), image_size.at<int>(0,0), image_size.at<int>(1,0));
+    std::vector<cv::Mat>().swap(image_lap_pyr);
+    std::vector<cv::Mat>().swap(foveated_pyr);
+    std::vector<cv::Mat>().swap(kernels);
+    std::vector<cv::Mat>().swap(image_sizes);
+    std::vector<cv::Mat>().swap(kernel_sizes);
 }
 
 void LaplacianBlending::BuildPyramids(const cv::Mat & image) {
@@ -43,6 +34,20 @@ void LaplacianBlending::BuildPyramids(const cv::Mat & image) {
             
     image_smallest_level=up;           
 }
+
+void LaplacianBlending::ComputeRois(const cv::Mat &center, cv::Rect &kernel_roi_rect, const cv::Mat &kernel_size, const cv::Mat &image_size) {
+
+    // Kernel center - image coordinate
+    cv::Mat upper_left_kernel_corner = (kernel_size) / 2.0 - center;
+
+    // encontrar roi no kernel
+    // cv::Rect take (upper left corner, width, heigth)
+    kernel_roi_rect=cv::Rect(upper_left_kernel_corner.at<int>(0,0),
+                             upper_left_kernel_corner.at<int>(1,0),
+                             image_size.at<int>(0,0),
+                             image_size.at<int>(1,0));
+}
+
 
 cv::Mat LaplacianBlending::Foveate(const cv::Mat &image, const cv::Mat &center) {
 
@@ -76,7 +81,6 @@ cv::Mat LaplacianBlending::Foveate(const cv::Mat &image, const cv::Mat &center) 
 }
 
 
-
 cv::Mat LaplacianBlending::CreateFilter(const int & m, const int & n, const int & sigma_x, const int & sigma_y, const int & sigma_xy) {
 
     cv::Mat gkernel(m,n,CV_64FC3);
@@ -93,14 +97,11 @@ cv::Mat LaplacianBlending::CreateFilter(const int & m, const int & n, const int 
     double max_value = -std::numeric_limits<double>::max();
 
     // build kernel
-
-    for (unsigned int x=0; x<n; ++x) 
-    {
+    for (unsigned int x=0; x<n; ++x) {
         double dx=(x-xc);
         double rx = dx*dx;
         
-        for(unsigned int y=0; y<m; ++y) 
-	{
+        for(unsigned int y=0; y<m; ++y) {
 	    double dy=(y-yc);
             double ry=dy*dy;
             double rxy=dx*dy;
@@ -130,17 +131,14 @@ cv::Mat LaplacianBlending::CreateFilter(const int & m, const int & n, const int 
     return gkernel;
 }
 
-
-void LaplacianBlending::CreateFilterPyr(const int & width, const int & height, const int & _sigma_x, const int & _sigma_y, const int & sigma_xy) 
-{
+void LaplacianBlending::CreateFilterPyr(const int & width, const int & height, const int & _sigma_x, const int & _sigma_y, const int & sigma_xy) {
 	// Foveate images
 	int m=floor(4*height);
 	int n=floor(4*width);
 
 	kernels[0]=CreateFilter(m,n,_sigma_x,_sigma_y,sigma_xy);
 
-	for (int l=0; l<levels; ++l) 
-	{
+	for (int l=0; l<levels; ++l) {
 		cv::pyrDown(kernels[l], kernels[l+1]);
 
 		cv::Mat image_size(2,1,CV_32S);
@@ -154,5 +152,4 @@ void LaplacianBlending::CreateFilterPyr(const int & width, const int & height, c
 		kernel_sizes[l]=kernel_size;
 	}
 }
-
 

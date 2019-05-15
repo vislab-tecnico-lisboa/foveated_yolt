@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(foveated_yolt)
 
-set(ROS TRUE)
+set(ROS FALSE)
 set(CLASSIFICATION TRUE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/")
 
@@ -49,7 +49,6 @@ if(${ROS})
     cfg/fovea.cfg
   )
 
-
   add_action_files(
     DIRECTORY action
     FILES Eye.action Task.action
@@ -63,7 +62,6 @@ if(${ROS})
      INCLUDE_DIRS include
      CATKIN_DEPENDS roscpp actionlib actionlib_msgs message_runtime
   )
-
 
   include_directories(
     include

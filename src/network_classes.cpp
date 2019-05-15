@@ -68,7 +68,6 @@ std::vector<int> ArgMax(const std::vector<float>& v, int n) {
     return result;
 }
 
-
 //////////////////////////////////////////////////////////
 ///////////////////// CLASS NETWORK //////////////////////
 //////////////////////////////////////////////////////////
@@ -77,6 +76,7 @@ std::vector<int> ArgMax(const std::vector<float>& v, int n) {
 // Function: Network                  //
 // Load network, mean file and labels //
 ////////////////////////////////////////
+
 Network::Network(const string& model_file, const string& weight_file,
                  const string& mean_file, const string& label_file) {
 
@@ -108,7 +108,6 @@ Network::Network(const string& model_file, const string& weight_file,
     Blob<float>* output_layer = net->output_blobs()[0];
     CHECK_EQ(labels.size(), output_layer->channels())
                 << "Number of labels is different from the output layer dimension.";
-
 }
 
 //////////////////////////
@@ -125,7 +124,6 @@ void Network::SetMean(const string& mean_file) {
     mean_blob.FromProto(blob_proto);              // make copy
     CHECK_EQ(mean_blob.channels(), num_channels)
             << "Number of channels of mean file doesn't match input layer";
-
 
     // The format of the mean file is planar 32-bit float BGR or grayscale
     std::vector<cv::Mat> channels;
@@ -144,12 +142,10 @@ void Network::SetMean(const string& mean_file) {
     cv::Mat mean;
     cv::merge(channels, mean);
 
-
     // Compute the global mean pixel value and create a mean image filled with this value
     cv::Scalar channel_mean = cv::mean(mean);
     mean_ = cv::Mat(input_geometry, mean.type(), channel_mean);
 }
-
 
 ///////////////////////////////////
 // Function Classify             //
@@ -228,7 +224,6 @@ void Network::WrapInputLayer(std::vector<cv::Mat>* input_channels) {
     }
 }
 
-
 ////////////////////////////////////////////////
 // Function Preprocess                        //
 // Subtract mean, swap channels, resize input //
@@ -278,11 +273,16 @@ void Network::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channel
             << "Input channels are not wrapping the input layer of the network.";
 }
 
-///////////////////////
-// Function CalcBBox //
-///////////////////////
-
+/************************************************************************/
+// Function CalcBBox
+/************************************************************************/
 Rect Network::CalcBBox(int class_index, ClassData mydata, float thresh, cv::Mat & saliency_map) {
+
+
+    //std::vector<Rect> bboxes;
+
+    // For each predicted class (top 5)
+    //for (int i = 0; i < N; ++i) {
 
     /*********************************************************/
     //                  Get Saliency Map                     //
@@ -293,13 +293,14 @@ Rect Network::CalcBBox(int class_index, ClassData mydata, float thresh, cv::Mat 
 
     // Dados do 1 forward
     Blob<float>* forward_output_layer = net->output_blobs()[0];
-
-    //float* fc8Data = forward_output_layer->mutable_cpu_data();
+    float* fc8Data = forward_output_layer->mutable_cpu_data();
     float* fc8Diff = forward_output_layer->mutable_cpu_diff();
+
 
     // Backward of a specific class
     for (int i = 0;  i< forward_output_layer->num() * forward_output_layer->channels() * forward_output_layer->height() * forward_output_layer->width(); ++i)
         fc8Diff[i] = 0.0f;
+
     fc8Diff[label_index] = 1.0f; // Specific class
 
     // Backward
@@ -307,7 +308,7 @@ Rect Network::CalcBBox(int class_index, ClassData mydata, float thresh, cv::Mat 
 
     // Get Data
     boost::shared_ptr<caffe::Blob<float> > out_data_layer = net->blob_by_name("data");  // get data from Data layer
-    //int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
+    int dim = out_data_layer->num() * out_data_layer->channels() * out_data_layer->height() * out_data_layer->width();
 
     const float* begin_diff = out_data_layer->mutable_cpu_diff();
 
@@ -326,7 +327,7 @@ Rect Network::CalcBBox(int class_index, ClassData mydata, float thresh, cv::Mat 
     cv::normalize(M2, M2, 0, 1, NORM_MINMAX);
 
     // Find max across RGB channels
-    saliency_map = CalcRGBmax(M2); 
+    saliency_map = CalcRGBmax(M2);
 
     /*********************************************************/
     //                  Segmentation Mask                    //
@@ -335,23 +336,14 @@ Rect Network::CalcBBox(int class_index, ClassData mydata, float thresh, cv::Mat 
 
     Mat foreground_mask;
     threshold(saliency_map, foreground_mask, thresh, 1, THRESH_BINARY);
-    //imshow("Mask", foreground_mask);
-    //waitKey(0);
 
-  
     foreground_mask.convertTo(foreground_mask,CV_8UC1);
+
     Mat Points;
     findNonZero(foreground_mask,Points);
-
-    cv::Rect Min_Rect;
-    if(Points.empty())
-        Min_Rect=cv::Rect();
-    else
-        Min_Rect = boundingRect(Points);
-
+    Rect Min_Rect = boundingRect(Points);
 
     return Min_Rect;
-
 }
 
 
@@ -435,9 +427,9 @@ void Network::VisualizeSaliencyMap(const cv::Mat & saliency_map, int k, const st
     if(!imwrite(filename, saliency_map_))
         cout << "ERROR: Saving Saliency Map"<< endl;
 
-    //namedWindow(filename,WINDOW_AUTOSIZE);
-    //imshow(filename, saliency_map_);
-    //waitKey(0);
+    /*namedWindow(filename,WINDOW_AUTOSIZE);
+    imshow(filename, saliency_map_);
+    waitKey(1);*/
 }
 
 
@@ -452,21 +444,26 @@ void Network::VisualizeFoveation(const cv::Mat & fix_pt, const cv::Mat & img, co
     pt.x = fix_pt.at<int>(0,0);
     pt.y = fix_pt.at<int>(1,0);
 
-    string type = ".png";
     stringstream ss;
-    ss<<name<<(k + 1)<<type;
+    ss<<name<<(k + 1);
     string filename = ss.str();
     ss.str("");
 
     cv::Mat img_ = img.clone();
-    circle(img_, pt, sigma,Scalar(0, 0, 255),2);
 
-    if(!imwrite(filename, img_))
+    if(!imwrite(filename+std::string(".png"), img_))
         cout << "ERROR: Saving Foveation Image"<< endl;
 
-    //namedWindow(filename,WINDOW_AUTOSIZE);
-    //imshow(filename, img_);
-    //waitKey(1);
+    circle(img_, pt, sigma,Scalar(0, 0, 255),2);
+
+    if(!imwrite(filename+std::string("_circle.png"), img_))
+        cout << "ERROR: Saving Foveation Image"<< endl;
+
+    /*
+    namedWindow("first_foveation",WINDOW_AUTOSIZE);
+    imshow(filename, img_);
+    waitKey(1);
+    */
 }
 
 
@@ -495,7 +492,6 @@ float* Network::LimitValues(float* bottom_data) {
     for (unsigned int i=0; i< sizeof(bottom_data); ++i){
         bottom_data[i] = bottom_data[i]-result[0];
         bottom_data[i] = bottom_data[i]/result[1];
-        //cout << bottom_data[i] << "\n" << endl;
     }
 
     return bottom_data;

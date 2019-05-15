@@ -64,7 +64,9 @@ int main(int argc, char** argv){
 	static bool debug                 = atoi(argv[15]);         // Set debug = 1 to see figures
 	static int total_images           = atoi(argv[16]);         // Number of images
 	if (strcmp(argv[17], "CPU") == 0)                           // Set Mode
+	{
 		Caffe::set_mode(Caffe::CPU);
+	}
 	else {
 		Caffe::set_mode(Caffe::GPU);
 		int device_id = atoi(argv[18]);
@@ -131,7 +133,7 @@ int main(int argc, char** argv){
 	// File with 5 classes + scores + 5 bounding boxes
 	// 1st classification and localization
 	std::string feedforward_detection_str=results_folder+"feedfoward_detection_"+
-														 "t"    + ToString(threshs.size()) +
+														 "t"   + ToString(threshs.size()) +
 														 "s"   + ToString(sigmas.size())  +
 														 "p"   + ToString(npoints)+
 														 "r"   + ToString(random)         +
@@ -143,7 +145,7 @@ int main(int argc, char** argv){
 	// File with 5 classes + scores + 5 bounding boxes
 	//  Re classification and Re localization
 	std::string feedback_detection_str=results_folder+"feedback_detection_"+
-														 "t"    + ToString(threshs.size()) +
+														 "t"   + ToString(threshs.size()) +
 														 "s"   + ToString(sigmas.size())  +
 														 "p"   + ToString(npoints)+
 														 "r"   + ToString(random)         +
@@ -156,7 +158,7 @@ int main(int argc, char** argv){
 	srand (time(NULL));
 	std::vector<cv::Mat> fixedpts = FixationPoints(size_map,npoints,random);
  
-   // Total number of iterations
+	// Total number of iterations
 	int total_iterations=total_images*threshs.size()*sigmas.size()*fixedpts.size();
 
 	float thresh;
@@ -192,19 +194,19 @@ int main(int argc, char** argv){
 					std::vector<int> indexs;
 					std::vector<Rect> bboxes1;
 					std::vector<Rect> bboxes2;
-
+               				ClassData first_pass_data(N);
 					// Atual iteration
 					int iteration=input+1+fixedpt_index*total_images+
 								  sigma_index*total_images*fixedpts.size()+
 								  thresh_index*total_images*sigmas.size()*fixedpts.size();
 					std::cout << "Th:" << thresh
-							  << "\tSig:" << sigma
-							  << "\tPt: (" << fixedpt.at<int>(0,0)<<","<<fixedpt.at<int>(1,0)<<')'
-							  << "\tImg:" << input+1
-							  << " of " << total_images
-							  << "\tIter: " << iteration
-							  << " of "  << total_iterations
-							  << " ("<< 100.0*(iteration)/(total_iterations) << "%)"<< std::endl;
+						  << "\tSig:" << sigma
+						  << "\tPt: (" << fixedpt.at<int>(0,0)<<","<<fixedpt.at<int>(1,0)<<')'
+						  << "\tImg:" << input+1
+						  << " of " << total_images
+						  << "\tIter: " << iteration
+						  << " of "  << total_iterations
+						  << " ("<< 100.0*(iteration)/(total_iterations) << "%)"<< std::endl;
 
 					// 1st Foveation
 					if(mode==FOVEATION)
@@ -216,8 +218,6 @@ int main(int argc, char** argv){
 					    cv::GaussianBlur(img,img, Size(5,5), sigma, sigma);
 					}
 
-
-
 					cv::Mat img_first_pass=img.clone();
 
 					// For Visualizing Foveated Image
@@ -226,15 +226,12 @@ int main(int argc, char** argv){
 						std::string foveation_filename_=foveation_filename+ToString(iteration)+"_"+ToString(1)+"_";;
 						Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index,foveation_filename_);
 					}
-					//Network.VisualizeFoveation(fixedpt,img,sigma,fixedpt_index,foveation_filename);
 
 					// 1st Feedforward with foveated image
 					//  Prediciton of TOP 5 classes
-
-					ClassData first_pass_data = Network.Classify(img, N);
+					first_pass_data = Network.Classify(img, N);
 
 					//std::cout << "----- 1st Feedfoward Pass ------" << std::endl;
-					//std::cout << first_pass_data << std::endl;
 
 					// Store results
 					feedforward_detection << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
@@ -245,10 +242,13 @@ int main(int argc, char** argv){
 					// For each predicted class labels
 					for (int class_index = 0; class_index < N; ++class_index) {
 
+						std::cout << "   prediction " << class_index+1 << std::endl;
+
 						/////////////////////////////////////////////
 						//  Weakly Supervised Object Localization  //
 						// Saliency Map + Segmentation Mask + BBox //
 						/////////////////////////////////////////////
+
 						cv::Mat saliency_map;
 						cv::Rect Min_Rect = Network.CalcBBox(class_index,first_pass_data,thresh,saliency_map);
 
@@ -258,16 +258,17 @@ int main(int argc, char** argv){
 						// Store results
 						if (class_index==N-1) {
 							feedforward_detection << first_pass_data.label[class_index] << ";" 
-												  << first_pass_data.score[class_index] << ";"
-												  << Min_Rect.x << ";" << Min_Rect.y << ";"
-												  << Min_Rect.width << ";" << Min_Rect.height;
+										  << first_pass_data.score[class_index] << ";"
+										  << Min_Rect.x << ";" << Min_Rect.y << ";"
+										  << Min_Rect.width << ";" << Min_Rect.height;
 							feedforward_detection << endl;
 						}
-						else {
+						else 
+						{
 							feedforward_detection << first_pass_data.label[class_index] << ";" 
-												  << first_pass_data.score[class_index] << ";"
-												  << Min_Rect.x << ";" << Min_Rect.y << ";"
-												  << Min_Rect.width << ";" << Min_Rect.height << ";";
+										  << first_pass_data.score[class_index] << ";"
+										  << Min_Rect.x << ";" << Min_Rect.y << ";"
+										  << Min_Rect.width << ";" << Min_Rect.height << ";";
 						}
 
 						/////////////////////////////////////////////////////////
@@ -298,7 +299,8 @@ int main(int argc, char** argv){
 						//std::cout << feedback_data << std::endl;
 
 						// For each bounding box
-						for(int m=0; m<N; ++m) {
+						for(int m=0; m<N; ++m) 
+						{
 							// Save all labels, scores and indexes
 							labels.push_back(feedback_data.label[m]);
 							scores.push_back(feedback_data.score[m]);
@@ -308,11 +310,12 @@ int main(int argc, char** argv){
 						if(debug) {
 							std::string saliency_map_filename_=saliency_map_filename+ToString(iteration)+"_"+ToString(1)+"_";
    							Network.VisualizeSaliencyMap(saliency_map,class_index,saliency_map_filename_);
+							
 							std::string foveation_filename_=foveation_filename+ToString(iteration)+"_"+ToString(2)+"_";
 							Network.VisualizeFoveation(fixation_point,img_second_pass,sigma,class_index,foveation_filename_);
 							Mat dst;
 							cv::hconcat(img_orig,img_first_pass, dst); // horizontal
-							cv::hconcat(dst, img_second_pass, dst); // horizontal
+							cv::hconcat(dst, img_second_pass, dst);    // horizontal
 
    							cv::normalize(saliency_map, saliency_map, 255, 0,NORM_MINMAX);
 							saliency_map.convertTo(saliency_map,CV_8UC1); 
@@ -320,14 +323,14 @@ int main(int argc, char** argv){
 							cv::hconcat(dst, saliency_map, dst); // horizontal
 							//cv::vconcat(a, b, dst); // vertical
 							namedWindow( "original image,    first pass,   second pass,     saliency map", WINDOW_FULLSCREEN); // Create a window for display.
-							imshow( "original image,    first pass,   second pass,    saliency map", dst );                  // Show our image inside it.
+							imshow( "original image,    first pass,   second pass,    saliency map", dst );                    // Show our image inside it.
 							waitKey(1);
 						}
 					}
 
 					/////////////////////////////////////////////////////////
 					//      Image Re-Localization with Attention           //
-					// Saliency Map + Segmentation Mask + BBox             //
+					//    Saliency Map + Segmentation Mask + BBox          //
 					/////////////////////////////////////////////////////////
 
 					// Variables for top 5 ranked classes

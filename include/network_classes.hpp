@@ -32,7 +32,7 @@ class ClassData {
 
 
 // Callback for function std::partial_sort used in ArgMax
-static bool PairCompare(const std::pair<float, int>& lhs,
+bool PairCompare(const std::pair<float, int>& lhs,
                         const std::pair<float, int>& rhs);
 std::vector<int> ArgMax(const std::vector<float>& v, int n);
 
@@ -45,7 +45,7 @@ class Network {
 
         // Return Top 5 prediction of image in mydata
         ClassData Classify(const cv::Mat& img, int N);
-        Rect CalcBBox(int class_index, const cv::Mat &img, ClassData mydata, float thresh,cv::Mat & saliency_map); // NEW
+        Rect CalcBBox(int class_index, ClassData mydata, float thresh,cv::Mat & saliency_map); // NEW
         void VisualizeBBox(std::vector<Rect> bboxes, int N, cv::Mat &img, int size_map, int ct, const std::string & name);
         void VisualizeFoveation(const cv::Mat & fix_pt, const cv::Mat & img, const int & sigma, const int & k, const std::string & name);
         void VisualizeSaliencyMap(const cv::Mat & saliency_map, int k, const std::string & name);
@@ -62,7 +62,7 @@ class Network {
         std::vector<float> Predict(const cv::Mat& img);
 
         int num_channels;
-        shared_ptr<Net<float> > net;
+        boost::shared_ptr<caffe::Net<float> > net;
 
         cv::Mat mean_;
         std::vector<string> labels;

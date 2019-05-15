@@ -1,9 +1,10 @@
 build/*
-files/*
+files/*.caffemodel
 *.pdf
 *.zip
 *~
 images/*
 results/*
+figures/
 cmake/Modules/FindCaffe.cmake
 CMakeLists.txt.user

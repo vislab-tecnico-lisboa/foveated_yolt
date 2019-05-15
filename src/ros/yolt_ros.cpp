@@ -1,102 +1,171 @@
 #include "ros/yolt_ros.hpp"
+#include <chrono>
+#include <ctime>
 
-YoltRos::YoltRos (const ros::NodeHandle & nh_) : nh(nh_), nh_priv("~")
+YoltRos::YoltRos (const ros::NodeHandle & nh_, const std::string & name) : nh(nh_), nh_priv("~"),
+    as_(nh_, name, boost::bind(&YoltRos::executeCB, this, _1), false),
+    action_name_(name)
 {
+	image_transport::ImageTransport it(nh);
 
-		image_transport::ImageTransport it(nh);
-		sub = it.subscribe("/usb_cam/image_raw", 1, &YoltRos::imageCallback, this);
+	sub = it.subscribe("/input_image", 5, &YoltRos::imageCallback, this);
+	pub = it.advertise("/output", 5);
+	// Load network, pre-processment, set mean and load labels
 
-		// Load network, pre-processment, set mean and load labels
+	// Network parameters
+	string model_file;
+	string weight_file;
+	string mean_file;
+	string label_file;
+	string device;
+	int device_id;
 
-		// Foveation parameters
-		nh_priv.param<int>("width",   width,   500);
-		nh_priv.param<int>("height",  height,  500);
-		nh_priv.param<int>("levels",  levels,  10);
-		nh_priv.param<int>("sigma_x", sigma_x, 70);
-		nh_priv.param<int>("sigma_y", sigma_y, 70);
 
-		string model_file;
-		string weight_file;
-		string mean_file;
-		string label_file;
-		string dataset_folder;
+	nh_priv.param<int>("top_classes", top_classes, 5);
+	nh_priv.param<int>("width", width, 227);
+	nh_priv.param<int>("height", height, 227);
+	nh_priv.param<double>("saliency_threshold", saliency_threshold, 0.7);
+	nh_priv.param<std::string>("model_file", model_file, "");
+	nh_priv.param<std::string>("weight_file", weight_file, "");
+	nh_priv.param<std::string>("mean_file", mean_file, "");
+	nh_priv.param<std::string>("label_file", label_file, "");
+	nh_priv.param<std::string>("device", device, "CPU");
+	nh_priv.param<int>("device_id", device_id, 0);
 
-		nh_priv.param<std::string>("model_file", model_file, "");
-		nh_priv.param<std::string>("weight_file", weight_file, "");
-		nh_priv.param<std::string>("mean_file", mean_file, "");
-		nh_priv.param<std::string>("label_file", label_file, "");
+	ROS_INFO_STREAM("top_classes: " << top_classes);
+	ROS_INFO_STREAM("width: " << width);
+	ROS_INFO_STREAM("height: " << height);
+	ROS_INFO_STREAM("saliency_threshold: " << saliency_threshold);
+	ROS_INFO_STREAM("model_file: " << model_file);
+	ROS_INFO_STREAM("weight_file: " << weight_file);
+	ROS_INFO_STREAM("mean_file: " << mean_file);
+	ROS_INFO_STREAM("label_file: " << label_file);
+	ROS_INFO_STREAM("device: " << device);
+	ROS_INFO_STREAM("device_id: " << device_id);
 
-		ROS_INFO_STREAM("model_file: " << model_file);
-		ROS_INFO_STREAM("weight_file: " << weight_file);
-		ROS_INFO_STREAM("mean_file: " << mean_file);
-		ROS_INFO_STREAM("label_file: " << label_file);
+	if (device=="CPU")                           // Set Mode
+		Caffe::set_mode(Caffe::CPU);
+	else {
+		Caffe::set_mode(Caffe::GPU);
+		Caffe::SetDevice(device_id);
+	}
 
-		fixation_point=cv::Mat(2,1,CV_32S);
-		fixation_point.at<int>(0,0) = width/2;
-		fixation_point.at<int>(1,0) = height/2;
-		
-		foveation=boost::shared_ptr<LaplacianBlending> (new LaplacianBlending(width, height, levels, sigma_x,sigma_y));
+	yolt_network=boost::shared_ptr<Network>(new Network(model_file, weight_file, mean_file, label_file));
 
-		conf_callback = boost::bind(&YoltRos::configCallback, this, _1, _2);
-		server.setCallback(conf_callback);
-		//network=boost::shared_ptr<Network>(new Network(model_file, weight_file, mean_file, label_file));
-		//std::cout << "network initialized" << std::endl;
+	//conf_callback = boost::bind(&YoltRos::configCallback, this, _1, _2);
+	//server.setCallback(conf_callback);
+
+	std::cout << "network initialized" << std::endl;
+	as_.start();
 }
 
-void YoltRos::configCallback(foveated_yolt::FoveaConfig &config, uint32_t level) {
-	ROS_INFO_STREAM("Reconfigure Request: "<<  config.levels << " " << config.sigma_x << " " << config.sigma_y << " " << config.width << " " << config.height);
-
-	this->sigma_x=config.sigma_x;
-	this->sigma_y=config.sigma_y;
-
-	if(config.levels!=this->levels || config.width!=this->width || config.height!=this->height)
-	{
-		foveation=boost::shared_ptr<LaplacianBlending> (new LaplacianBlending(this->width,this->height,config.levels,this->sigma_x,this->sigma_y));
-		this->levels=config.levels;
-		this->width =config.width;
-		this->height=config.height;
-	}
-	else
-	{
-		foveation->CreateFilterPyr(this->width,this->height,this->sigma_x,this->sigma_y);
-	}
-}
 
 void YoltRos::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-	static int iteration=0;
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	try
 	{
 		cv::Mat image;
-		cv_bridge::toCvShare(msg, "bgr8")->image.convertTo(image, CV_64F);
-
+		cv_bridge::toCvShare(msg, "bgr8")->image.convertTo(image, CV_8UC3);
 		cv::resize(image,image,cv::Size(width,height));//resize image
+		//image.convertTo(image, CV_32FC3);
+		//image=image/255.0;
+		ClassData first_pass_data = yolt_network->Classify(image, top_classes);
 
-		// Foveate
-		cv::Mat foveated_image = foveation->Foveate(image,fixation_point);
+		std::vector<Rect> bounding_boxes;
+		std::vector<std::string> labels;
+		std::vector<float> scores;
+		std::vector<int> indexes;
+		std::vector<cv::Mat> saliency_maps;
 
-		foveated_image.convertTo(foveated_image,CV_8UC3);
+		// Weak object localization
+		for (int class_index = 0; class_index < top_classes; ++class_index) {
+			cv::Mat saliency_map;
+			cv::Rect bounding_box = yolt_network->CalcBBox(class_index, first_pass_data, (float)saliency_threshold, saliency_map);
+			//std::cout << bounding_box << std::endl;
+			// Save all labels, scores, indexes, bounding boxes and saliency maps
+			for (int class_index_bb = 0; class_index_bb < top_classes; ++class_index_bb) {
+				bounding_boxes.push_back(bounding_box);
+				saliency_maps.push_back(saliency_map);
+				labels.push_back(first_pass_data.label[class_index_bb]);
+				scores.push_back(first_pass_data.score[class_index_bb]);
+				indexes.push_back(first_pass_data.index[class_index_bb]);
+			}
+		}
 
-		cv::imshow("view",foveated_image);
-		//std::cout << "iteration:" << ++iteration << std::endl;
-		//std::cout << foveated_image.cols << std::endl;
-		//std::cout << foveated_image.rows << std::endl;
+		// Task free: Get top class
+		std::vector<cv::Mat> top_final_saliency_maps;
+		std::vector<std::string> top_final_labels;
+		std::vector<float> top_final_scores;
+		std::vector<int> top_final_index;
+		std::vector<int> sort_scores_index  = ArgMax(scores, top_classes*top_classes);
+		int top = 0;
+
+		while((int)top_final_labels.size() < top_classes){
+			int idx = sort_scores_index[top];
+			if((std::find(top_final_labels.begin(), top_final_labels.end(), labels[idx])) == (top_final_labels.end())) {
+				top_final_labels.push_back(labels[idx]);
+				top_final_scores.push_back(scores[idx]);
+				top_final_index.push_back(indexes[idx]);    
+				top_final_saliency_maps.push_back(saliency_maps[idx]);         
+			}
+			++top;
+		}
+
+		for (int class_index = 0; class_index < top_classes; ++class_index) {
+
+			std::cout << top_final_index[class_index] << ": " << top_final_labels[class_index] << " " << top_final_scores[class_index] << " :::: ";
+		}
+		std::cout << std::endl;
+
+
+	    	//cv::normalize(top_final_saliency_maps[0], top_final_saliency_maps[0],0,255.0); 
+    		cv::cvtColor(top_final_saliency_maps[0], top_final_saliency_maps[0], cv::COLOR_GRAY2BGR);
+		top_final_saliency_maps[0].convertTo(top_final_saliency_maps[0],CV_8UC3, 255.0);
+    		//top_final_saliency_maps[0].convertTo(top_final_saliency_maps[0],CV_8UC3); 
+
+		sensor_msgs::ImagePtr msg_out = cv_bridge::CvImage(std_msgs::Header(), "bgr8", top_final_saliency_maps[0]).toImageMsg();
+
+		pub.publish(msg_out);
 	}
 	catch (cv_bridge::Exception& e)
 	{
 		ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
 	}
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+	ROS_DEBUG_STREAM("total yolt time: " << duration << " ms");
 }
 
-int main(int argc, char **argv)
+
+void YoltRos::executeCB(const foveated_yolt::TaskGoalConstPtr &goal)
 {
-	ros::init(argc, argv, "image_listener");
-	ros::NodeHandle nh;
-	cv::namedWindow("view");
-	cv::startWindowThread();
+	// helper variables
+	/*bool success = true;
 
-	YoltRos yolt_ros(nh);
-	ros::spin();
-	cv::destroyWindow("view");
+
+	if(goal->levels!=this->levels)
+	{
+		foveation=boost::shared_ptr<LaplacianBlending> (new LaplacianBlending(this->width,this->height,goal->levels,this->sigma_x,this->sigma_y));
+		this->levels=goal->levels;
+	}
+	else
+	{
+		foveation->CreateFilterPyr(this->width,this->height,this->sigma_x,this->sigma_y);
+	}
+
+	fixation_point.at<int>(0,0)=goal->cx;  fixation_point.at<int>(1,0)=goal->cy;
+	// start executing the action
+
+	if(success)
+	{
+		result_.sequence = feedback_.sequence;
+		ROS_INFO("%s: Succeeded", action_name_.c_str());
+		// set the action state to succeeded
+		as_.setSucceeded(result_);
+	}*/
+
 }
+
+
 

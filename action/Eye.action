@@ -1,0 +1,12 @@
+#goal definition
+int32 cx
+int32 cy
+int32 levels
+int32 sigma_xx
+int32 sigma_yy
+---
+#result definition
+int32[] sequence
+---
+#feedback
+int32[] sequence

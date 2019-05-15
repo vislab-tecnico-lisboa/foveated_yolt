@@ -3,23 +3,22 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <cv_bridge/cv_bridge.h>
-#include "network_classes.hpp"
+#include "laplacian_foveation.hpp"
 #include <memory>
 #include <boost/shared_ptr.hpp>
 #include <dynamic_reconfigure/server.h>
 #include <foveated_yolt/FoveaConfig.h>
-#include <foveated_yolt/TaskAction.h>
+#include <foveated_yolt/EyeAction.h>
 #include <actionlib/server/simple_action_server.h>
 
-class YoltRos
+class FoveationRos
 {
-		double saliency_threshold;
-		int top_classes, width, height;
+		int levels, width, height, sigma_x, sigma_y;
 
-		boost::shared_ptr<Network> yolt_network;
+		boost::shared_ptr<LaplacianBlending> foveation;
 
 		ros::NodeHandle nh, nh_priv;
-		actionlib::SimpleActionServer<foveated_yolt::TaskAction> as_;
+		actionlib::SimpleActionServer<foveated_yolt::EyeAction> as_;
 		std::string action_name_;
 		image_transport::Subscriber sub;
 		image_transport::Publisher pub;
@@ -28,14 +27,15 @@ class YoltRos
 		dynamic_reconfigure::Server<foveated_yolt::FoveaConfig> server;
 		dynamic_reconfigure::Server<foveated_yolt::FoveaConfig>::CallbackType conf_callback;
 		
+		void configCallback(foveated_yolt::FoveaConfig &config, uint32_t level);
 
 
-		foveated_yolt::TaskFeedback feedback_;
-		foveated_yolt::TaskResult result_;
-		void executeCB(const foveated_yolt::TaskGoalConstPtr &goal);
+		foveated_yolt::EyeFeedback feedback_;
+		foveated_yolt::EyeResult result_;
+		void executeCB(const foveated_yolt::EyeGoalConstPtr &goal);
 
 	public:
-		YoltRos (const ros::NodeHandle & nh_, const std::string & name);
+		FoveationRos (const ros::NodeHandle & nh_, const std::string & name);
 		void imageCallback(const sensor_msgs::ImageConstPtr& msg);
 };
 

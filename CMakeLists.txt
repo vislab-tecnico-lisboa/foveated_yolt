@@ -5,6 +5,9 @@ set(ROS FALSE)
 set(CLASSIFICATION TRUE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/")
 
+SET(CMAKE_CXX_FLAGS_RELEASE "-Wall -O3 -Wno-deprecated-declarations -std=c++11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+
 # Include package config, boost-python
 find_package(PkgConfig REQUIRED)
 include(cmake/boost-python.cmake)
@@ -13,14 +16,13 @@ include(cmake/Modules/FindCaffe.cmake)
 
 if(${CLASSIFICATION})
   find_package(Caffe REQUIRED)
-  #find_package(CUDA REQUIRED)
 endif(${CLASSIFICATION})
+
 find_package(Boost COMPONENTS system filesystem regex python REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(PythonInterp REQUIRED)
 find_package(NumPy REQUIRED)
 find_package(PythonLibs REQUIRED)
-
 
 option(-std "std" c++11)
 
@@ -31,41 +33,56 @@ include_directories(
 	${PYTHON_NUMPY_INCLUDE_DIR}
 )
 
+set(GLOG_LIB glog)
+
 if(${ROS})
   find_package(catkin REQUIRED COMPONENTS
     roscpp
     cv_bridge
     image_transport
     dynamic_reconfigure
+    actionlib
+    actionlib_msgs
   )
 
   generate_dynamic_reconfigure_options(
     cfg/fovea.cfg
-    #...
+  )
+
+  add_action_files(
+    DIRECTORY action
+    FILES Eye.action Task.action
+  )
+
+  generate_messages(
+    DEPENDENCIES actionlib_msgs
   )
 
   catkin_package(
-  #  INCLUDE_DIRS include
-  #  LIBRARIES camera_scheduling
-  #  CATKIN_DEPENDS message_runtime
+     INCLUDE_DIRS include
+     CATKIN_DEPENDS roscpp actionlib actionlib_msgs message_runtime
   )
 
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+  include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+  )
 
-add_executable (yolt_ros src/ros/yolt_ros.cpp src/laplacian_foveation.cpp src/network_classes.cpp)
-target_link_libraries (yolt_ros ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${GLOG_LIB} ${Caffe_LIBRARIES})
-add_dependencies(yolt_ros ${PROJECT_NAME}_gencfg)
+add_executable (foveation_ros src/ros/foveation_ros_node.cpp src/ros/foveation_ros.cpp src/laplacian_foveation.cpp)
+target_link_libraries (foveation_ros ${Boost_LIBRARIES} ${Caffe_LIBRARIES} ${GLOG_LIB} ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_dependencies(foveation_ros ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_EXPORTED_TARGETS)
+
+add_executable (yolt_ros src/ros/yolt_ros_node.cpp src/ros/yolt_ros.cpp src/network_classes.cpp)
+target_link_libraries (yolt_ros ${Boost_LIBRARIES} ${Caffe_LIBRARIES} ${GLOG_LIB} ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_dependencies(yolt_ros ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_EXPORTED_TARGETS)
+
 # FOVEATION PYTHON BINDINGS
-
 endif(${ROS})
 
-add_definitions(${Caffe_DEFINITIONS})    # ex. -DCPU_ONLY
-add_definitions(-DCPU_ONLY)
+add_definitions(${Caffe_DEFINITIONS})
 
 # ADD OUR OWN EXECUTABLE FILES
-set(GLOG_LIB glog)
+
 
 if(${CLASSIFICATION})
   add_executable(
@@ -82,10 +99,7 @@ if(${CLASSIFICATION})
 	${GLOG_LIB}  
 	${OpenCV_LIBS}
   )
-
 endif(${CLASSIFICATION})
-
-
 
 
 boost_python_module(np_opencv_converter src/python_bindings/np_opencv_converter.cpp src/python_bindings/conversion.cpp)

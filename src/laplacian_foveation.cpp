@@ -32,11 +32,7 @@ void LaplacianBlending::ComputeRois(const cv::Mat &center, cv::Rect &kernel_roi_
 void LaplacianBlending::BuildPyramids(const cv::Mat & image) {
 
     cv::Mat current_img=image;
-    if(current_img.depth()==CV_8U)
-    {
-	    current_img.convertTo(current_img, CV_64FC3); 
-	    current_img/=255.0;
-    }
+    current_img.convertTo(current_img, CV_64FC3); 
 
     for (int l=0; l<levels; ++l) {
         cv::pyrDown(current_img, down);

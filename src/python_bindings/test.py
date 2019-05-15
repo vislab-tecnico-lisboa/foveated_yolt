@@ -7,14 +7,19 @@ from random import randint
 import time
 
 rho=-0.5
-sigma_xx=80
-sigma_yy=100
+
+sigma_xx=50
+sigma_yy=50
 sigma_xy=int(np.floor(rho*sigma_xx*sigma_yy))
 
 levels=7
-img = cv2.imread('image.jpg')
+img = cv2.imread('images/image_r_100.jpg')
+
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
+
+
+
 
 # Create the Laplacian blending object
 my_lap_obj=fv(width,height,levels,sigma_xx,sigma_yy,sigma_xy)
@@ -31,11 +36,13 @@ try:
         # RANDOM FOVEA SIZE
         #my_lap_obj.update_fovea(width,height,sigma_x,sigma_y)
 
+        #print npcv.test_np_mat(np.array(center))
         # Foveate the image
-        foveated_img = my_lap_obj.foveate(img,npcv.test_np_mat(np.array(center)))
+        #print npcv.test_np_mat(np.array(center))
+        foveated_img=my_lap_obj.foveate(img,npcv.test_np_mat(np.array(center)))
 
         end = time.time()
-        print(end - start)
+        #print(end - start)
 
         # Display the foveated image
         plt.imshow(foveated_img)
@@ -45,12 +52,9 @@ try:
         ax = plt.gca()
         #ax.add_artist(circle)
 
-
         plt.draw()
         plt.pause(.001)
         plt.cla()
-
-
 
 except KeyboardInterrupt:
     print('interrupted!')

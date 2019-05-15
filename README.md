@@ -6,33 +6,43 @@ The pre-trained models used to test our method are CaffeNet, AlexNet, GoogLeNet 
 
 
 Donwload files and from root, create a build directory (mkdir build).
-
 Execute from root
-
 
 bash scripts/setup.sh to directly download the pre-trained models.
 
-
-
 To compile from root: 
 
+```
 cd build
-
 cmake ..
-
 make
+```
 
-
-
-
+<<<<<<< HEAD
+<<<<<<< HEAD
 To run yolt.cpp from root:
 
+```
+bash scripts/setup.sh
+```
+
+=======
+=======
+>>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
+First, run the setup.sh script
+```
+bash scripts/setup.sh
+```
+Second, run the detector from the root:
+<<<<<<< HEAD
+>>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
+=======
+>>>>>>> dd8896b40ba9d842d4f50bf1aac3e1a94d6302af
+```
 bash scripts/run_detector.sh
- 
+```
 
-
-To configure your network and its parameters, change accordingly the run_detector.sh file.
-
+To configure your network and its parameters, change the ```run_detector.sh``` file accordingly.
 
 If you use our code, please cite our work:
 
@@ -47,5 +57,10 @@ If you use our code, please cite our work:
 }
 ```
 
+To test the python wrapper on an example image, change the ```filename='filename.jpg' ```, and run the following command from the root directory:
+
+```
+python src/python_bindings/test.py
+```
 
 

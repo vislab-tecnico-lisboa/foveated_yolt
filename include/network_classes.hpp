@@ -68,3 +68,4 @@ class Network {
         std::vector<string> labels;
         cv::Size input_geometry;        // size of network - width and height
 };
+

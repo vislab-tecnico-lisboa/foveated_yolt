@@ -1,7 +1,6 @@
 #include <boost/python.hpp>
 #include "laplacian_foveation.hpp"
 
-
 using namespace boost::python;
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(foveate, LaplacianBlending::Foveate, 1, 2)
 

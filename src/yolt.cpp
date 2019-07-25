@@ -238,11 +238,13 @@ int main(int argc, char** argv){
 										  << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
 					feedback_detection    << std::fixed << std::setprecision(4) << sigma << ";" << thresh 
 										  << ";" << fixedpt.at<int>(0,0) << ";" << fixedpt.at<int>(1,0) << ";";
-
+							
+					std::vector<cv::Mat> images_second_pass;
+					std::vector<cv::Mat> saliency_maps;
+					std::vector<cv::Mat> fixation_points;
 					// For each predicted class labels
 					for (int class_index = 0; class_index < N; ++class_index) {
-
-						std::cout << "   prediction " << class_index+1 << std::endl;
+						std::cout << "first pass label: " << first_pass_data.label[class_index] << "   score: " << first_pass_data.score[class_index] << std::endl;				
 
 						/////////////////////////////////////////////
 						//  Weakly Supervised Object Localization  //
@@ -251,6 +253,7 @@ int main(int argc, char** argv){
 
 						cv::Mat saliency_map;
 						cv::Rect Min_Rect = Network.CalcBBox(class_index,first_pass_data,thresh,saliency_map);
+						saliency_maps.push_back(saliency_map);
 
 						// Save all bounding boxes
 						bboxes1.push_back(Min_Rect);
@@ -279,7 +282,7 @@ int main(int argc, char** argv){
 						cv::Mat fixation_point(2,1,CV_32S);
 						fixation_point.at<int>(0,0) = Min_Rect.y + Min_Rect.height/2;
 						fixation_point.at<int>(1,0) = Min_Rect.x + Min_Rect.width/2;
-
+						fixation_points.push_back(fixation_point);
 						cv::Mat img_second_pass;
 
 						if(mode==FOVEATION)
@@ -294,10 +297,9 @@ int main(int argc, char** argv){
 						// 2nd Feedforward with foveated image
 						//  Prediciton New top 5 of each predicted class
 						ClassData feedback_data = Network.Classify(img_second_pass, N);
-
+						
 						//std::cout << "----- 2nd Feedfoward Pass ------" << std::endl;
 						//std::cout << feedback_data << std::endl;
-
 						// For each bounding box
 						for(int m=0; m<N; ++m) 
 						{
@@ -305,28 +307,11 @@ int main(int argc, char** argv){
 							labels.push_back(feedback_data.label[m]);
 							scores.push_back(feedback_data.score[m]);
 							indexs.push_back(feedback_data.index[m]);
-						}
-
-						if(debug) {
-							std::string saliency_map_filename_=saliency_map_filename+ToString(iteration)+"_"+ToString(1)+"_";
-   							Network.VisualizeSaliencyMap(saliency_map,class_index,saliency_map_filename_);
-							
-							std::string foveation_filename_=foveation_filename+ToString(iteration)+"_"+ToString(2)+"_";
-							Network.VisualizeFoveation(fixation_point,img_second_pass,sigma,class_index,foveation_filename_);
-							Mat dst;
-							cv::hconcat(img_orig,img_first_pass, dst); // horizontal
-							cv::hconcat(dst, img_second_pass, dst);    // horizontal
-
-   							cv::normalize(saliency_map, saliency_map, 255, 0,NORM_MINMAX);
-							saliency_map.convertTo(saliency_map,CV_8UC1); 
-							cv::cvtColor(saliency_map, saliency_map, cv::COLOR_GRAY2BGR);
-							cv::hconcat(dst, saliency_map, dst); // horizontal
-							//cv::vconcat(a, b, dst); // vertical
-							namedWindow( "original image,    first pass,   second pass,     saliency map", WINDOW_FULLSCREEN); // Create a window for display.
-							imshow( "original image,    first pass,   second pass,    saliency map", dst );                    // Show our image inside it.
-							waitKey(1);
+							images_second_pass.push_back(img_second_pass);
 						}
 					}
+
+
 
 					/////////////////////////////////////////////////////////
 					//      Image Re-Localization with Attention           //
@@ -353,6 +338,39 @@ int main(int argc, char** argv){
 						top ++;
 					}
 
+					if(debug) {
+						unsigned int class_index=0;
+						cv::Mat saliency_map=saliency_maps[class_index];
+						cv::Mat img_second_pass=images_second_pass[class_index];
+
+						std::string first_pass_image_str; first_pass_image_str=first_pass_data.label[class_index];
+						putText(img_first_pass, first_pass_image_str, cvPoint(30,30),  FONT_HERSHEY_COMPLEX_SMALL,0.8,cvScalar(0,top_final_scores[class_index]*255.0,(1.0-top_final_scores[class_index])*255.0),1,CV_AA);
+
+						std::string second_pass_image_str; second_pass_image_str=top_final_labels[class_index];
+						putText(img_second_pass, second_pass_image_str, cvPoint(30,30),  FONT_HERSHEY_COMPLEX_SMALL,0.8,cvScalar(0,top_final_scores[class_index]*255.0,(1.0-top_final_scores[class_index])*255.0),1,CV_AA);
+
+						std::string saliency_map_filename_=saliency_map_filename+ToString(iteration)+"_"+ToString(1)+"_";
+						cv::Mat fixation_point=fixation_points[class_index];
+
+						Network.VisualizeSaliencyMap(saliency_map,class_index,saliency_map_filename_);
+					
+						std::string foveation_filename_=foveation_filename+ToString(iteration)+"_"+ToString(2)+"_";
+						Network.VisualizeFoveation(fixation_point,img_second_pass,sigma,class_index,foveation_filename_);
+						Mat dst;
+						cv::hconcat(img_orig,img_first_pass, dst); // horizontal
+						cv::hconcat(dst, img_second_pass, dst);    // horizontal
+
+						cv::normalize(saliency_map, saliency_map, 255, 0,NORM_MINMAX);
+						saliency_map.convertTo(saliency_map,CV_8UC1); 
+						cv::cvtColor(saliency_map, saliency_map, cv::COLOR_GRAY2BGR);
+						cv::hconcat(dst, saliency_map, dst); // horizontal
+						//cv::vconcat(a, b, dst); // vertical
+						//namedWindow("original image, first pass, second pass, saliency map", WINDOW_FULLSCREEN); // Create a window for display.
+						imshow( "original image,    first pass,   second pass,    saliency map", dst );                    // Show our image inside it.
+
+						waitKey(1);
+					}
+
 					// Feedfoward - 2nd Prediciton of TOP N classes
 					ClassData feedback_top_final_data = ClassData(top_final_labels,top_final_scores,top_final_index);
 					
@@ -360,7 +378,8 @@ int main(int argc, char** argv){
 					//std::cout << feedback_top_final_data << std::endl;
 
 
-					for (int class_index = 0; class_index < N; ++class_index) {				
+					for (int class_index = 0; class_index < N; ++class_index) {
+
 						cv::Mat saliency_map;
 						Rect Min_Rect = Network.CalcBBox(class_index, feedback_top_final_data, thresh,saliency_map);
 						if(debug) {

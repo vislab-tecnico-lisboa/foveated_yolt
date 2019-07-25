@@ -27,6 +27,7 @@ void LaplacianBlending::BuildPyramids(const cv::Mat & image) {
 
     for (int l=0; l<levels; ++l) {
         cv::pyrDown(current_img, down);
+
         cv::pyrUp(down, up, current_img.size());
         image_lap_pyr[l]=current_img-up;
         current_img = down;
@@ -50,11 +51,11 @@ void LaplacianBlending::ComputeRois(const cv::Mat &center, cv::Rect &kernel_roi_
 
 
 cv::Mat LaplacianBlending::Foveate(const cv::Mat &image, const cv::Mat &center) {
-
     BuildPyramids(image);
     image_smallest_level.copyTo(foveated_image);
 
     for(int i=levels-1; i>=0; --i) {
+	//std::cout << i << std::endl;
         cv::Mat aux;
         aux=center/(powf(2,i));
         cv::Rect kernel_roi_rect;         
@@ -77,6 +78,7 @@ cv::Mat LaplacianBlending::Foveate(const cv::Mat &image, const cv::Mat &center) 
         }
     }
 
+    foveated_image.convertTo(foveated_image, CV_8U); 
     return foveated_image;
 }
 

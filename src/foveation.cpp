@@ -366,6 +366,7 @@ cv::Mat foveate(const cv::Mat &img, const int &size_map,
 				const int &levels, const int &sigma,
 				const cv::Mat &fixation_point) {
 
+
 	cv::Mat image;
 	img.convertTo(image, CV_64F);
 
@@ -393,28 +394,29 @@ std::vector<cv::Mat> FixationPoints (int img_size, int n_points, int random) {
 
 	std::cout<<"Fixation Points: " << std::endl;
 
-		int bins = sqrt(n_points);
+	int bins = sqrt(n_points);
 
-		if (random) {
-			for (int i = 0; i < n_points; i++) {
+	if (random) {
+		for (int i = 0; i < n_points; i++) {
+			cv::Mat fixation_point(2,1,CV_32S);
+			fixation_point.at<int>(0,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
+			fixation_point.at<int>(1,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
+					std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
+				  fixation_points.push_back(fixation_point);
+		}
+	}
+	else {
+		for (int i = 0; i < bins; i++) {
+			for (int j = 0; j < bins; j++) {
 				cv::Mat fixation_point(2,1,CV_32S);
-				fixation_point.at<int>(0,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
-				fixation_point.at<int>(1,0) = img_size*0.05 + rand() % (int)(img_size-img_size*0.05);
-						std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
-					  fixation_points.push_back(fixation_point);
+				fixation_point.at<int>(0,0) = img_size / bins * j + (img_size / bins /2);
+				fixation_point.at<int>(1,0) = img_size / bins * i + (img_size / bins / 2);
+				std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
+				fixation_points.push_back(fixation_point);
 			}
 		}
-		else {
-			for (int i = 0; i < bins; i++) {
-				for (int j = 0; j < bins; j++) {
-					cv::Mat fixation_point(2,1,CV_32S);
-					fixation_point.at<int>(0,0) = img_size / bins * j + (img_size / bins /2);
-					fixation_point.at<int>(1,0) = img_size / bins * i + (img_size / bins / 2);
-					std::cout<<"("<<fixation_point.at<int>(0,0)<<","<<fixation_point.at<int>(1,0)<< ')'<< std::endl;
-					fixation_points.push_back(fixation_point);
-				}
-			}
-		}		
+	}		
+
 	return fixation_points;
 }
 

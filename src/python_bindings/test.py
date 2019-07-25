@@ -8,18 +8,18 @@ import time
 
 rho=-0.5
 
+# FOVEA SIZE
 sigma_xx=50
 sigma_yy=50
-sigma_xy=int(np.floor(rho*sigma_xx*sigma_yy))
+#sigma_xy=int(np.floor(rho*sigma_xx*sigma_yy))
+sigma_xy=0
 
-levels=7
-img = cv2.imread('images/image_r_100.jpg')
+#PYRAMID LEVELS
+levels=5
+img = cv2.imread('images/pedestrian.jpg')
+#img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
-
-
-
 
 # Create the Laplacian blending object
 my_lap_obj=fv(width,height,levels,sigma_xx,sigma_yy,sigma_xy)
@@ -27,34 +27,28 @@ try:
     while True:
         start = time.time()
 
-        #sigma_x=randint(1, sigma_x_max)
-        #sigma_y=randint(1, sigma_y_max)
+	sigma_x=sigma_xx
+	sigma_y=sigma_yy
 
-        # RANDOM FIXATION POINTS
+        #center=[randint(1,width), randint(1,height)]         # RANDOM FIXATION POINTS
         center=[int(width/2.0), int(height/2.0)]
-
-        # RANDOM FOVEA SIZE
-        #my_lap_obj.update_fovea(width,height,sigma_x,sigma_y)
+        # FOVEA SIZE
+        my_lap_obj.update_fovea(width,height,sigma_x,sigma_y,sigma_xy)
 
         #print npcv.test_np_mat(np.array(center))
         # Foveate the image
         #print npcv.test_np_mat(np.array(center))
+        #print img.depth()
         foveated_img=my_lap_obj.foveate(img,npcv.test_np_mat(np.array(center)))
+        #foveated_img = foveated_img.astype(int)
+        #foveated_img=cv2.cvtColor(foveated_img, cv2.COLOR_BGR2RGB)
+
+	cv2.imshow('image',foveated_img)
+	cv2.waitKey(10)
+	#cv2.destroyAllWindows()
 
         end = time.time()
-        #print(end - start)
-
-        # Display the foveated image
-        plt.imshow(foveated_img)
-        #img.set_data(im)
-
-        circle=plt.Circle((center[0],center[1]),1.0,color='blue')
-        ax = plt.gca()
-        #ax.add_artist(circle)
-
-        plt.draw()
-        plt.pause(.001)
-        plt.cla()
+	print 'elapsed time:'+str(end-start)
 
 except KeyboardInterrupt:
     print('interrupted!')

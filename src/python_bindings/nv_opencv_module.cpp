@@ -25,7 +25,7 @@ cv::Mat test_with_args(const cv::Mat_<float>& in, const int& var1 = 1,
                        const double& var2 = 10.0, const std::string& name=std::string("test_name")) {
   std::cerr << "in: " << in << std::endl;
   std::cerr << "sz: " << in.size() << std::endl;
-  std::cerr << "Returning transpose" << std::endl;
+  std::cerr << "returning transpose" << std::endl;
   return in.t();
 }
 
@@ -41,7 +41,7 @@ class GenericWrapper {
   cv::Mat process(const cv::Mat& in) {
     std::cerr << "in: " << in << std::endl;
     std::cerr << "sz: " << in.size() << std::endl;
-    std::cerr << "Returning transpose" << std::endl;
+    std::cerr << "returning transpose" << std::endl;
     return in.t();
   }
 

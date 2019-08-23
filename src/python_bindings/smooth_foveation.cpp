@@ -4,7 +4,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv/cv.hpp>
 
-#include "opencv2/objdetect.hpp"
+
 //Convert
 #include <pybind11/stl.h>
 #include "conversions.h"

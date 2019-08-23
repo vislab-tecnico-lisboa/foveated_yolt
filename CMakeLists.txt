@@ -15,13 +15,13 @@ find_package(PkgConfig REQUIRED)
 #  add_definitions(-DOPENCV_3)
 
 if(${CLASSIFICATION})
-include(cmake/Modules/FindCaffe.cmake)
+  include(cmake/Modules/FindCaffe.cmake)
   find_package(Caffe REQUIRED)
-include_directories(	${Caffe_INCLUDE_DIRS})
+  include_directories(	${Caffe_INCLUDE_DIRS})
 endif(${CLASSIFICATION})
 
 find_package(Boost COMPONENTS system filesystem regex REQUIRED)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 3 REQUIRED)
 #find_package(Python COMPONENTS Interpreter Development)
 #find_package(PythonInterp REQUIRED)
 #find_package(NumPy REQUIRED)
@@ -100,7 +100,7 @@ if(${CLASSIFICATION})
   )
 endif(${CLASSIFICATION})
 
-#include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 #boost_python_module(np_opencv_converter src/python_bindings/np_opencv_converter.cpp src/python_bindings/conversion.cpp)
 #target_link_libraries(np_opencv_converter boost_system boost_python ${Boost_LIBRARIES} ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
 
@@ -123,8 +123,7 @@ set(PYTHON_FILES
 
 pybind11_add_module(pysmooth_foveation src/laplacian_foveation.cpp src/python_bindings/smooth_foveation.cpp src/python_bindings/conversions.cpp)
 target_link_libraries(pysmooth_foveation PRIVATE pybind11::module ${OpenCV_LIBS})
-set_target_properties(pysmooth_foveation PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
-    SUFFIX "${PYTHON_MODULE_EXTENSION}") 
+set_target_properties(pysmooth_foveation PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}" SUFFIX "${PYTHON_MODULE_EXTENSION}") 
 configure_file(src/python_bindings/__init__.py src/python_bindings/__init__.py)
 
 

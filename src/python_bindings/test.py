@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
-import np_opencv_module as npcv
-from yolt_python import LaplacianBlending as fv
+import pysmooth_foveation as fv
 from matplotlib import pyplot as plt
 from random import randint
 import time
@@ -22,16 +21,20 @@ img = cv2.imread('images/pedestrian.jpg')
 height, width, channels = img.shape
 
 # Create the Laplacian blending object
-my_lap_obj=fv(width,height,levels,sigma_xx,sigma_yy,sigma_xy)
+my_lap_obj=fv.LaplacianBlending(width,height,levels,sigma_xx,sigma_yy,sigma_xy)
 try:
     while True:
         start = time.time()
 
-	sigma_x=sigma_xx
-	sigma_y=sigma_yy
+        sigma_x=sigma_xx
+        sigma_y=sigma_yy
 
-        #center=[randint(1,width), randint(1,height)]         # RANDOM FIXATION POINTS
-        center=[int(width/2.0), int(height/2.0)]
+        #sigma_x=randint(1, sigma_xx)
+        #sigma_y=randint(1, sigma_yy)
+
+        center=np.array([randint(1,width), randint(1,height)])         # RANDOM FIXATION POINTS
+        #center=[int(width/2.0), int(height/2.0)]
+
         # FOVEA SIZE
         my_lap_obj.update_fovea(width,height,sigma_x,sigma_y,sigma_xy)
 
@@ -39,16 +42,16 @@ try:
         # Foveate the image
         #print npcv.test_np_mat(np.array(center))
         #print img.depth()
-        foveated_img=my_lap_obj.foveate(img,npcv.test_np_mat(np.array(center)))
+        foveated_img=my_lap_obj.Foveate(img,center)
         #foveated_img = foveated_img.astype(int)
         #foveated_img=cv2.cvtColor(foveated_img, cv2.COLOR_BGR2RGB)
 
-	cv2.imshow('image',foveated_img)
-	cv2.waitKey(10)
+        cv2.imshow('image',foveated_img)
+        cv2.waitKey(10)
 	#cv2.destroyAllWindows()
 
         end = time.time()
-	print 'elapsed time:'+str(end-start)
+        #print 'elapsed time:'+str(end-start)
 
 except KeyboardInterrupt:
     print('interrupted!')

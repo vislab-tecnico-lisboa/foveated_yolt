@@ -21,7 +21,7 @@ if(${CLASSIFICATION})
 endif(${CLASSIFICATION})
 
 find_package(Boost COMPONENTS system filesystem regex REQUIRED)
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV)# 3 REQUIRED)
 #find_package(Python COMPONENTS Interpreter Development)
 #find_package(PythonInterp REQUIRED)
 #find_package(NumPy REQUIRED)

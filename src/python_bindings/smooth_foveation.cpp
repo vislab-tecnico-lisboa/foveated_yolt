@@ -2,7 +2,7 @@
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
-#include <opencv/cv.hpp>
+#include <opencv2/opencv.hpp>
 
 
 //Convert
@@ -14,7 +14,7 @@ namespace py = pybind11;
 
 cv::Mat read_image(std::string image_name)
 {
-        cv::Mat image = cv::imread(image_name, CV_LOAD_IMAGE_COLOR);
+        cv::Mat image = cv::imread(image_name, cv::IMREAD_COLOR);
             return image;
 }
 
